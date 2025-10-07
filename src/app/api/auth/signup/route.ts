@@ -1,46 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, email, password, fullName, role } = body;
+    const { username, password, fullName, fatherName, cnic, contactNumber, qualification, role } = body;
 
     // Validation
-    if (!username || !email || !password || !fullName) {
+    if (!username || !password || !fullName || !role) {
       return NextResponse.json(
-        { message: 'All fields are required' },
+        { message: 'Username, password, full name, and role are required' },
         { status: 400 }
       );
     }
 
-    // Check if username already exists
-    const existingUsers: any = await query(
-      'SELECT * FROM users WHERE username = ? OR email = ?',
-      [username, email]
-    );
-
-    if (Array.isArray(existingUsers) && existingUsers.length > 0) {
+    // Validate role
+    if (!['author', 'reviewer'].includes(role)) {
       return NextResponse.json(
-        { message: 'Username or email already exists' },
-        { status: 409 }
+        { message: 'Role must be either author or reviewer' },
+        { status: 400 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // For demo purposes, simulate successful registration
+    // In a real app, you would save to database here
+    console.log('New user registration:', {
+      username,
+      fullName,
+      fatherName,
+      cnic,
+      contactNumber,
+      qualification,
+      role
+    });
 
-    // Insert new user
-    const result: any = await query(
-      'INSERT INTO users (username, email, password, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-      [username, email, hashedPassword, fullName, role || 'author']
-    );
+    // Create user data
+    const userData = {
+      id: Math.floor(Math.random() * 1000) + 100, // Mock ID
+      username,
+      email: `${username}@pagb.com`, // Mock email
+      fullName,
+      role,
+    };
 
     return NextResponse.json(
       {
         message: 'User registered successfully',
-        userId: result.insertId,
+        user: userData,
       },
       { status: 201 }
     );

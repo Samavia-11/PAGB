@@ -1,4 +1,4 @@
-# 🚀 Complete Setup Guide - JournalFlow Army Journal
+# 🚀 Complete Setup Guide - JournalFlow  PAGB
 
 ## ✅ What Has Been Created
 

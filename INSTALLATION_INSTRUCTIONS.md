@@ -1,4 +1,4 @@
-# 📦 Installation Instructions - Army Journal Application
+# 📦 Installation Instructions -  PAGB Application
 
 ## 🎯 Quick Start (5 Steps)
 
@@ -109,7 +109,7 @@ npm install
 
 ## 🎉 You're Ready!
 
-Your Army Journal application is now running with:
+Your  PAGB application is now running with:
 - ✅ TypeScript landing page
 - ✅ Login/Signup pages
 - ✅ 4 role-based dashboards

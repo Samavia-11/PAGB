@@ -1,4 +1,4 @@
-# 🚀 Quick Reference - Army Journal
+# 🚀 Quick Reference -  PAGB
 
 ## ⚡ Quick Start (Copy & Paste)
 

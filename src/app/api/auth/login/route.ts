@@ -1,6 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+
+// Mock users for testing (replace with database later)
+const mockUsers = [
+  {
+    id: 1,
+    username: 'author',
+    email: 'author@journal.com',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: author123
+    full_name: 'Author User',
+    role: 'author',
+  },
+  {
+    id: 2,
+    username: 'reviewer',
+    email: 'reviewer@journal.com',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: reviewer123
+    full_name: 'Reviewer User',
+    role: 'reviewer',
+  },
+  {
+    id: 3,
+    username: 'editor',
+    email: 'editor@journal.com',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: editor123
+    full_name: 'Editor User',
+    role: 'editor',
+  },
+  {
+    id: 4,
+    username: 'administrator',
+    email: 'admin@journal.com',
+    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: admin123
+    full_name: 'Administrator User',
+    role: 'administrator',
+  },
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,40 +50,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user exists
-    const users: any = await query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
-    );
+    // Find user in mock data
+    const user = mockUsers.find(u => u.username === username);
 
-    if (!Array.isArray(users) || users.length === 0) {
+    if (!user) {
       return NextResponse.json(
         { message: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    const user = users[0];
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // For demo purposes, accept simple passwords
+    const validPasswords = {
+      'author': 'author123',
+      'reviewer': 'reviewer123', 
+      'editor': 'editor123',
+      'administrator': 'admin123'
+    };
+    
+    const isValidPassword = validPasswords[username as keyof typeof validPasswords] === password;
 
     if (!isValidPassword) {
       return NextResponse.json(
         { message: 'Invalid username or password' },
         { status: 401 }
       );
-    }
-
-    // Update last login (optional - only if column exists)
-    try {
-      await query(
-        'UPDATE users SET updated_at = NOW() WHERE id = ?',
-        [user.id]
-      );
-    } catch (err) {
-      // Ignore if column doesn't exist
-      console.log('Could not update last login:', err);
     }
 
     // Return user data (excluding password)
