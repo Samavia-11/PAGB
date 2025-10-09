@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Lock, Phone, CreditCard, GraduationCap, UserCheck, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import AnimatedStars from '../../components/AnimatedStars';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -85,6 +86,7 @@ export default function LoginPage() {
 
   return (
     <div className={`${isSignUp ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 flex items-center justify-center px-4 ${isSignUp ? 'py-4' : 'py-12'}`}>
+      <AnimatedStars />
       <div className={`${isSignUp ? 'max-w-4xl w-full h-full max-h-[95vh] flex flex-col' : 'max-w-lg w-full'}`}>
 
         {/* Logo/Brand */}
