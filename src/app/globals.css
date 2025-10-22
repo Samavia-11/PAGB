@@ -1,109 +1,178 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Army Green Book Color Palette */
+  --color-army-green: #4A5F3A;
+  --color-army-green-light: #5C7349;
+  --color-army-green-dark: #3A4A2E;
+  --color-accent-orange: #E85D04;
+  --color-accent-orange-light: #FF7518;
+  --color-accent-orange-dark: #C94F04;
+  
+  /* Font families - using web safe fonts */
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  /* Army Green Book Color Palette */
+  --army-green: #4A5F3A;
+  --army-green-light: #5C7349;
+  --army-green-dark: #3A4A2E;
+  --accent-orange: #E85D04;
+  --accent-orange-light: #FF7518;
+  --accent-orange-dark: #C94F04;
+  
+  /* Neutral Colors */
+  --background: #ffffff;
+  --foreground: #1A1A1A;
+  --text-primary: #1A1A1A;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --border-gray: #E5E5E5;
+  --hover-gray: #F5F5F5;
+  
+  /* Typography - Note: --font-serif and --font-sans are defined by Next.js fonts */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
 }
 
-/* Animated Stars Keyframes */
-@keyframes star-twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+/* AUSA Design System - Component Styles */
+
+/* Typography Classes */
+.page-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
-@keyframes star-flow-right {
-  0% { transform: translateX(-20vw) translateY(var(--start-y, 50vh)) scale(0.1); opacity: 0; }
-  15% { transform: translateX(-10vw) translateY(var(--start-y, 50vh)) scale(0.8); opacity: 1; }
-  50% { transform: translateX(50vw) translateY(var(--start-y, 50vh)) scale(1); opacity: 1; }
-  85% { transform: translateX(110vw) translateY(var(--start-y, 50vh)) scale(0.8); opacity: 1; }
-  100% { transform: translateX(120vw) translateY(var(--start-y, 50vh)) scale(0.1); opacity: 0; }
+.article-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--army-green);
+  line-height: 1.4;
+  transition: color 0.2s ease;
 }
 
-@keyframes star-flow-left {
-  0% { transform: translateX(120vw) translateY(var(--start-y, 50vh)) scale(0.1); opacity: 0; }
-  15% { transform: translateX(110vw) translateY(var(--start-y, 50vh)) scale(0.8); opacity: 1; }
-  50% { transform: translateX(50vw) translateY(var(--start-y, 50vh)) scale(1); opacity: 1; }
-  85% { transform: translateX(-10vw) translateY(var(--start-y, 50vh)) scale(0.8); opacity: 1; }
-  100% { transform: translateX(-20vw) translateY(var(--start-y, 50vh)) scale(0.1); opacity: 0; }
+.article-title:hover {
+  color: var(--accent-orange);
 }
 
-@keyframes star-flow-down {
-  0% { transform: translateX(var(--start-x, 50vw)) translateY(-20vh) scale(0.1); opacity: 0; }
-  15% { transform: translateX(var(--start-x, 50vw)) translateY(-10vh) scale(0.8); opacity: 1; }
-  50% { transform: translateX(var(--start-x, 50vw)) translateY(50vh) scale(1); opacity: 1; }
-  85% { transform: translateX(var(--start-x, 50vw)) translateY(110vh) scale(0.8); opacity: 1; }
-  100% { transform: translateX(var(--start-x, 50vw)) translateY(120vh) scale(0.1); opacity: 0; }
+.section-heading {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
 }
 
-@keyframes star-flow-up {
-  0% { transform: translateX(var(--start-x, 50vw)) translateY(120vh) scale(0.1); opacity: 0; }
-  15% { transform: translateX(var(--start-x, 50vw)) translateY(110vh) scale(0.8); opacity: 1; }
-  50% { transform: translateX(var(--start-x, 50vw)) translateY(50vh) scale(1); opacity: 1; }
-  85% { transform: translateX(var(--start-x, 50vw)) translateY(-10vh) scale(0.8); opacity: 1; }
-  100% { transform: translateX(var(--start-x, 50vw)) translateY(-20vh) scale(0.1); opacity: 0; }
+/* Button Styles */
+.btn-primary {
+  background-color: var(--army-green);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
-@keyframes star-flow-diagonal-br {
-  0% { transform: translateX(-20vw) translateY(-20vh) scale(0.1); opacity: 0; }
-  15% { transform: translateX(-10vw) translateY(-10vh) scale(0.8); opacity: 1; }
-  50% { transform: translateX(50vw) translateY(50vh) scale(1); opacity: 1; }
-  85% { transform: translateX(110vw) translateY(110vh) scale(0.8); opacity: 1; }
-  100% { transform: translateX(120vw) translateY(120vh) scale(0.1); opacity: 0; }
+.btn-primary:hover {
+  background-color: var(--army-green-light);
 }
 
-@keyframes star-flow-diagonal-tl {
-  0% { transform: translateX(120vw) translateY(120vh) scale(0.1); opacity: 0; }
-  15% { transform: translateX(110vw) translateY(110vh) scale(0.8); opacity: 1; }
-  50% { transform: translateX(50vw) translateY(50vh) scale(1); opacity: 1; }
-  85% { transform: translateX(-10vw) translateY(-10vh) scale(0.8); opacity: 1; }
-  100% { transform: translateX(-20vw) translateY(-20vh) scale(0.1); opacity: 0; }
+.btn-secondary {
+  background-color: var(--accent-orange);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
 }
 
-/* Star animation classes */
-.animate-star-twinkle {
-  animation: star-twinkle 4s ease-in-out infinite;
+.btn-secondary:hover {
+  background-color: var(--accent-orange-dark);
 }
 
-.animate-flow-right {
-  animation: star-flow-right 20s linear infinite;
+.btn-outline {
+  background-color: transparent;
+  color: var(--army-green);
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--army-green);
+  border-radius: 0.25rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.animate-flow-left {
-  animation: star-flow-left 18s linear infinite;
+.btn-outline:hover {
+  background-color: var(--army-green);
+  color: white;
 }
 
-.animate-flow-down {
-  animation: star-flow-down 22s linear infinite;
+/* Card Styles */
+.article-card {
+  background: white;
+  border: 1px solid var(--border-gray);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
 }
 
-.animate-flow-up {
-  animation: star-flow-up 16s linear infinite;
+.article-card:hover {
+  box-shadow: 0 2px 8px rgba(74, 95, 58, 0.15);
 }
 
-.animate-flow-diagonal-br {
-  animation: star-flow-diagonal-br 25s linear infinite;
+/* Navigation Styles */
+.nav-link {
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s ease;
+  text-decoration: none;
 }
 
-.animate-flow-diagonal-tl {
-  animation: star-flow-diagonal-tl 20s linear infinite;
+.nav-link:hover {
+  color: var(--army-green);
+}
+
+.nav-link.active {
+  color: var(--army-green);
+  border-bottom: 2px solid var(--accent-orange);
+}
+
+/* Utility Classes */
+.text-green {
+  color: var(--army-green);
+}
+
+.text-orange {
+  color: var(--accent-orange);
+}
+
+.bg-green {
+  background-color: var(--army-green);
+}
+
+.bg-orange {
+  background-color: var(--accent-orange);
+}
+
+.border-green {
+  border-color: var(--army-green);
+}
+
+/* Smooth transitions for all interactive elements */
+a, button {
+  transition: all 0.2s ease;
 }
