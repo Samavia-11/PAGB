@@ -130,7 +130,9 @@ export default function Home() {
 
         {/* Main Navigation */}
         <div className="container mx-auto px-4 py-4">
+
           <div className="flex items-center justify-between">
+            
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-green rounded flex items-center justify-center">
