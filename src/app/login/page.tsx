@@ -60,19 +60,17 @@ export default function LoginPage() {
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect based on role
+        // Route to role-specific dashboards
         if (data.user.role === 'author') {
           router.push('/author/dashboard');
         } else if (data.user.role === 'reviewer') {
           router.push('/reviewer/dashboard');
-        } else if (data.user.role === 'editor') {
+        } else if (data.user.role === 'editor' || data.user.role === 'editor_in_chief' || data.user.role === 'assistant_editor') {
           router.push('/editor/dashboard');
-        } else if (data.user.role === 'administrator') {
-          router.push('/admin/dashboard');
-        } else if (data.user.role === 'administrator') {
-          router.push('/administrator');
+        } else if (data.user.role === 'administrator' || data.user.role === 'patron' || data.user.role === 'patron_in_chief') {
+          router.push('/administrator/dashboard');
         } else {
-          setError('Invalid user role.');
+          router.push('/author/dashboard');
         }
       } else {
         setError(data.message || `${isSignUp ? 'Registration' : 'Login'} failed. Please try again.`);
