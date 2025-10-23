@@ -414,7 +414,7 @@ export default function Home() {
               <p className="text-xs text-gray-600 mb-3">
                 Deadline: March 31, 2025
               </p>
-              <Link href="/submission" className="btn-secondary text-sm w-full inline-block text-center">
+              <Link href="/login" className="btn-secondary text-sm w-full inline-block text-center">
                 Submit Now
               </Link>
             </div>
