@@ -10,15 +10,22 @@ export async function GET() {
     }
     const entries = fs.readdirSync(baseDir, { withFileTypes: true });
     const counts: Record<string, number> = {};
+    const displayByKey: Record<string, string> = {};
+    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
     for (const ent of entries) {
       if (ent.isFile() && /\.pdf$/i.test(ent.name)) {
-        const match = ent.name.split('___')[1];
-        const author = (match || '').replace(/\.pdf$/i, '').trim();
-        if (author) counts[author] = (counts[author] || 0) + 1;
+        const nameNoExt = ent.name.replace(/\.pdf$/i, '');
+        const parts = nameNoExt.split('___');
+        const authorRaw = (parts.length > 1 ? parts[1] : nameNoExt).trim();
+        if (authorRaw) {
+          const key = normalize(authorRaw);
+          counts[key] = (counts[key] || 0) + 1;
+          if (!displayByKey[key]) displayByKey[key] = authorRaw.replace(/\s+/g, ' ').trim();
+        }
       }
     }
     const authors = Object.keys(counts)
-      .map((name) => ({ slug: name, name, count: counts[name] }))
+      .map((key) => ({ slug: displayByKey[key], name: displayByKey[key], count: counts[key] }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json({ authors });
