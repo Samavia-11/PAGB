@@ -13,11 +13,24 @@ interface Article {
   updated_at: string;
 }
 
+interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  action_url?: string;
+}
+
 export default function AuthorDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -35,11 +48,17 @@ export default function AuthorDashboard() {
 
     setUser(parsedUser);
     fetchArticles(parsedUser.id);
+    fetchNotifications(parsedUser.id);
   }, [router]);
 
   const fetchArticles = async (userId: number) => {
     try {
-      const response = await fetch(`/api/articles/author/${userId}`);
+      const response = await fetch('/api/articles', {
+        headers: {
+          'x-user-id': userId.toString(),
+          'x-user-role': 'author'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setArticles(data.articles || []);
@@ -48,6 +67,54 @@ export default function AuthorDashboard() {
       console.error('Error fetching articles:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotifications = async (userId: number) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        headers: { 'x-user-id': userId.toString() }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.notifications?.filter((n: Notification) => !n.is_read).length || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markAsRead = async (id: number) => {
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleSubmit = async (articleId: number) => {
+    if (!confirm('Submit this article for review?')) return;
+    try {
+      const response = await fetch(`/api/articles/${articleId}/workflow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit',
+          from_user_id: user.id,
+          from_role: 'author'
+        })
+      });
+      if (response.ok) {
+        alert('Article submitted successfully!');
+        fetchArticles(user.id);
+      } else {
+        alert('Failed to submit article');
+      }
+    } catch (error) {
+      alert('Error submitting article');
     }
   };
 
@@ -193,30 +260,69 @@ export default function AuthorDashboard() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option>Blue</option>
-                  <option>Green</option>
-                  <option>Red</option>
-                </select>
-                <button className="p-2 text-gray-400 hover:text-gray-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
                 </button>
-                <span className="text-sm text-gray-600">author</span>
-                <button className="p-2 text-gray-400 hover:text-gray-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
+                <span className="text-sm text-gray-600">{user?.fullName || 'author'}</span>
               </div>
             </div>
           </div>
         </header>
 
+        {/* Notifications Dropdown */}
+        {showNotifications && (
+          <div className="absolute right-6 top-20 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {notifications.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <p>No notifications</p>
+                </div>
+              ) : (
+                notifications.slice(0, 10).map(notif => (
+                  <div
+                    key={notif.id}
+                    onClick={() => !notif.is_read && markAsRead(notif.id)}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      !notif.is_read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-gray-900">{notif.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {new Date(notif.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      {!notif.is_read && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Dashboard Content */}
-        <div className="flex-1 bg-gray-50 p-6">
+        <div className="flex-1 bg-gray-50 p-6 relative">
           {/* Dashboard Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Author Dashboard</h1>
@@ -516,12 +622,22 @@ export default function AuthorDashboard() {
                         >
                           View
                         </Link>
-                        <Link
-                          href={`/author/articles/${article.id}/edit`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Edit
-                        </Link>
+                        {article.status === 'draft' && (
+                          <>
+                            <Link
+                              href={`/author/articles/edit/${article.id}`}
+                              className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            >
+                              Edit
+                            </Link>
+                            <button
+                              onClick={() => handleSubmit(article.id)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Submit
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
