@@ -31,11 +31,11 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   
-  const stats: Stats = {
-    publishedArticles: 18,
-    activeAuthors: 25,
-    issuesPublished: 1
-  };
+  const [stats, setStats] = useState<Stats>({
+    publishedArticles: 0,
+    activeAuthors: 0,
+    issuesPublished: 0,
+  });
 
   const initialArticles: Article[] = [
     {
@@ -111,8 +111,45 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Load real-time site stats
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/site-stats');
+        const data = await res.json();
+        if (!cancelled && data) {
+          setStats({
+            publishedArticles: Number(data.publishedArticles || 0),
+            activeAuthors: Number(data.activeAuthors || 0),
+            issuesPublished: Number(data.issuesPublished || 0),
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const [articles, setArticles] = useState<Article[]>(initialArticles);
   const articlesRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/random-articles?count=5');
+        const data = await res.json();
+        if (!cancelled && data?.files && Array.isArray(data.files) && data.files.length > 0) {
+          setArticles(data.files);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,8 +223,8 @@ export default function Home() {
               <Link href="/current-issue" className="nav-link">Current Issue</Link>
               <Link href="/archives" className="nav-link">Archives</Link>
               <Link href="/about" className="nav-link">About</Link>
-              <Link href="/submission" className="nav-link">Submit Article</Link>
-              <Link href="/contact" className="nav-link">Contact</Link>
+              <Link href="/login" className="nav-link">Submit Article</Link>
+              <Link href="#footer" className="nav-link">Contact</Link>
             </nav>
 
             {/* Search & Mobile Menu */}
@@ -246,8 +283,8 @@ export default function Home() {
                 <Link href="/current-issue" className="nav-link">Current Issue</Link>
                 <Link href="/archives" className="nav-link">Archives</Link>
                 <Link href="/about" className="nav-link">About</Link>
-                <Link href="/submission" className="nav-link">Submit Article</Link>
-                <Link href="/contact" className="nav-link">Contact</Link>
+                <Link href="/login" className="nav-link">Submit Article</Link>
+                <Link href="#footer" className="nav-link">Contact</Link>
               </nav>
             </div>
           )}
@@ -290,16 +327,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Content Bar with Link */}
-      <section className="bg-orange-50 border-b-2 border-orange py-6">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <Link href="/complete-issue" className="text-2xl font-bold text-orange hover:text-orange-dark transition-colors inline-block">
-              VIEW THE ENTIRE 2024-2025 GREEN BOOK HERE
-            </Link>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Simple Stats Bar */}
       <section className="bg-white border-b border-gray-200 py-6">
@@ -335,10 +363,10 @@ export default function Home() {
         <div className="relative container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Articles */}
-          <div className="lg:col-span-2" ref={articlesRef} style={{ scrollMarginTop: 100 }}>
+          <div className="lg:col-span-2 pl-3 md:pl-6" ref={articlesRef} style={{ scrollMarginTop: 100 }}>
             {/* ARTICLES Header - AUSA Style */}
             <div className="mb-8">
-              <h2 className="text-5xl font-black mb-2" style={{fontFamily: 'Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '900'}}>
+              <h2 className="text-3xl font-black mb-2" style={{fontFamily: 'Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '900'}}>
                 ARTICLES
               </h2>
             </div>
@@ -346,58 +374,15 @@ export default function Home() {
             {/* Article List - Magazine Style with Thumbnails */}
             <div className="space-y-8">
               {articles.map((article, index) => (
-                <article key={index} className="flex items-start space-x-6 pb-8 border-b border-gray-200 last:border-b-0">
+                <article key={index} className="flex items-start space-x-8 pb-8 border-b border-gray-200 last:border-b-0">
                   {/* Magazine Cover Thumbnail - Attractive Design */}
-                  <Link href={article.pdfUrl} target="_blank" className="flex-shrink-0 group">
-                    <div className="w-32 h-44 rounded shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 relative"
-                         style={{
-                           background: `linear-gradient(135deg, ${
-                             index === 0 ? '#1a4d2e, #2d5f3f' :
-                             index === 1 ? '#2d5a1e, #3d6f2e' :
-                             index === 2 ? '#1e3a2d, #2e4a3d' :
-                             index === 3 ? '#2e4d1e, #3e5d2e' :
-                             index === 4 ? '#1e2d3a, #2e3d4a' :
-                             '#1a3d2e, #2a4d3e'
-                           })`
-                         }}>
-                      {/* Background Military Image */}
+                  <Link href={article.pdfUrl} target="_blank" className="flex-shrink-0 group ml-1 md:ml-2">
+                    <div className="w-32 h-44 rounded shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 relative bg-white">
                       <img 
-                        src="/images/shanahan-1.webp"
+                        src="/images/icon.png"
                         alt={article.title}
-                        className="w-full h-full object-cover opacity-30 absolute inset-0"
+                        className="w-full h-full object-cover absolute inset-0"
                       />
-                      
-                      {/* Cover Design Overlay */}
-                      <div className="absolute inset-0 flex flex-col justify-between p-3">
-                        {/* Top Section - PAGB Branding */}
-                        <div className="text-center">
-                          <div className="text-yellow-400 font-black text-xl mb-1" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.9)'}}>
-                            PAGB
-                          </div>
-                          <div className="h-0.5 w-16 bg-orange mx-auto mb-1"></div>
-                          <div className="text-white text-xs font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.9)'}}>
-                            2024
-                          </div>
-                        </div>
-                        
-                        {/* Middle Section - Article Title (shortened) */}
-                        <div className="flex-1 flex items-center justify-center px-1">
-                          <h4 className="text-white text-xs font-bold text-center leading-tight" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.9)'}}>
-                            {article.title.split(':')[0].substring(0, 50)}
-                            {article.title.length > 50 ? '...' : ''}
-                          </h4>
-                        </div>
-                        
-                        {/* Bottom Section - Issue Info */}
-                        <div className="text-center">
-                          <div className="text-white text-xs mb-1" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.9)'}}>
-                            ISSUE #{index + 1}
-                          </div>
-                          <div className="bg-orange text-white text-xs font-bold px-2 py-0.5 rounded inline-block">
-                            PDF
-                          </div>
-                        </div>
-                      </div>
                       
                       {/* Hover Overlay */}
                       <div className="absolute inset-0 bg-orange opacity-0 group-hover:opacity-20 transition-opacity"></div>
@@ -410,9 +395,9 @@ export default function Home() {
                   </Link>
                   
                   {/* Article Content */}
-                  <div className="flex-1">
+                  <div className="flex-1 pl-1 md:pl-2">
                     <Link href={article.pdfUrl} target="_blank">
-                      <h3 className="text-2xl font-bold mb-2 text-gray-900 hover:text-orange transition-colors" style={{fontFamily: 'Georgia, serif', lineHeight: '1.3', fontWeight: '700'}}>
+                      <h3 className="text-xl font-bold mb-2 text-gray-900 hover:text-orange transition-colors" style={{fontFamily: 'Georgia, serif', lineHeight: '1.25', fontWeight: '700'}}>
                         {article.title}
                       </h3>
                     </Link>
@@ -459,7 +444,7 @@ export default function Home() {
 
             {/* ARMY MAGAZINE */}
             <div className="mb-12">
-              <h3 className="text-4xl font-bold mb-2" style={{
+              <h3 className="text-2xl font-bold mb-2" style={{
                 color: '#5A6B4A', 
                 fontFamily: 'Arial, sans-serif', 
                 fontWeight: '700',
@@ -471,7 +456,7 @@ export default function Home() {
 
             {/* Other Issues */}
             <div>
-              <h3 className="text-4xl font-bold mb-2 pb-3 border-b-2 border-gray-300" style={{
+              <h3 className="text-2xl font-bold mb-2 pb-3 border-b-2 border-gray-300" style={{
                 color: '#3A3A3A', 
                 fontFamily: 'Arial, sans-serif', 
                 fontWeight: '700',
@@ -490,21 +475,10 @@ export default function Home() {
                     {/* Magazine Cover with Image */}
                     <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
                       <img 
-                        src="/images/shanahan-1.webp" 
+                        src="/images/icon.png" 
                         alt="Pakistan Army Green Book 2024"
                         className="w-full h-full object-cover opacity-60"
                       />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                        <div className="text-yellow-400 font-black text-3xl mb-2" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          PAGB
-                        </div>
-                        <div className="text-white font-black text-xl leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          GREEN<br/>BOOK
-                        </div>
-                        <div className="text-white text-sm mt-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>
-                          2024
-                        </div>
-                      </div>
                     </div>
                     
                     {/* Text Content */}
@@ -527,21 +501,10 @@ export default function Home() {
                     {/* Magazine Cover with Image */}
                     <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
                       <img 
-                        src="/images/shanahan-1.webp" 
+                        src="/images/icon.png" 
                         alt="Pakistan Army Green Book 2021"
                         className="w-full h-full object-cover opacity-60"
                       />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                        <div className="text-yellow-400 font-black text-3xl mb-2" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          PAGB
-                        </div>
-                        <div className="text-white font-black text-xl leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          GREEN<br/>BOOK
-                        </div>
-                        <div className="text-white text-sm mt-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>
-                          2021
-                        </div>
-                      </div>
                     </div>
                     {/* Text Content */}
                     <div className="flex-1 p-5">
@@ -553,41 +516,7 @@ export default function Home() {
                     </div>
                   </div>
                 </button>
-
-                {/* Issue Card 2 - Front Cover */}
-                <Link href="/pdfs/Tittle%20Green%20Book%202024%20F.pdf" target="_blank" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                  backdropFilter: 'blur(4px)'
-                }}>
-                  <div className="flex">
-                    {/* Magazine Cover with Image */}
-                    <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-800 to-green-600 overflow-hidden">
-                      <img 
-                        src="/images/shanahan-1.webp" 
-                        alt="Green Book 2024 Front Cover"
-                        className="w-full h-full object-cover opacity-60"
-                      />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                        <div className="text-yellow-400 font-black text-2xl mb-1" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          COVER
-                        </div>
-                        <div className="text-white font-black text-lg leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          DESIGN
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Text Content */}
-                    <div className="flex-1 p-5">
-                      <div className="text-sm text-gray-700 mb-2 font-semibold">COVER PAGE</div>
-                      <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>
-                        GREEN BOOK 2024 - FRONT COVER
-                      </h4>
-                      <p className="text-xs text-gray-600 mt-2">High Resolution Cover | 873 KB</p>
-                    </div>
-                  </div>
-                </Link>
-
+                
                 {/* View All Link */}
                 <div className="text-center pt-4">
                   <Link href="/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
@@ -636,7 +565,7 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="flex items-center group">
+                  <Link href="#footer" className="flex items-center group">
                     <div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4 flex-shrink-0">
                       <Users className="w-6 h-6 text-white" />
                     </div>
@@ -861,7 +790,7 @@ export default function Home() {
       </section>
 
       {/* Institutional Footer */}
-      <footer className="bg-green text-white py-12 border-t-4 border-orange">
+      <footer id="footer" className="bg-green text-white py-12 border-t-4 border-orange">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             {/* About Section */}
