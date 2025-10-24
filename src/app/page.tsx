@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe } from 'lucide-react';
+import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Article {
   title: string;
@@ -15,9 +15,9 @@ interface Article {
 }
 
 interface Author {
-  number: number;
   name: string;
-  rank: string;
+  slug: string;
+  count: number;
 }
 
 interface Stats {
@@ -37,7 +37,7 @@ export default function Home() {
     issuesPublished: 1
   };
 
-  const articles: Article[] = [
+  const initialArticles: Article[] = [
     {
       title: "Pakistan's National Security Policies",
       author: "Various Contributors",
@@ -94,16 +94,52 @@ export default function Home() {
     }
   ];
 
-  const authors: Author[] = [
-    { number: 15, name: "Lt. Col. John Smith", rank: "Lieutenant Colonel" },
-    { number: 53, name: "Dr. Sarah Johnson", rank: "Professor of   History" },
-    { number: 82, name: "Maj. Gen. Robert Carter", rank: "Major General (Retd.)" }
-  ];
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [authorIndex, setAuthorIndex] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/list-authors');
+        const data = await res.json();
+        if (!cancelled && data?.authors) setAuthors(data.authors);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const articlesRef = useRef<HTMLDivElement | null>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Search functionality would be implemented here
     console.log('Searching for:', searchQuery);
+  };
+
+  const loadIssue = async (folder: string) => {
+    try {
+      const res = await fetch(`/api/list-pdfs?folder=${encodeURIComponent(folder)}`);
+      const data = await res.json();
+      if (data.files && Array.isArray(data.files)) {
+        setArticles(data.files);
+        if (typeof window !== 'undefined') {
+          // Scroll to ARTICLES section (account for sticky header)
+          const el = articlesRef.current;
+          if (el) {
+            const headerOffset = 90; // approximate sticky header height
+            const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+            const offsetPosition = elementPosition - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load issue', err);
+    }
   };
 
 
@@ -299,7 +335,7 @@ export default function Home() {
         <div className="relative container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Articles */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2" ref={articlesRef} style={{ scrollMarginTop: 100 }}>
             {/* ARTICLES Header - AUSA Style */}
             <div className="mb-8">
               <h2 className="text-5xl font-black mb-2" style={{fontFamily: 'Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '900'}}>
@@ -446,7 +482,7 @@ export default function Home() {
               
               <div className="space-y-6 mt-8">
                 {/* Issue Card 1 - Complete 2024 Issue */}
-                <Link href="/pdfs/0001___Content%20pages%20update%202024%20curve.pdf" target="_blank" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
+                <button onClick={() => loadIssue('2024')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.85)',
                   backdropFilter: 'blur(4px)'
                 }}>
@@ -480,7 +516,43 @@ export default function Home() {
                       <p className="text-xs text-gray-600 mt-2">18 Articles | 145 MB</p>
                     </div>
                   </div>
-                </Link>
+                </button>
+
+                {/* Issue Card 2021 - Complete 2021 Issue */}
+                <button onClick={() => loadIssue('2021')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(4px)'
+                }}>
+                  <div className="flex">
+                    {/* Magazine Cover with Image */}
+                    <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
+                      <img 
+                        src="/images/shanahan-1.webp" 
+                        alt="Pakistan Army Green Book 2021"
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
+                        <div className="text-yellow-400 font-black text-3xl mb-2" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+                          PAGB
+                        </div>
+                        <div className="text-white font-black text-xl leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+                          GREEN<br/>BOOK
+                        </div>
+                        <div className="text-white text-sm mt-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>
+                          2021
+                        </div>
+                      </div>
+                    </div>
+                    {/* Text Content */}
+                    <div className="flex-1 p-5">
+                      <div className="text-sm text-gray-700 mb-2 font-semibold">2021 EDITION</div>
+                      <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>
+                        PAKISTAN ARMY GREEN BOOK 2021 - COMPLETE ISSUE
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-2">Multiple Articles</p>
+                    </div>
+                  </div>
+                </button>
 
                 {/* Issue Card 2 - Front Cover */}
                 <Link href="/pdfs/Tittle%20Green%20Book%202024%20F.pdf" target="_blank" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
@@ -613,16 +685,33 @@ export default function Home() {
       <section className="bg-white border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
           <h2 className="section-heading text-center mb-8">Contributing Authors</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {authors.map((author, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded p-6 text-center hover:shadow-md transition-shadow">
-                <div className="w-20 h-20 bg-green text-white rounded-full flex items-center justify-center mx-auto mb-4 font-serif text-2xl">
-                  {author.number}
-                </div>
-                <h3 className="font-serif font-bold text-green mb-1">{author.name}</h3>
-                <p className="text-sm text-gray-600">{author.rank}</p>
-              </div>
-            ))}
+          <div className="relative">
+            <button
+              aria-label="Previous"
+              className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+              onClick={() => setAuthorIndex((prev) => Math.max(0, prev - 1))}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              aria-label="Next"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+              onClick={() => setAuthorIndex((prev) => Math.min(Math.max(0, Math.max(0, authors.length - 3)), prev + 1))}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-10">
+              {authors.slice(authorIndex, authorIndex + 3).map((author) => (
+                <Link key={author.slug} href={`/author/${encodeURIComponent(author.slug)}`} className="bg-white border border-gray-200 rounded p-6 text-center hover:shadow-md transition-shadow">
+                  <div className="w-20 h-20 bg-green text-white rounded-full flex items-center justify-center mx-auto mb-4 font-serif text-2xl">
+                    {author.count}
+                  </div>
+                  <h3 className="font-serif font-bold text-green mb-1">{author.name}</h3>
+                  <p className="text-xs text-gray-500 mt-2">Articles: {author.count}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
