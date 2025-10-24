@@ -60,19 +60,17 @@ export default function LoginPage() {
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect based on role
+        // Route to role-specific dashboards
         if (data.user.role === 'author') {
           router.push('/author/dashboard');
         } else if (data.user.role === 'reviewer') {
           router.push('/reviewer/dashboard');
-        } else if (data.user.role === 'editor') {
+        } else if (data.user.role === 'editor' || data.user.role === 'editor_in_chief' || data.user.role === 'assistant_editor') {
           router.push('/editor/dashboard');
-        } else if (data.user.role === 'administrator') {
-          router.push('/admin/dashboard');
-        } else if (data.user.role === 'administrator') {
-          router.push('/administrator');
+        } else if (data.user.role === 'administrator' || data.user.role === 'patron' || data.user.role === 'patron_in_chief') {
+          router.push('/administrator/dashboard');
         } else {
-          setError('Invalid user role.');
+          router.push('/author/dashboard');
         }
       } else {
         setError(data.message || `${isSignUp ? 'Registration' : 'Login'} failed. Please try again.`);
@@ -86,16 +84,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className={`${isSignUp ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 flex items-center justify-center px-4 ${isSignUp ? 'py-4' : 'py-12'}`}>
+    <div className={`${isSignUp ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gradient-to-br from-slate-900 via-green-900 to-green-800 flex items-center justify-center px-4 ${isSignUp ? 'py-4' : 'py-12'}`}>
      
       <div className={`${isSignUp ? 'max-w-4xl w-full h-full max-h-[95vh] flex flex-col' : 'max-w-lg w-full'}`}>
 
         {/* Logo/Brand */}
         <div className={`text-center ${isSignUp ? 'mb-4' : 'mb-8'}`}>
-          <h1 className={`${isSignUp ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent`}>
+          <h1 className={`${isSignUp ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent`}>
             PAGB
           </h1>
-          <p className={`${isSignUp ? 'mt-1 text-blue-200 text-sm' : 'mt-2 text-blue-200'}`}>
+          <p className={`${isSignUp ? 'mt-1 text-green-200 text-sm' : 'mt-2 text-green-200'}`}>
             {isSignUp ? 'Create Your Account' : 'Welcome back'}
           </p>
         </div>
@@ -109,7 +107,7 @@ export default function LoginPage() {
               onClick={() => setIsSignUp(false)}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                 !isSignUp 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-green-700 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -120,7 +118,7 @@ export default function LoginPage() {
               onClick={() => setIsSignUp(true)}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
                 isSignUp 
-                  ? 'bg-white text-blue-600 shadow-sm' 
+                  ? 'bg-white text-green-700 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -156,7 +154,7 @@ export default function LoginPage() {
                       value={formData.fullName}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -176,7 +174,7 @@ export default function LoginPage() {
                       value={formData.fatherName}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                       placeholder="Enter father's name"
                     />
                   </div>
@@ -196,7 +194,7 @@ export default function LoginPage() {
                       value={formData.cnic}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                       placeholder="XXXXX-XXXXXXX-X"
                       maxLength={15}
                     />
@@ -217,7 +215,7 @@ export default function LoginPage() {
                       value={formData.contactNumber}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                       placeholder="+92 XXX XXXXXXX"
                     />
                   </div>
@@ -237,7 +235,7 @@ export default function LoginPage() {
                       value={formData.qualification}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                       placeholder="e.g., PhD in Computer Science"
                     />
                   </div>
@@ -256,7 +254,7 @@ export default function LoginPage() {
                       value={formData.role}
                       onChange={handleChange}
                       required={isSignUp}
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all appearance-none bg-white"
                     >
                       <option value="">Select your role</option>
                       <option value="author">Author</option>
@@ -283,7 +281,7 @@ export default function LoginPage() {
                     value={formData.username}
                     onChange={handleChange}
                     required
-                    className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all ${
                       isSignUp 
                         ? 'pl-9 pr-3 py-2 text-sm' 
                         : 'pl-10 pr-4 py-3'
@@ -307,7 +305,7 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    className={`w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all ${
                       isSignUp 
                         ? 'pl-9 pr-10 py-2 text-sm' 
                         : 'pl-10 pr-12 py-3'
@@ -329,7 +327,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
+              className={`w-full bg-gradient-to-r from-green-700 to-green-600 text-white rounded-lg font-medium hover:from-green-800 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] ${
                 isSignUp ? 'py-2.5 px-4 text-sm' : 'py-3 px-4'
               }`}
             >
@@ -352,7 +350,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-green-700 hover:text-green-800 font-medium"
                 >
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </button>
@@ -383,7 +381,7 @@ export default function LoginPage() {
                     value={formData.username}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                     placeholder="Enter your username"
                   />
                 </div>
@@ -403,7 +401,7 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
                     placeholder="Enter your password"
                   />
                   <button
@@ -420,7 +418,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-green-800 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
@@ -440,7 +438,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setIsSignUp(true)}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-green-700 hover:text-green-800 font-medium"
                   >
                     Sign Up
                   </button>

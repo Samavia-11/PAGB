@@ -10,6 +10,8 @@ interface Article {
   date: string;
   description: string;
   published: string;
+  pdfUrl: string;
+  thumbnail: string;
 }
 
 interface Author {
@@ -30,32 +32,65 @@ export default function Home() {
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   
   const stats: Stats = {
-    publishedArticles: 397,
-    activeAuthors: 94,
-    issuesPublished: 21
+    publishedArticles: 18,
+    activeAuthors: 25,
+    issuesPublished: 1
   };
 
   const articles: Article[] = [
     {
-      title: "Modern   Strategy in Digital Warfare",
-      author: "Lt. Col. John D. Smith (Retd.)",
-      date: "January 15, 2025",
-      description: "This paper examines the evolution of   strategy in the context of digital warfare and cyber operations in modern   organizations.",
-      published: "1/15/2025"
+      title: "Pakistan's National Security Policies",
+      author: "Various Contributors",
+      date: "2024",
+      description: "A comprehensive analysis of Pakistan's national security framework, strategic challenges, and policy recommendations for safeguarding national interests.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(1)%20___Pakistan%E2%80%99s%20National%20Security%20National%20Security%20Policies.pdf",
+      thumbnail: "/images/thumbnails/article-1.jpg"
     },
     {
-      title: "Leadership Development in Contemporary Armed Forces",
-      author: "Maj. Gen. Emily R. Chen (Retd.)",
-      date: "January 10, 2025",
-      description: "An analysis of leadership training programs and their effectiveness across different   organizations.",
-      published: "1/10/2025"
+      title: "Afghan Refugees and The Principle of Non-Refoulement",
+      author: "Various Contributors",
+      date: "2024",
+      description: "An examination of the Afghan refugee crisis and international legal principles governing refugee protection and non-refoulement.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(2)___Afghan%20Refugees%20Afghan%20Refugees%20and%20The%20Principle%20of%20and%20The%20Principle%20of%20Non-Refoulement.pdf",
+      thumbnail: "/images/thumbnails/article-2.jpg"
     },
     {
-      title: "Logistics and Supply Chain Management in   Operations",
-      author: "Col. Robert Martinez",
-      date: "January 5, 2025",
-      description: "Exploring modern logistics challenges and supply chain optimization in complex operational environments.",
-      published: "1/5/2025"
+      title: "Pakistan-Afghanistan Relations: A Historical Perspective",
+      author: "Various Contributors",
+      date: "2024",
+      description: "A historical analysis of Pakistan-Afghanistan bilateral relations, examining key events, challenges, and opportunities for regional cooperation.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(4)___Pakistan-Afghanistan%20Relations%20Relations%20A%20Historical%20Perspective.pdf",
+      thumbnail: "/images/thumbnails/article-4.jpg"
+    },
+    {
+      title: "Modi's Neighbourhood First Policy: Implications for Pakistan",
+      author: "Various Contributors",
+      date: "2024",
+      description: "An assessment of India's neighbourhood-first diplomatic strategy and its strategic implications for Pakistan and regional stability.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(5)___Modi%E2%80%99s%20Neighbourhood%20First%20Policy%20Implications%20for%20Pakistan.pdf",
+      thumbnail: "/images/thumbnails/article-5.jpg"
+    },
+    {
+      title: "Character of Future Military Conflict in Subcontinent",
+      author: "Various Contributors",
+      date: "2024",
+      description: "Exploring the evolving nature of warfare in South Asia, including emerging technologies, hybrid threats, and strategic doctrines.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(6)___%20Character%20of%20Future%20Character%20Military%20Conflict%20in%20Subcontinent.pdf",
+      thumbnail: "/images/thumbnails/article-6.jpg"
+    },
+    {
+      title: "Unravelling the Intriguing Nexus: Socially Disruptive Proxies and Security Milieu of Pakistan",
+      author: "Various Contributors",
+      date: "2024",
+      description: "An analysis of non-state actors, proxy warfare, and their impact on Pakistan's internal security environment.",
+      published: "2024",
+      pdfUrl: "/pdfs/PAGB%202024%20(7)___Unravelling%20the%20Intriguing%20Nexus%20Socially%20Disruptive%20Proxies%20%20and%20Security%20Milieu%20of%20Pakistan.pdf",
+      thumbnail: "/images/thumbnails/article-7.jpg"
     }
   ];
 
@@ -95,7 +130,9 @@ export default function Home() {
 
         {/* Main Navigation */}
         <div className="container mx-auto px-4 py-4">
+
           <div className="flex items-center justify-between">
+            
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-green rounded flex items-center justify-center">
@@ -270,34 +307,95 @@ export default function Home() {
               </h2>
             </div>
 
-            {/* Article List - AUSA Style */}
+            {/* Article List - Magazine Style with Thumbnails */}
             <div className="space-y-8">
               {articles.map((article, index) => (
-                <article key={index} className="flex items-start space-x-4 pb-8 border-b border-gray-200 last:border-b-0">
-                  {/* Article Thumbnail */}
-                  <div className="flex-shrink-0 w-28 h-20 bg-gray-200 overflow-hidden">
-                    <img 
-                      src={`https://images.unsplash.com/photo-1552519507-ac02dcb43829?w=200&h=150&fit=crop&crop=center`}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                <article key={index} className="flex items-start space-x-6 pb-8 border-b border-gray-200 last:border-b-0">
+                  {/* Magazine Cover Thumbnail - Attractive Design */}
+                  <Link href={article.pdfUrl} target="_blank" className="flex-shrink-0 group">
+                    <div className="w-32 h-44 rounded shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 relative"
+                         style={{
+                           background: `linear-gradient(135deg, ${
+                             index === 0 ? '#1a4d2e, #2d5f3f' :
+                             index === 1 ? '#2d5a1e, #3d6f2e' :
+                             index === 2 ? '#1e3a2d, #2e4a3d' :
+                             index === 3 ? '#2e4d1e, #3e5d2e' :
+                             index === 4 ? '#1e2d3a, #2e3d4a' :
+                             '#1a3d2e, #2a4d3e'
+                           })`
+                         }}>
+                      {/* Background Military Image */}
+                      <img 
+                        src="/images/shanahan-1.webp"
+                        alt={article.title}
+                        className="w-full h-full object-cover opacity-30 absolute inset-0"
+                      />
+                      
+                      {/* Cover Design Overlay */}
+                      <div className="absolute inset-0 flex flex-col justify-between p-3">
+                        {/* Top Section - PAGB Branding */}
+                        <div className="text-center">
+                          <div className="text-yellow-400 font-black text-xl mb-1" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.9)'}}>
+                            PAGB
+                          </div>
+                          <div className="h-0.5 w-16 bg-orange mx-auto mb-1"></div>
+                          <div className="text-white text-xs font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.9)'}}>
+                            2024
+                          </div>
+                        </div>
+                        
+                        {/* Middle Section - Article Title (shortened) */}
+                        <div className="flex-1 flex items-center justify-center px-1">
+                          <h4 className="text-white text-xs font-bold text-center leading-tight" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.9)'}}>
+                            {article.title.split(':')[0].substring(0, 50)}
+                            {article.title.length > 50 ? '...' : ''}
+                          </h4>
+                        </div>
+                        
+                        {/* Bottom Section - Issue Info */}
+                        <div className="text-center">
+                          <div className="text-white text-xs mb-1" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.9)'}}>
+                            ISSUE #{index + 1}
+                          </div>
+                          <div className="bg-orange text-white text-xs font-bold px-2 py-0.5 rounded inline-block">
+                            PDF
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-orange opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                      
+                      {/* PDF Icon on Hover */}
+                      <div className="absolute top-2 right-2 bg-orange rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <FileText className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  </Link>
                   
                   {/* Article Content */}
                   <div className="flex-1">
-                    <Link href={`/article/${index + 1}`}>
-                      <h3 className="text-3xl font-bold mb-2 text-green hover:text-orange transition-colors" style={{fontFamily: 'Georgia, serif', lineHeight: '1.3', fontWeight: '700'}}>
+                    <Link href={article.pdfUrl} target="_blank">
+                      <h3 className="text-2xl font-bold mb-2 text-gray-900 hover:text-orange transition-colors" style={{fontFamily: 'Georgia, serif', lineHeight: '1.3', fontWeight: '700'}}>
                         {article.title}
                       </h3>
                     </Link>
                     <div className="mb-2">
-                      <p className="font-bold text-base" style={{fontFamily: 'Arial Narrow, Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '700'}}>
+                      <p className="font-bold text-sm text-gray-700" style={{fontFamily: 'Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '700'}}>
                         {article.author}
                       </p>
                     </div>
-                    <p className="text-gray-700 text-base leading-relaxed" style={{fontFamily: 'Arial, sans-serif'}}>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-3" style={{fontFamily: 'Arial, sans-serif'}}>
                       {article.description}
                     </p>
+                    <Link 
+                      href={article.pdfUrl} 
+                      target="_blank"
+                      className="inline-flex items-center text-sm font-semibold text-orange hover:text-green transition-colors"
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      Read Full Article (PDF)
+                    </Link>
                   </div>
                 </article>
               ))}
@@ -318,7 +416,7 @@ export default function Home() {
               <p className="text-xs text-gray-600 mb-3">
                 Deadline: March 31, 2025
               </p>
-              <Link href="/submission" className="btn-secondary text-sm w-full inline-block text-center">
+              <Link href="/login" className="btn-secondary text-sm w-full inline-block text-center">
                 Submit Now
               </Link>
             </div>
@@ -347,8 +445,8 @@ export default function Home() {
               </h3>
               
               <div className="space-y-6 mt-8">
-                {/* Issue Card 1 */}
-                <Link href="/issue/2025-10" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
+                {/* Issue Card 1 - Complete 2024 Issue */}
+                <Link href="/pdfs/0001___Content%20pages%20update%202024%20curve.pdf" target="_blank" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.85)',
                   backdropFilter: 'blur(4px)'
                 }}>
@@ -357,31 +455,35 @@ export default function Home() {
                     <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
                       <img 
                         src="/images/shanahan-1.webp" 
-                        alt="Green Book October 2025"
+                        alt="Pakistan Army Green Book 2024"
                         className="w-full h-full object-cover opacity-60"
                       />
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
                         <div className="text-yellow-400 font-black text-3xl mb-2" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          ARMY
+                          PAGB
                         </div>
                         <div className="text-white font-black text-xl leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
                           GREEN<br/>BOOK
+                        </div>
+                        <div className="text-white text-sm mt-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>
+                          2024
                         </div>
                       </div>
                     </div>
                     
                     {/* Text Content */}
                     <div className="flex-1 p-5">
-                      <div className="text-sm text-gray-700 mb-2 font-semibold">OCTOBER 2025</div>
+                      <div className="text-sm text-gray-700 mb-2 font-semibold">2024 EDITION</div>
                       <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>
-                        ARMY MAGAZINE VOL. 75, NO. 10, OCTOBER 2025 - THE GREEN BOOK
+                        PAKISTAN ARMY GREEN BOOK 2024 - COMPLETE ISSUE
                       </h4>
+                      <p className="text-xs text-gray-600 mt-2">18 Articles | 145 MB</p>
                     </div>
                   </div>
                 </Link>
 
-                {/* Issue Card 2 */}
-                <Link href="/issue/2025-09" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
+                {/* Issue Card 2 - Front Cover */}
+                <Link href="/pdfs/Tittle%20Green%20Book%202024%20F.pdf" target="_blank" className="block border border-gray-300 hover:shadow-xl transition-shadow" style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.85)',
                   backdropFilter: 'blur(4px)'
                 }}>
@@ -390,25 +492,26 @@ export default function Home() {
                     <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-800 to-green-600 overflow-hidden">
                       <img 
                         src="/images/shanahan-1.webp" 
-                        alt="Green Book September 2025"
+                        alt="Green Book 2024 Front Cover"
                         className="w-full h-full object-cover opacity-60"
                       />
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                        <div className="text-yellow-400 font-black text-3xl mb-2" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          ARMY
+                        <div className="text-yellow-400 font-black text-2xl mb-1" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+                          COVER
                         </div>
-                        <div className="text-white font-black text-xl leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-                          GREEN<br/>BOOK
+                        <div className="text-white font-black text-lg leading-tight text-center" style={{fontFamily: 'Impact, sans-serif', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
+                          DESIGN
                         </div>
                       </div>
                     </div>
                     
                     {/* Text Content */}
                     <div className="flex-1 p-5">
-                      <div className="text-sm text-gray-700 mb-2 font-semibold">SEPTEMBER 2025</div>
+                      <div className="text-sm text-gray-700 mb-2 font-semibold">COVER PAGE</div>
                       <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>
-                        ARMY MAGAZINE VOL. 75, NO. 9, SEPTEMBER 2025
+                        GREEN BOOK 2024 - FRONT COVER
                       </h4>
+                      <p className="text-xs text-gray-600 mt-2">High Resolution Cover | 873 KB</p>
                     </div>
                   </div>
                 </Link>
@@ -416,7 +519,7 @@ export default function Home() {
                 {/* View All Link */}
                 <div className="text-center pt-4">
                   <Link href="/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
-                    View All Issues <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
+                    View All Issues & Articles <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
                   </Link>
                 </div>
               </div>
@@ -520,6 +623,151 @@ export default function Home() {
                 <p className="text-sm text-gray-600">{author.rank}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Editorial Board Section */}
+      <section className="bg-gray-50 border-t border-gray-200 py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center mb-12" style={{color: '#3A3A3A', fontFamily: 'Georgia, serif'}}>
+            Editorial Board
+          </h2>
+          
+          <div className="max-w-6xl mx-auto space-y-12">
+            {/* Leadership */}
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Leadership</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <div className="text-sm font-semibold text-orange mb-2">PATRON-IN-CHIEF</div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-1">Lieutenant General Muhammad Aamer Najam, HI (M)</h4>
+                  <p className="text-gray-600">IGT&E</p>
+                </div>
+                
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-1">Major General Muhammad Shahid Abro</h4>
+                  <p className="text-gray-600">DG HRD</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Editorial Team */}
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Editorial Team</h3>
+              <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-4">
+                <div className="text-sm font-semibold text-orange mb-2">EDITOR</div>
+                <h4 className="text-xl font-bold text-gray-900">Dir E Wing</h4>
+              </div>
+              
+              <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                <div className="text-sm font-semibold text-orange mb-4">ASSISTANT EDITORS</div>
+                <div className="space-y-3">
+                  <div className="border-l-4 border-green pl-4">
+                    <h5 className="font-bold text-gray-900">Brigadier Dr Shahid Yaqub Abbasi</h5>
+                    <p className="text-sm text-gray-600">FGE&I Dte, Rawalpindi</p>
+                  </div>
+                  <div className="border-l-4 border-green pl-4">
+                    <h5 className="font-bold text-gray-900">Colonel Dr Sayyam Bin Saeed</h5>
+                    <p className="text-sm text-gray-600">HRD Dte, GHQ</p>
+                  </div>
+                  <div className="border-l-4 border-green pl-4">
+                    <h5 className="font-bold text-gray-900">Lieutenant Colonel Dr Zillay Hussain Dar</h5>
+                    <p className="text-sm text-gray-600">HRD Dte, (GSO-1 PAGB)</p>
+                  </div>
+                  <div className="border-l-4 border-green pl-4">
+                    <h5 className="font-bold text-gray-900">Lieutenant Col Dr Qasim Ali Shah</h5>
+                    <p className="text-sm text-gray-600">ISPR, GHQ</p>
+                  </div>
+                  <div className="border-l-4 border-green pl-4">
+                    <h5 className="font-bold text-gray-900">Major Dr Muhammad Irfan</h5>
+                    <p className="text-sm text-gray-600">Military College Jhelum</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Advisory Board */}
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Advisory Board</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Major General Dr Muhammad Samrez Salik, HI (M), (Retd)</h5>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Zulfiqar Khan</h5>
+                  <p className="text-sm text-gray-600">Professor/Dean Faculty of Contemporary Studies, NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Zafar Iqbal Cheema</h5>
+                  <p className="text-sm text-gray-600">President, Strategic Vision Institute</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Rizwana Karim Abbasi</h5>
+                  <p className="text-sm text-gray-600">Professor International Relations, NUML</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Syed Waqas Ali Kausar</h5>
+                  <p className="text-sm text-gray-600">Professor/HOD Government & Public Policy, NUML</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Shaheen Akhtar</h5>
+                  <p className="text-sm text-gray-600">Professor International Relations, NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Muhammad Sheharyar Khan</h5>
+                  <p className="text-sm text-gray-600">Associate Professor International Relations, Iqra University</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Sumeera Imran</h5>
+                  <p className="text-sm text-gray-600">Assistant Professor International Relations, NDU</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Peer Review Committee */}
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Peer Review Committee</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Lubna Abid Ali</h5>
+                  <p className="text-sm text-gray-600">Dean Faculty of Contemporary Studies (FCS), NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Maria Saifuddin Effendi</h5>
+                  <p className="text-sm text-gray-600">Assistant Professor Peace & Conflict Studies, NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Brig Dr Saif Ur Rehman, TI (M), (Retd)</h5>
+                  <p className="text-sm text-gray-600">Regional Director NUML, Peshawar</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Muhammad Bashir Khan</h5>
+                  <p className="text-sm text-gray-600">Professor Govt & Public Policy, NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Muhammad Riaz Shad</h5>
+                  <p className="text-sm text-gray-600">Professor/Head of Department International Relations, NUML</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Asma Shakir Khawaja</h5>
+                  <p className="text-sm text-gray-600">Executive Director, CISS AJ&K</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Dr Rubina Waseem</h5>
+                  <p className="text-sm text-gray-600">Department of Strategic Studies, NDU</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Brig Dr Abdul Rauf</h5>
+                  <p className="text-sm text-gray-600">Director Special Plans, C&IT Br, GHQ</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded p-4">
+                  <h5 className="font-bold text-gray-900">Brig Dr Muhammad Farooq</h5>
+                  <p className="text-sm text-gray-600">Director B Wing, HRD Dte, GHQ</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
