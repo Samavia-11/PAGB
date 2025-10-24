@@ -256,7 +256,7 @@ export default function Home() {
 
       {/* Hero Section with Green Gradient, Military Image, and Text at Bottom */}
       <section className="relative h-[500px] md:h-[600px] overflow-hidden" style={{
-        background: 'linear-gradient(90deg,rgba(26, 51, 32, 1) 17%, rgba(26, 51, 32, 1) 17%, rgba(25, 92, 17, 1) 52%, rgba(5, 56, 2, 1) 73%, rgba(10, 48, 4, 1) 88%);'
+        background: 'linear-gradient(90deg,rgba(26, 51, 32, 1) 17%, rgba(26, 51, 32, 1) 17%, rgba(25, 92, 17, 1) 52%, rgba(5, 56, 2, 1) 73%, rgba(10, 48, 4, 1) 88%)'
       }}>
         {/* Military Image - Centered with Increased Height */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -708,7 +708,6 @@ export default function Home() {
                     {author.count}
                   </div>
                   <h3 className="font-serif font-bold text-green mb-1">{author.name}</h3>
-                  <p className="text-xs text-gray-500 mt-2">Articles: {author.count}</p>
                 </Link>
               ))}
             </div>

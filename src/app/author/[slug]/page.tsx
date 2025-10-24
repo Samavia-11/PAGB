@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FileText } from "lucide-react";
+import { useParams } from "next/navigation";
 
 interface Article {
   title: string;
@@ -14,16 +15,19 @@ interface Article {
   thumbnail: string;
 }
 
-export default function AuthorPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default function AuthorPage() {
+  const { slug: slugParam } = useParams<{ slug: string }>();
+  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    if (!slug) return;
     (async () => {
       try {
-        const res = await fetch(`/api/list-author-pdfs?author=${encodeURIComponent(slug)}`);
+        const authorName = decodeURIComponent(slug);
+        const res = await fetch(`/api/list-author-pdfs?author=${encodeURIComponent(authorName)}`);
         const data = await res.json();
         if (!cancelled && data.files) setArticles(data.files);
       } catch (e) {
@@ -37,7 +41,7 @@ export default function AuthorPage({ params }: { params: { slug: string } }) {
     };
   }, [slug]);
 
-  const displayName = decodeURIComponent(slug);
+  const displayName = slug ? decodeURIComponent(slug) : "";
 
   return (
     <div className="min-h-screen bg-white">
