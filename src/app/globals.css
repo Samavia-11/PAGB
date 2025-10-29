@@ -9,9 +9,9 @@
   --color-accent-orange-light: #FF7518;
   --color-accent-orange-dark: #C94F04;
   
-  /* Font families - using web safe fonts */
-  --font-serif: Georgia, 'Times New Roman', serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Font families - using Google Fonts */
+  --font-serif: var(--font-merriweather), Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-opensans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 :root {
