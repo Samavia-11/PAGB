@@ -21,8 +21,6 @@ export default function AdminDashboard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [homeDropdown, setHomeDropdown] = useState(false);
-  const [mediaDropdown, setMediaDropdown] = useState(false);
-  const [aboutDropdown, setAboutDropdown] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -59,6 +57,10 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('user');
     router.push('/login');
+  };
+
+  const handleCreateNewIssue = () => {
+    router.push('/administrator/current-issue/form');
   };
 
   if (loading) {
@@ -120,7 +122,7 @@ export default function AdminDashboard() {
             </li>
             
             <li>
-              <Link href="/administrator/current-issue" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
+              <Link href="/administrator/current-issue/display" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                 </svg>
@@ -164,79 +166,13 @@ export default function AdminDashboard() {
               </Link>
             </li>
 
-            {/* Media with Dropdown */}
             <li>
-              <div>
-                <button 
-                  onClick={() => setMediaDropdown(!mediaDropdown)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M3,3H21V7H3V3M4,8H20V21H4V8M9.5,11A0.5,0.5 0 0,0 9,11.5V13H15V11.5A0.5,0.5 0 0,0 14.5,11H9.5Z" />
-                    </svg>
-                    <span>Media</span>
-                  </div>
-                  <svg className={`w-4 h-4 transform transition-transform ${mediaDropdown ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
-                  </svg>
-                </button>
-                {mediaDropdown && (
-                  <div className="ml-6 mt-2 space-y-1">
-                    <Link href="/administrator/media/news" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      News
-                    </Link>
-                    <Link href="/administrator/media/events" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      Events
-                    </Link>
-                    <Link href="/administrator/media/gallery" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      Gallery
-                    </Link>
-                    <Link href="/administrator/media/publications" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      Publications
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </li>
-            
-            <li>
-              <Link href="/administrator/careers" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
+              <Link href="/administrator/about" className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-green-600 transition-colors">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                  <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z" />
                 </svg>
-                <span>Careers</span>
+                <span>About</span>
               </Link>
-            </li>
-
-            {/* About with Dropdown */}
-            <li>
-              <div>
-                <button 
-                  onClick={() => setAboutDropdown(!aboutDropdown)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z" />
-                    </svg>
-                    <span>About</span>
-                  </div>
-                  <svg className={`w-4 h-4 transform transition-transform ${aboutDropdown ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
-                  </svg>
-                </button>
-                {aboutDropdown && (
-                  <div className="ml-6 mt-2 space-y-1">
-                    <Link href="/administrator/about/mission" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      Our Mission
-                    </Link>
-                    <Link href="/administrator/about/contact" className="block px-4 py-2 text-sm text-green-200 hover:text-white hover:bg-green-600 rounded transition-colors">
-                      Contact Information
-                    </Link>
-                  </div>
-                )}
-              </div>
             </li>
           </ul>
         </nav>
@@ -507,14 +443,17 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button className="flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+              <button 
+                onClick={handleCreateNewIssue}
+                className="flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+              >
                 <span>📄</span>
                 <span>Create New Issue</span>
               </button>
-              <button className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              <Link href="/dashboard/admin/users" className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                 <span>👥</span>
                 <span>Manage Users</span>
-              </button>
+              </Link>
               <button className="flex items-center justify-center space-x-2 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors">
                 <span>⚙️</span>
                 <span>Journal Settings</span>

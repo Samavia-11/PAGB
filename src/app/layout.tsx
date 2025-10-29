@@ -2,18 +2,23 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Merriweather, Open_Sans } from 'next/font/google';
 
+// Load the fonts with the new recommended approach
 const merriweather = Merriweather({
   weight: ['400', '700', '900'],
   subsets: ['latin'],
-  variable: '--font-serif',
+  variable: '--font-merriweather',
   display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const openSans = Open_Sans({
   weight: ['400', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-opensans',
   display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
