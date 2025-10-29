@@ -35,6 +35,13 @@ export default function Dashboard() {
       setUser(parsedUser);
       fetchNotifications(parsedUser.id);
       fetchArticles(parsedUser.id, parsedUser.role);
+      
+      // Set up periodic refresh for notifications (every 30 seconds)
+      const notificationInterval = setInterval(() => {
+        fetchNotifications(parsedUser.id);
+      }, 30000);
+      
+      return () => clearInterval(notificationInterval);
     }
   }, []);
 
@@ -212,24 +219,56 @@ export default function Dashboard() {
           {/* Sidebar - Notifications */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Bell className="w-5 h-5 mr-2" />
-                Notifications
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold flex items-center">
+                  <Bell className="w-5 h-5 mr-2" />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </h2>
+                <button
+                  onClick={() => user && fetchNotifications(user.id)}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  title="Refresh notifications"
+                >
+                  Refresh
+                </button>
+              </div>
               <div className="space-y-3">
-                {notifications.slice(0, 10).map(notif => (
-                  <div
-                    key={notif.id}
-                    className={`p-3 rounded border ${notif.is_read ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'}`}
-                    onClick={() => !notif.is_read && markAsRead(notif.id)}
-                  >
-                    <h4 className="font-semibold text-sm">{notif.title}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(notif.created_at).toLocaleString()}
-                    </p>
+                {notifications.length === 0 ? (
+                  <div className="text-center text-gray-500 py-4">
+                    <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No notifications yet</p>
                   </div>
-                ))}
+                ) : (
+                  notifications.slice(0, 10).map(notif => (
+                    <div
+                      key={notif.id}
+                      className={`p-3 rounded border cursor-pointer transition-colors ${
+                        notif.type === 'editor_comments' 
+                          ? (notif.is_read ? 'bg-purple-50 border-purple-200' : 'bg-purple-100 border-purple-300')
+                          : (notif.is_read ? 'bg-gray-50' : 'bg-blue-50 border-blue-200')
+                      }`}
+                      onClick={() => !notif.is_read && markAsRead(notif.id)}
+                    >
+                      <div className="flex items-start space-x-2">
+                        {notif.type === 'editor_comments' && (
+                          <Send className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm">{notif.title}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(notif.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
