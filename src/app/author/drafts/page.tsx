@@ -28,7 +28,7 @@ export default function DraftsPage(){
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Draft Articles</h1>
-        <a href="/author/submit" className="px-3 py-2 bg-blue-600 text-white rounded">Submit New</a>
+        <a href="/Author/submit" className="px-3 py-2 bg-blue-600 text-white rounded">Submit New</a>
       </div>
       <div className="bg-white rounded shadow divide-y">
         {drafts.length===0 && <div className="p-6 text-gray-500">No drafts yet</div>}
@@ -39,7 +39,7 @@ export default function DraftsPage(){
               <div className="text-xs text-gray-500">Updated {new Date(a.updated_at).toLocaleString()}</div>
             </div>
             <div className="flex gap-2">
-              <a className="px-3 py-1 border rounded" href={`/author/submit?edit=${a.id}`}>Edit</a>
+              <a className="px-3 py-1 border rounded" href={`/Author/drafts/${a.id}`}>Edit</a>
             </div>
           </div>
         ))}
