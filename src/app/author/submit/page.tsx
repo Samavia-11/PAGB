@@ -1,15 +1,12 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface AuthorInput { name: string; email: string; role: 'Main Author' | 'Co-Author'; contact?: string; affiliation: string; }
 
 export default function SubmitArticlePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
   const [user, setUser] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [authors, setAuthors] = useState<AuthorInput[]>([{ name: '', email: '', role: 'Main Author', contact: '', affiliation: '' }]);
 
@@ -36,66 +33,8 @@ export default function SubmitArticlePage() {
 
   useEffect(() => {
     const u = localStorage.getItem('user');
-    if (u) {
-      setUser(JSON.parse(u));
-      // Load draft data if editing
-      if (editId) {
-        setIsEditing(true);
-        loadDraftData(editId, JSON.parse(u));
-      }
-    }
-  }, [editId]);
-
-  const loadDraftData = async (draftId: string, user: any) => {
-    try {
-      const res = await fetch(`/api/articles/${draftId}`, {
-        headers: { 'x-user-id': String(user.id), 'x-user-role': 'author' }
-      });
-      if (!res.ok) throw new Error('Failed to load draft');
-      
-      const data = await res.json();
-      const article = data.article;
-      
-      // Populate form fields
-      setTitle(article.title || '');
-      
-      // Parse content if it exists
-      if (article.content) {
-        try {
-          const content = JSON.parse(article.content);
-          
-          // Set authors
-          if (content.authors && Array.isArray(content.authors)) {
-            setAuthors(content.authors);
-          }
-          
-          // Set manuscript data
-          if (content.manuscript) {
-            const ms = content.manuscript;
-            setArticleType(ms.articleType || '');
-            setAbstractText(ms.abstractText || '');
-            setKeywordList(ms.keywordList || []);
-            setArticleContent(ms.articleContent || '');
-            setFileName(ms.fileName || '');
-            
-            // Set declarations
-            setCoverLetter(ms.coverLetter || '');
-            setConflict(ms.conflict || '');
-            setFunding(ms.funding || '');
-            setDisclaimer(ms.disclaimer || '');
-            setEthicsOk(ms.ethicsOk || false);
-            setLicenseOk(ms.licenseOk || false);
-            setCoverLetterFileName(ms.coverLetterFileName || '');
-          }
-        } catch (e) {
-          console.error('Error parsing article content:', e);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading draft:', error);
-      alert('Failed to load draft data');
-    }
-  };
+    if (u) setUser(JSON.parse(u));
+  }, []);
 
   const addAuthor = () => setAuthors(a => [...a, { name: '', email: '', role: 'Co-Author', contact: '', affiliation: '' }]);
   const updateAuthor = (idx: number, field: keyof AuthorInput, value: string) => setAuthors(a => a.map((x,i)=> i===idx ? { ...x, [field]: value } as any : x));
@@ -168,43 +107,33 @@ export default function SubmitArticlePage() {
     if (!validateAffiliations()) return alert('Affiliation is mandatory for all authors and co-authors.');
     setSaving(true);
     try {
-      const method = isEditing ? 'PUT' : 'POST';
-      const url = isEditing ? `/api/articles/${editId}` : '/api/articles';
-      
-      const res = await fetch(url, { 
-        method, 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({
-          title,
-          content: JSON.stringify({
-            authors: filteredAuthors(),
-            manuscript: {
-              articleType,
-              abstractText,
-              keywordList,
-              articleContent,
-              fileName,
-              coverLetter,
-              conflict,
-              funding,
-              disclaimer,
-              ethicsOk,
-              licenseOk,
-              coverLetterFileName
-            }
-          }),
-          author_id: user.id
-        })
-      });
+      const res = await fetch('/api/articles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        title,
+        content: JSON.stringify({
+          authors: filteredAuthors(),
+          manuscript: {
+            articleType,
+            abstract: abstractText,
+            keywords: keywordList,
+            content: articleContent,
+            fileName
+          },
+          declarations: {
+            coverLetter,
+            conflict,
+            funding,
+            disclaimer,
+            ethicsOk,
+            licenseOk,
+            coverLetterFileName
+          }
+        }),
+        author_id: user.id
+      })});
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      alert(isEditing ? 'Draft updated' : 'Draft saved');
-      
-      if (isEditing) {
-        router.push('/author/drafts');
-      } else {
-        router.push(`/author/submit?edit=${data.id}`);
-      }
+      alert('Draft saved');
+      router.push(`/Author/drafts/${data.id}`);
     } catch (e:any) { alert(e.message || 'Failed to save draft'); }
     finally { setSaving(false); }
   };
@@ -214,81 +143,39 @@ export default function SubmitArticlePage() {
     if (!title) return alert('Title is required');
     const v = validateSubmit();
     if (v) return alert(v);
-    
+    // First create draft, then submit workflow
     setSaving(true);
     try {
-      let articleId = editId;
-      
-      // If editing, update the existing draft, otherwise create new
-      if (isEditing) {
-        const res = await fetch(`/api/articles/${editId}`, { 
-          method: 'PUT', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({
-            title,
-            content: JSON.stringify({
-              authors: filteredAuthors(),
-              manuscript: {
-                articleType,
-                abstractText,
-                keywordList,
-                articleContent,
-                fileName,
-                coverLetter,
-                conflict,
-                funding,
-                disclaimer,
-                ethicsOk,
-                licenseOk,
-                coverLetterFileName
-              }
-            }),
-            author_id: user.id
-          })
-        });
-        if (!res.ok) throw new Error('Failed to update draft');
-      } else {
-        // Create new article
-        const res = await fetch('/api/articles', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({
-            title,
-            content: JSON.stringify({
-              authors: filteredAuthors(),
-              manuscript: {
-                articleType,
-                abstractText,
-                keywordList,
-                articleContent,
-                fileName,
-                coverLetter,
-                conflict,
-                funding,
-                disclaimer,
-                ethicsOk,
-                licenseOk,
-                coverLetterFileName
-              }
-            }),
-            author_id: user.id
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to create');
-        articleId = data.id;
-      }
+      const res = await fetch('/api/articles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        title,
+        content: JSON.stringify({
+          authors: filteredAuthors(),
+          manuscript: {
+            articleType,
+            abstract: abstractText,
+            keywords: keywordList,
+            content: articleContent,
+            fileName
+          },
+          declarations: {
+            coverLetter,
+            conflict,
+            funding,
+            disclaimer,
+            ethicsOk,
+            licenseOk
+          }
+        }),
+        author_id: user.id
+      })});
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create');
 
-      // Submit workflow
-      await fetch(`/api/articles/${articleId}/workflow`, { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({
-          action: 'submit', from_user_id: user.id, from_role: 'author'
-        })
-      });
+      await fetch(`/api/articles/${data.id}/workflow`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        action: 'submit', from_user_id: user.id, from_role: 'author'
+      })});
       alert('Article submitted');
-      router.push('/author/dashboard');
+      router.push('/Author/dashboard');
     } catch (e:any) { alert(e.message || 'Failed to submit'); }
     finally { setSaving(false); }
   };
@@ -299,8 +186,6 @@ export default function SubmitArticlePage() {
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold">{isEditing ? 'Edit Article' : 'Submit New Article'}</h1>
-      
       <div className="bg-blue-50 border border-blue-200 p-4 rounded">
         <h2 className="font-semibold mb-2">Submission Guidelines</h2>
         <ul className="list-disc ml-6 text-sm">
@@ -461,12 +346,10 @@ export default function SubmitArticlePage() {
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60"
           >
-            {isEditing ? 'Update & Submit' : 'Submit Article'}
+            Submit Article
           </button>
-          <button disabled={saving} onClick={saveDraft} className="px-4 py-2 bg-gray-200 rounded">
-            {isEditing ? 'Update Draft' : 'Save Draft'}
-          </button>
-          <a href="/author/dashboard" className="px-4 py-2 bg-gray-100 rounded border">Cancel</a>
+          <button disabled={saving} onClick={saveDraft} className="px-4 py-2 bg-gray-200 rounded">Save Draft</button>
+          <a href="/Author/dashboard" className="px-4 py-2 bg-gray-100 rounded border">Cancel</a>
         </div>
       </div>
       {/* Confirmation Modal */}
@@ -474,8 +357,8 @@ export default function SubmitArticlePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmOpen(false)} />
           <div className="relative bg-white rounded shadow-lg w-full max-w-md mx-4 p-5">
-            <h3 className="text-lg font-semibold mb-1">{isEditing ? 'Update & Submit Article' : 'Submit Article'}</h3>
-            <p className="text-sm text-gray-700 mb-4">Are you sure you want to {isEditing ? 'update and submit' : 'submit'} the article?</p>
+            <h3 className="text-lg font-semibold mb-1">Submit Article</h3>
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to submit the article?</p>
             <div className="flex justify-end gap-2">
               <button onClick={() => setConfirmOpen(false)} className="px-4 py-2 rounded border bg-gray-50">No</button>
               <button onClick={() => { setConfirmOpen(false); submitNow(); }} className="px-4 py-2 rounded bg-blue-600 text-white">Yes, Submit</button>
