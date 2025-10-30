@@ -240,7 +240,8 @@ export default function EditArticle() {
     });
     
     try {
-      const response = await fetch(`/api/articles/${articleId}/comments`, {
+      // Use the simple comments API that works without database
+      const response = await fetch(`/api/articles/${articleId}/simple-comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -258,6 +259,27 @@ export default function EditArticle() {
       console.log('Response data:', responseData);
 
       if (response.ok) {
+        // Store the comment in localStorage for the author to see
+        const notification = {
+          id: Date.now(),
+          type: 'editor_comment',
+          title: `Editor Comments on "${article?.title}"`,
+          message: comments,
+          article_id: articleId,
+          from_user: user.full_name || user.username,
+          from_role: user.role,
+          created_at: new Date().toISOString(),
+          is_read: false
+        };
+        
+        // Get existing notifications from localStorage
+        const existingNotifications = JSON.parse(localStorage.getItem('author_notifications') || '[]');
+        existingNotifications.unshift(notification);
+        
+        // Keep only the last 50 notifications
+        const updatedNotifications = existingNotifications.slice(0, 50);
+        localStorage.setItem('author_notifications', JSON.stringify(updatedNotifications));
+        
         alert('Comments sent to author successfully!');
         setComments(''); // Clear the comments after sending
       } else {

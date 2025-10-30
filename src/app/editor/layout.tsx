@@ -76,7 +76,7 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
   const NavLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const active = pathname === href;
     return (
-      <Link href={href} className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${active ? 'bg-blue-900/60 text-white' : 'text-blue-50 hover:bg-blue-900/30'}`}>
+      <Link href={href} className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${active ? 'bg-green-900/60 text-white' : 'text-green-50 hover:bg-green-900/30'}`}>
         <Icon className="w-4 h-4" />
         <span>{label}</span>
       </Link>
@@ -86,9 +86,9 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <aside className={`bg-blue-800 text-white transition-all duration-200 ${open ? 'w-64' : 'w-16'} hidden md:flex flex-col md:sticky md:top-0 md:h-screen overflow-hidden`}>
-        <div className="h-14 flex items-center px-3 border-b border-blue-700/60">
-          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-blue-900/40 mr-2">
+      <aside className={`bg-green-800 text-white transition-all duration-200 ${open ? 'w-64' : 'w-16'} hidden md:flex flex-col md:sticky md:top-0 md:h-screen overflow-hidden`}>
+        <div className="h-14 flex items-center px-3 border-b border-green-700/60">
+          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-green-900/40 mr-2">
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           {open && <span className="font-semibold">PAGB Journal</span>}
@@ -99,19 +99,19 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
           <NavLink href="/editor/published" icon={FileCheck} label="Published" />
           <NavLink href="/editor/settings" icon={Settings} label="Settings" />
         </nav>
-        <div className="p-3 mt-auto border-t border-blue-700/60">
+        <div className="p-3 mt-auto border-t border-green-700/60">
           {user && (
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-blue-900/50 flex items-center justify-center font-semibold text-blue-50">
+              <div className="w-9 h-9 rounded-full bg-green-900/50 flex items-center justify-center font-semibold text-green-50">
                 {(user.fullName || user.username || 'E').toString().charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <div className="font-semibold truncate">{user.fullName || user.username}</div>
-                <div className="text-[11px] text-blue-100/80 capitalize">{user.role || 'editor'}</div>
+                <div className="text-[11px] text-green-100/80 capitalize">{user.role || 'editor'}</div>
               </div>
             </div>
           )}
-          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm bg-blue-900/30 hover:bg-blue-900/40 border border-blue-700/60">
+          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm bg-green-900/30 hover:bg-green-900/40 border border-green-700/60">
             <LogOut className="w-4 h-4" />
             <span>Logout</span>
           </button>
@@ -121,8 +121,8 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-14 bg-blue-800 text-white flex items-center px-3 md:px-5 gap-3 shadow">
-          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-blue-900/40 md:hidden">
+        <header className="h-14 bg-green-800 text-white flex items-center px-3 md:px-5 gap-3 shadow">
+          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-green-900/40 md:hidden">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1 max-w-2xl">
@@ -131,15 +131,15 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search articles, authors, keywords..."
-                className="w-full bg-blue-900/40 placeholder-blue-100/70 text-white rounded pl-9 pr-3 py-2 text-sm outline-none border border-blue-700/60 focus:border-blue-400"
+                className="w-full bg-green-900/40 placeholder-green-100/70 text-white rounded pl-9 pr-3 py-2 text-sm outline-none border border-green-700/60 focus:border-green-400"
               />
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-100" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-green-100" />
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-blue-100 hover:text-white"
+              className="relative p-2 text-green-100 hover:text-white"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -168,7 +168,7 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                   <div
                     key={notif.id}
                     onClick={() => !notif.is_read && markAsRead(notif.id)}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-blue-50' : ''}`}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-green-50' : ''}`}
                   >
                     <h4 className="text-sm font-semibold">{notif.title}</h4>
                     <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
