@@ -180,7 +180,7 @@ export default function AuthorDashboard(){
         <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
           <h3 className="font-semibold mb-3">Quick Actions</h3>
           <div className="flex gap-3">
-            <a href="/Author/submit" className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-sky-600 text-white shadow-sm">
+            <a href="/author/submit" className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-sky-600 text-white shadow-sm">
               <span className="inline-block w-2 h-2 rounded-full bg-white/80" />
               Submit New Article
             </a>
@@ -209,7 +209,7 @@ export default function AuthorDashboard(){
                   <div className="text-5xl mb-2">🗂️</div>
                   <div className="font-medium">No articles yet</div>
                   <div className="text-sm mb-4">Get started by submitting your first article to the journal.</div>
-                  <a href="/Author/submit" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">Submit Your First Article</a>
+                  <a href="/author/submit" className="inline-block px-4 py-2 bg-blue-600 text-white rounded">Submit Your First Article</a>
                 </div>
               )}
               {articles.map(a=> (
@@ -218,7 +218,7 @@ export default function AuthorDashboard(){
                   <div className="md:col-span-2 text-sm capitalize">{a.status.replace('_',' ')}</div>
                   <div className="md:col-span-2 text-sm text-gray-500">{new Date(a.created_at).toLocaleDateString()}</div>
                   <div className="md:col-span-2 md:text-right">
-                    {a.status==='draft' && <a className="px-3 py-1 border rounded mr-2" href={`/Author/drafts/${a.id}`}>Edit</a>}
+                    {a.status==='draft' && <a className="px-3 py-1 border rounded mr-2" href={`/author/submit?edit=${a.id}`}>Edit</a>}
                     <a className="px-3 py-1 border rounded" href="/dashboard">Open</a>
                   </div>
                 </div>
