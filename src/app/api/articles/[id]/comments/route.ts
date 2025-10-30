@@ -72,7 +72,7 @@ export async function POST(
     
     await query(sql, [
       author.id,
-      'editor_comments',
+      'comment_added',
       notificationTitle,
       notificationMessage,
       articleId,

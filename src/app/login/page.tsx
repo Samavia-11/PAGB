@@ -163,7 +163,7 @@ export default function LoginPage() {
                 {/* Father Name */}
                 <div>
                   <label htmlFor="fatherName" className="block text-xs font-medium text-gray-700 mb-1">
-                    Father's Name *
+                    Father&apos;s Name *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -434,7 +434,7 @@ export default function LoginPage() {
               {/* Toggle Link */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button
                     type="button"
                     onClick={() => setIsSignUp(true)}

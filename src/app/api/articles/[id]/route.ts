@@ -4,7 +4,11 @@ import { query } from '@/lib/db';
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
-    const rows: any = await query('SELECT * FROM articles WHERE id = ?', [id]);
+    const sql = `SELECT a.*, u.full_name as author_name 
+                 FROM articles a 
+                 JOIN users u ON a.author_id = u.id 
+                 WHERE a.id = ?`;
+    const rows: any = await query(sql, [id]);
     if (!rows || rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ article: rows[0] });
   } catch (e) {
