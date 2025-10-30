@@ -52,7 +52,7 @@ export default function EditDraftPage(){
     await save();
     await fetch(`/api/articles/${articleId}/workflow`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'submit', from_user_id: user?.id, from_role: 'author' })});
     alert('Submitted');
-    router.push('/Author/dashboard');
+    router.push('/author/dashboard');
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -93,7 +93,7 @@ export default function EditDraftPage(){
         <div className="flex gap-2">
           <button onClick={save} className="px-4 py-2 bg-gray-200 rounded">Save</button>
           <button onClick={submit} className="px-4 py-2 bg-blue-600 text-white rounded">Submit</button>
-          <a href="/Author/drafts" className="px-4 py-2 border rounded">Back</a>
+          <a href="/author/drafts" className="px-4 py-2 border rounded">Back</a>
         </div>
       </div>
     </div>
