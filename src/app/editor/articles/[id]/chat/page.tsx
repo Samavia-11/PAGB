@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Send, User, Clock, Eye, MessageSquare, Phone, Video, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Send, User, Eye, MessageSquare, FileText, Download, Image, File, Paperclip } from 'lucide-react';
 
 interface Message {
   id: string;
