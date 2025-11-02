@@ -200,7 +200,7 @@ async function createNotifications(articleId: number, senderId: number, senderRo
         type: 'reviewer_message',
         title: `Reviewer Message on "${article.title}"`,
         message: notificationMessage,
-        action_url: `/author/articles/${articleId}/chat`
+        action_url: `/Author/articles/${articleId}/chat`
       });
       
       // Find editors (assuming role-based notification)
@@ -237,7 +237,7 @@ async function createNotifications(articleId: number, senderId: number, senderRo
         type: 'editor_message',
         title: `Editor Message on "${article.title}"`,
         message: notificationMessage,
-        action_url: `/author/articles/${articleId}/chat`
+        action_url: `/Author/articles/${articleId}/chat`
       });
       
       const reviewersQuery = 'SELECT id FROM users WHERE role = "reviewer"';

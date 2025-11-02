@@ -374,7 +374,7 @@ Alternative paths:
 - Edit/Delete actions
 - Filter by status
 
-### **6. Create Article (`/author/articles/new`)**
+### **6. Create Article (`/Author/articles/new`)**
 **Purpose:** New article submission
 **Features:**
 - Title input
@@ -383,7 +383,7 @@ Alternative paths:
 - Submit for review
 - Form validation
 
-### **7. Edit Article (`/author/articles/edit/[id]`)**
+### **7. Edit Article (`/Author/articles/edit/[id]`)**
 **Purpose:** Edit existing article
 **Features:**
 - Load existing content

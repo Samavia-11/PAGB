@@ -392,7 +392,7 @@ export default function ArticleView() {
                 
                 {article.status === 'draft' && (
                   <a
-                    href={`/author/drafts/${article.id}`}
+                    href={`/Author/drafts/${article.id}`}
                     className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <FileText className="w-4 h-4 mr-2" />
