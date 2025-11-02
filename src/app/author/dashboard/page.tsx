@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Bell, FileText, CheckCircle, XCircle, Clock, Send, PlusCircle, Eye, BarChart3, TrendingUp, MessageSquare } from 'lucide-react';
 
 interface Article { 
@@ -320,27 +321,27 @@ export default function AuthorDashboard() {
                         </div>
                       </div>
                       <div className="mt-3 flex space-x-2">
-                        <a
-                          href={`/author/articles/${article.id}`}
+                        <Link
+                          href={`/Author/articles/${article.id}`}
                           className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                         >
                           <Eye className="w-4 h-4 mr-1" />
                           View
-                        </a>
-                        <a
-                          href={`/author/articles/${article.id}/chat`}
+                        </Link>
+                        <Link
+                          href={`/Author/articles/${article.id}/chat`}
                           className="flex items-center px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
                         >
                           <MessageSquare className="w-4 h-4 mr-1" />
                           Chat
-                        </a>
+                        </Link>
                         {article.status === 'draft' && (
-                          <a
-                            href={`/author/drafts/${article.id}`}
+                          <Link
+                            href={`/Author/drafts/${article.id}`}
                             className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
                           >
                             Edit
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </div>
