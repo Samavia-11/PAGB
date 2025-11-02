@@ -966,7 +966,7 @@ export default function Home() {
               <h4 className="font-serif font-bold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/about" className="text-gray-300 hover:text-white transition-colors">About PAGB</Link></li>
-                <li><Link href="/authors" className="text-gray-300 hover:text-white transition-colors">For Authors</Link></li>
+                <li><Link href="/Authors" className="text-gray-300 hover:text-white transition-colors">For Authors</Link></li>
                 <li><Link href="/reviewers" className="text-gray-300 hover:text-white transition-colors">For Reviewers</Link></li>
                 <li><Link href="/faq" className="text-gray-300 hover:text-white transition-colors">FAQ</Link></li>
                 <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact Us</Link></li>

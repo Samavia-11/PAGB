@@ -193,7 +193,7 @@ export default function AuthorArticleChat() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link
-              href="/author/dashboard"
+              href="/Author/dashboard"
               className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

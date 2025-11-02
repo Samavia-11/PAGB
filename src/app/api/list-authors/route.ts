@@ -34,7 +34,7 @@ export async function GET() {
         if (authorRaw) {
           const key = normalize(authorRaw);
           if (!authorPdfs[key]) {
-            authorPdfs[key] = `/authorsname/${encodeURIComponent(ent.name)}`;
+            authorPdfs[key] = `/Authorsname/${encodeURIComponent(ent.name)}`;
           }
         }
       }

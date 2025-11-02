@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         const parts = nameNoExt.split('___');
         const derivedAuthor = (parts.length > 1 ? parts[1] : nameNoExt).trim();
         const title = nameNoExt;
-        const url = `/authorsname/${encodeURIComponent(filename)}`;
+        const url = `/Authorsname/${encodeURIComponent(filename)}`;
         return { filename, title, author: derivedAuthor, url };
       });
 
