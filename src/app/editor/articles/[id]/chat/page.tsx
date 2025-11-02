@@ -1,8 +1,19 @@
 "use client";
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+<<<<<<< HEAD
 import { ArrowLeft, Send, User, Clock, Eye, MessageSquare, Phone, Video, MoreVertical, Paperclip, FileText, Download, X } from 'lucide-react';
+=======
+import { ArrowLeft, Send, User, Eye, MessageSquare, FileText, Download, Image, File, Paperclip } from 'lucide-react';
+
+interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+}
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
 
 interface Message {
   id: string;
@@ -12,12 +23,16 @@ interface Message {
   message: string;
   timestamp: string;
   read: boolean;
+<<<<<<< HEAD
   attachment?: {
     type: 'pdf';
     name: string;
     url: string;
     size: number;
   };
+=======
+  attachment?: FileAttachment;
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
 }
 
 interface Article {
@@ -38,7 +53,11 @@ export default function EditorAuthorChat() {
   const [sending, setSending] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+<<<<<<< HEAD
   const [uploading, setUploading] = useState(false);
+=======
+  const fileInputRef = useRef<HTMLInputElement>(null);
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +129,7 @@ export default function EditorAuthorChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+<<<<<<< HEAD
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
@@ -141,21 +161,94 @@ export default function EditorAuthorChat() {
         localStorage.setItem(fileKey, base64);
         resolve(fileKey);
       };
+=======
+  const uploadFile = async (file: File): Promise<string> => {
+    // Convert file to base64 for local storage
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Store in localStorage with a unique key
+        const fileKey = `file_${Date.now()}_${file.name}`;
+        console.log('Storing file with key:', fileKey);
+        localStorage.setItem(fileKey, base64String);
+        console.log('File stored successfully');
+        resolve(fileKey);
+      };
+      reader.onerror = reject;
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
       reader.readAsDataURL(file);
     });
   };
 
+<<<<<<< HEAD
+=======
+  const handleFileDownload = (attachment: FileAttachment) => {
+    console.log('Attempting to download file:', attachment);
+    console.log('Looking for key:', attachment.url);
+    
+    // Retrieve file from localStorage
+    const fileData = localStorage.getItem(attachment.url);
+    console.log('File data found:', fileData ? 'Yes' : 'No');
+    
+    if (fileData) {
+      // Create a download link
+      const link = document.createElement('a');
+      link.href = fileData;
+      link.download = attachment.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Check all localStorage keys to debug
+      console.log('All localStorage keys:', Object.keys(localStorage));
+      alert('File not found. It may have been deleted.');
+    }
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      
+      // Check file type (allow PDF, DOC, DOCX, TXT)
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid file type (PDF, DOC, DOCX, or TXT)');
+        return;
+      }
+      
+      setSelectedFile(file);
+      
+      // Reset the input value to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || sending) return;
 
     setSending(true);
     setUploading(!!selectedFile);
     
+<<<<<<< HEAD
     let attachment = undefined;
+=======
+    let attachment: FileAttachment | undefined;
+    
+    // Handle file upload if a file is selected
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
     if (selectedFile) {
       try {
         const fileUrl = await uploadFile(selectedFile);
         attachment = {
+<<<<<<< HEAD
           type: 'pdf' as const,
           name: selectedFile.name,
           url: fileUrl,
@@ -169,6 +262,21 @@ export default function EditorAuthorChat() {
       }
     }
 
+=======
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size,
+          url: fileUrl
+        };
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Failed to upload file. Please try again.');
+        setSending(false);
+        return;
+      }
+    }
+    
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
     const message: Message = {
       id: Date.now().toString(),
       sender: user.id.toString(),
@@ -180,6 +288,7 @@ export default function EditorAuthorChat() {
       attachment
     };
 
+    console.log('Saving message with attachment:', message);
     const updatedMessages = [...messages, message];
     saveMessages(updatedMessages);
 
@@ -188,13 +297,23 @@ export default function EditorAuthorChat() {
       id: Date.now(),
       type: 'editor_chat',
       title: `New message from Editor`,
+<<<<<<< HEAD
       message: attachment ? `Shared a PDF: ${attachment.name}` : newMessage.trim(),
+=======
+      message: newMessage.trim() || (selectedFile ? `Sent a file: ${selectedFile.name}` : ''),
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
       article_id: params.id,
       article_title: article?.title,
       from_user: user.full_name || user.username,
       from_role: user.role,
       created_at: new Date().toISOString(),
-      is_read: false
+      is_read: false,
+      attachment: attachment ? {
+        name: attachment.name,
+        type: attachment.type,
+        size: attachment.size,
+        url: attachment.url
+      } : undefined
     };
 
     const existingNotifications = JSON.parse(localStorage.getItem('author_notifications') || '[]');
@@ -203,9 +322,12 @@ export default function EditorAuthorChat() {
 
     setNewMessage('');
     setSelectedFile(null);
+<<<<<<< HEAD
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+=======
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
     setSending(false);
     setUploading(false);
   };
@@ -296,18 +418,6 @@ export default function EditorAuthorChat() {
               <Eye className="w-4 h-4 mr-2" />
               View Article
             </Link>
-            
-            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
-              <Phone className="w-5 h-5" />
-            </button>
-            
-            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
-              <Video className="w-5 h-5" />
-            </button>
-            
-            <button className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors">
-              <MoreVertical className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </header>
@@ -353,6 +463,7 @@ export default function EditorAuthorChat() {
                     ? 'bg-blue-600 text-white'
                     : 'bg-white border border-gray-200 text-gray-900'
                 }`}>
+<<<<<<< HEAD
                   {message.message && <p className="text-sm">{message.message}</p>}
                   
                   {message.attachment && (
@@ -368,6 +479,22 @@ export default function EditorAuthorChat() {
                           }`} />
                           <div>
                             <p className={`text-xs font-medium ${
+=======
+                  {message.message && <p className="text-sm mb-2">{message.message}</p>}
+                  {message.attachment && (
+                    <div className={`mt-2 p-3 rounded-lg border-2 ${
+                      message.senderRole === 'editor'
+                        ? 'bg-blue-500 border-blue-300'
+                        : 'bg-gray-50 border-gray-300'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center flex-1 min-w-0">
+                          <FileText className={`w-5 h-5 mr-2 flex-shrink-0 ${
+                            message.senderRole === 'editor' ? 'text-white' : 'text-blue-600'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium truncate ${
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
                               message.senderRole === 'editor' ? 'text-white' : 'text-gray-900'
                             }`}>
                               {message.attachment.name}
@@ -375,11 +502,16 @@ export default function EditorAuthorChat() {
                             <p className={`text-xs ${
                               message.senderRole === 'editor' ? 'text-blue-100' : 'text-gray-500'
                             }`}>
+<<<<<<< HEAD
                               {formatFileSize(message.attachment.size)}
+=======
+                              {Math.round(message.attachment.size / 1024)} KB
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
                             </p>
                           </div>
                         </div>
                         <button
+<<<<<<< HEAD
                           onClick={() => handleDownloadFile(message.attachment!)}
                           className={`p-1 rounded hover:bg-opacity-80 ${
                             message.senderRole === 'editor'
@@ -387,6 +519,13 @@ export default function EditorAuthorChat() {
                               : 'text-gray-600 hover:bg-gray-200'
                           }`}
                           title="Download PDF"
+=======
+                          onClick={() => handleFileDownload(message.attachment!)}
+                          className={`ml-2 p-1.5 rounded hover:bg-opacity-20 hover:bg-black transition-colors ${
+                            message.senderRole === 'editor' ? 'text-white' : 'text-blue-600'
+                          }`}
+                          title="Download file"
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
                         >
                           <Download className="w-4 h-4" />
                         </button>
@@ -426,6 +565,7 @@ export default function EditorAuthorChat() {
 
       {/* Message Input */}
       <div className="bg-white border-t border-gray-200 p-4">
+<<<<<<< HEAD
         {/* File Preview */}
         {selectedFile && (
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -448,7 +588,23 @@ export default function EditorAuthorChat() {
           </div>
         )}
         
+=======
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        />
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
         <div className="flex items-end space-x-3">
+          <button
+            onClick={handleAttachClick}
+            className="p-2 text-gray-600 hover:text-blue-600 rounded-full hover:bg-gray-100 transition-colors"
+            title="Attach file"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
           <div className="flex-1">
             <div className="relative">
               <textarea
@@ -481,9 +637,27 @@ export default function EditorAuthorChat() {
             </div>
           </div>
           
+          {selectedFile && (
+            <div className="flex items-center text-sm text-gray-600 mr-2 bg-blue-50 rounded-lg px-3 py-1">
+              <FileText className="w-4 h-4 mr-2 text-blue-600" />
+              <span className="truncate max-w-xs">{selectedFile.name}</span>
+              <button 
+                onClick={() => setSelectedFile(null)}
+                className="ml-2 text-gray-400 hover:text-gray-600"
+                title="Remove file"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+          
           <button
             onClick={handleSendMessage}
+<<<<<<< HEAD
             disabled={(!newMessage.trim() && !selectedFile) || sending || uploading}
+=======
+            disabled={(!newMessage.trim() && !selectedFile) || sending}
+>>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
             className={`p-3 rounded-full transition-colors ${
               (newMessage.trim() || selectedFile) && !sending && !uploading
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
