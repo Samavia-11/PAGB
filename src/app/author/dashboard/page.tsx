@@ -237,7 +237,7 @@ export default function AuthorDashboard() {
               My Articles
             </h2>
             <a
-              href="/author/submit"
+              href="/Author/submit"
               className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               <PlusCircle className="w-4 h-4 mr-2" />
@@ -251,7 +251,7 @@ export default function AuthorDashboard() {
                 <p className="font-medium mb-2">No articles yet</p>
                 <p className="text-sm mb-4">Get started by submitting your first article to the journal.</p>
                 <a
-                  href="/author/submit"
+                  href="/Author/submit"
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   <PlusCircle className="w-4 h-4 mr-2" />

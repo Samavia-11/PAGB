@@ -39,6 +39,6 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ success: true, id: result.insertId });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create article' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create article' + error}, { status: 500 });
   }
 }
