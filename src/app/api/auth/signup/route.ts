@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,23 +23,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For demo purposes, simulate successful registration
-    // In a real app, you would save to database here
-    console.log('New user registration:', {
-      username,
-      fullName,
-      fatherName,
-      cnic,
-      contactNumber,
-      qualification,
-      role
-    });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate email from username
+    const email = `${username}@pagb.com`;
 
-    // Create user data
+    // Check if username already exists
+    const existingUser = await query(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    ) as any[];
+
+    if (existingUser.length > 0) {
+      return NextResponse.json(
+        { message: 'Username or email already exists' },
+        { status: 409 }
+      );
+    }
+
+    // Insert user into database
+    const result = await query(
+      'INSERT INTO users (username, email, password, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+      [username, email, hashedPassword, fullName, role]
+    ) as any;
+
+    // Create user data for response
     const userData = {
-      id: Math.floor(Math.random() * 1000) + 100, // Mock ID
+      id: result.insertId,
       username,
-      email: `${username}@pagb.com`, // Mock email
+      email,
       fullName,
       role,
     };
@@ -50,8 +64,17 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Signup error:', error);
+    
+    // Handle specific database errors
+    if (error.code === 'ER_DUP_ENTRY') {
+      return NextResponse.json(
+        { message: 'Username or email already exists' },
+        { status: 409 }
+      );
+    }
+    
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
