@@ -64,7 +64,7 @@ export default function PendingReviews() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[forestgreen] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function PendingReviews() {
                   <div className="flex-1">
                     <Link href={`/reviewer/articles/${article.id}`} className="block">
                       <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-medium text-gray-900 hover:text-purple-600">
+                        <h3 className="text-lg font-medium text-gray-900 hover:text-[forestgreen]">
                           {article.title}
                         </h3>
                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
@@ -136,7 +136,7 @@ export default function PendingReviews() {
                   <div className="ml-4">
                     <Link
                       href={`/reviewer/articles/${article.id}`}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                      className="px-4 py-2 bg-[forestgreen] text-white rounded-lg hover:bg-[#1d7a1d] transition-colors text-sm"
                     >
                       Start Review
                     </Link>

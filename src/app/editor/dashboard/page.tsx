@@ -238,7 +238,7 @@ export default function EditorDashboard() {
 
       <div className="container mx-auto p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-blue-100 text-blue-700 flex items-center justify-center">
               <FileText className="w-5 h-5" />
@@ -248,16 +248,7 @@ export default function EditorDashboard() {
               <div className="text-2xl font-bold">{articles.filter(a => a.status === 'submitted' || a.status === 'under_review').length}</div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-purple-100 text-purple-700 flex items-center justify-center">
-              <Edit className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-gray-500 text-sm">Editorial</div>
-              <div className="text-2xl font-bold">{articles.filter(a => a.status === 'with_editor' || a.status === 'reviewed').length}</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
+          <Link href="/editor/reviewers" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
             <div className="w-9 h-9 rounded bg-orange-100 text-orange-700 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
@@ -265,7 +256,7 @@ export default function EditorDashboard() {
               <div className="text-gray-500 text-sm">Reviewers</div>
               <div className="text-2xl font-bold">{reviewers.length}</div>
             </div>
-          </div>
+          </Link>
           <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-green-100 text-green-700 flex items-center justify-center">
               <Award className="w-5 h-5" />
@@ -376,19 +367,7 @@ export default function EditorDashboard() {
                   </div>
                 </div>
                 
-                <div className="p-3 rounded border bg-purple-50">
-                  <div className="flex items-start space-x-2">
-                    <Edit className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm">Editorial Process</h4>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {articles.filter(a => a.status === 'with_editor' || a.status === 'reviewed').length} articles in editorial review
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded border bg-orange-50">
+                <Link href="/editor/reviewers" className="p-3 rounded border bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer block">
                   <div className="flex items-start space-x-2">
                     <Users className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
@@ -398,7 +377,7 @@ export default function EditorDashboard() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 <div className="p-3 rounded border bg-green-50">
                   <div className="flex items-start space-x-2">

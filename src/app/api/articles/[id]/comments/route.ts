@@ -81,24 +81,31 @@ export async function POST(
 
     // Handle file upload
     if (file) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'articles', articleId.toString());
-      await mkdir(uploadsDir, { recursive: true });
-      
-      // Generate unique filename
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop();
-      fileName = file.name;
-      const uniqueFileName = `${timestamp}-${file.name}`;
-      const filePath = join(uploadsDir, uniqueFileName);
-      
-      await writeFile(filePath, buffer);
-      
-      fileUrl = `/uploads/articles/${articleId}/${uniqueFileName}`;
-      fileType = file.type;
+      try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = join(process.cwd(), 'public', 'uploads', 'articles', articleId.toString());
+        await mkdir(uploadsDir, { recursive: true });
+        
+        // Generate unique filename - sanitize filename to prevent issues
+        const timestamp = Date.now();
+        const originalFileName = file.name;
+        // Replace problematic characters in filename
+        const sanitizedFileName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        fileName = originalFileName; // Keep original name for database
+        const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
+        const filePath = join(uploadsDir, uniqueFileName);
+        
+        await writeFile(filePath, buffer);
+        
+        fileUrl = `/uploads/articles/${articleId}/${uniqueFileName}`;
+        fileType = file.type || 'application/octet-stream';
+      } catch (fileError) {
+        console.error('Error uploading file:', fileError);
+        throw new Error(`File upload failed: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+      }
     }
 
     // Get sender information
@@ -133,8 +140,16 @@ export async function POST(
     
     const newMessage = await query(newMessageQuery, [result.insertId]) as any[];
 
-    // Create notifications for relevant users
-    await createNotifications(articleId, senderId, senderRole, message, fileName);
+    if (!newMessage || newMessage.length === 0) {
+      throw new Error('Failed to retrieve inserted message');
+    }
+
+    // Create notifications for relevant users (don't fail if notifications fail)
+    try {
+      await createNotifications(articleId, senderId, senderRole, message, fileName);
+    } catch (notifError) {
+      console.error('Error creating notifications (non-fatal):', notifError);
+    }
 
     return NextResponse.json({
       success: true,
@@ -154,8 +169,9 @@ export async function POST(
 
   } catch (error) {
     console.error('Error sending message:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: 'Failed to send message' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

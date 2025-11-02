@@ -8,7 +8,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "db:setup": "node database/seed-users.js"
+    "db:setup": "node database/seed-users.js",
+    "db:create-messages": "node database/create-direct-messages-table.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
