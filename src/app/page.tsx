@@ -18,6 +18,7 @@ interface Author {
   name: string;
   slug: string;
   count: number;
+  pdfUrl: string;
 }
 
 interface Stats {
@@ -30,6 +31,47 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [editorialDropdownOpen, setEditorialDropdownOpen] = useState<boolean>(false);
+
+  // Multiple fallback scroll function
+  const scrollToSection = (sectionId: string) => {
+    // Close dropdowns first
+    setEditorialDropdownOpen(false);
+    setMobileMenuOpen(false);
+    
+    // Try multiple methods
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        // Method 1: scrollIntoView
+        try {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        } catch (e) {
+          // Method 2: Manual scroll calculation
+          const elementTop = element.offsetTop - 100;
+          window.scrollTo({
+            top: elementTop,
+            behavior: 'smooth'
+          });
+        }
+        
+        // Method 3: Backup instant scroll (in case smooth doesn't work)
+        setTimeout(() => {
+          const currentScroll = window.pageYOffset;
+          const targetScroll = element.offsetTop - 100;
+          if (Math.abs(currentScroll - targetScroll) > 50) {
+            window.scrollTo(0, targetScroll);
+          }
+        }, 1000);
+      } else {
+        // Method 4: Hash navigation fallback
+        window.location.hash = sectionId;
+      }
+    }, 100);
+  };
   
   const [stats, setStats] = useState<Stats>({
     publishedArticles: 0,
@@ -132,6 +174,20 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editorialDropdownOpen) {
+        setEditorialDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editorialDropdownOpen]);
+
   const [articles, setArticles] = useState<Article[]>(initialArticles);
   const articlesRef = useRef<HTMLDivElement | null>(null);
 
@@ -223,7 +279,54 @@ export default function Home() {
               <Link href="/current-issue" className="nav-link">Current Issue</Link>
               <Link href="/archives" className="nav-link">Archives</Link>
               <Link href="/about" className="nav-link">About</Link>
-              <Link href="/login" className="nav-link">Submit Article</Link>
+              
+              {/* Editorial Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
+                  className="nav-link flex items-center space-x-1 hover:text-green-700 transition-colors"
+                >
+                  <span>Editorial</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${
+                    editorialDropdownOpen ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                {editorialDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          alert('Leadership clicked!'); // Temporary test
+                          scrollToSection('leadership');
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Leadership
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('editorial-team')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Editorial Team
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('advisory-board')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Advisory Board
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('peer-review')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Peer Review Committee
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <Link href="#footer" className="nav-link">Contact</Link>
             </nav>
 
@@ -283,7 +386,49 @@ export default function Home() {
                 <Link href="/current-issue" className="nav-link">Current Issue</Link>
                 <Link href="/archives" className="nav-link">Archives</Link>
                 <Link href="/about" className="nav-link">About</Link>
-                <Link href="/login" className="nav-link">Submit Article</Link>
+                
+                {/* Mobile Editorial Dropdown */}
+                <div>
+                  <button
+                    onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
+                    className="nav-link flex items-center justify-between w-full"
+                  >
+                    <span>Editorial</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${
+                      editorialDropdownOpen ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                  
+                  {editorialDropdownOpen && (
+                    <div className="ml-4 mt-2 space-y-1">
+                      <button
+                        onClick={() => scrollToSection('leadership')}
+                        className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600"
+                      >
+                        Leadership
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('editorial-team')}
+                        className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600"
+                      >
+                        Editorial Team
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('advisory-board')}
+                        className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600"
+                      >
+                        Advisory Board
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('peer-review')}
+                        className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600"
+                      >
+                        Peer Review Committee
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
                 <Link href="#footer" className="nav-link">Contact</Link>
               </nav>
             </div>
@@ -611,7 +756,7 @@ export default function Home() {
       </section>
 
       {/* Featured authors - Simplified */}
-      <section className="bg-white border-t border-gray-200 py-12">
+      <section id="authors" className="bg-white border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
           <h2 className="section-heading text-center mb-8">Contributing Authors</h2>
           <div className="relative">
@@ -632,12 +777,12 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-10">
               {authors.slice(authorIndex, authorIndex + 3).map((author) => (
-                <Link key={author.slug} href={`/author/${encodeURIComponent(author.slug)}`} className="bg-white border border-gray-200 rounded p-6 text-center hover:shadow-md transition-shadow">
+                <a key={author.slug} href={author.pdfUrl} target="_blank" rel="noopener noreferrer" className="bg-white border border-gray-200 rounded p-6 text-center hover:shadow-md transition-shadow">
                   <div className="w-20 h-20 bg-green text-white rounded-full flex items-center justify-center mx-auto mb-4 font-serif text-2xl">
                     {author.count}
                   </div>
                   <h3 className="font-serif font-bold text-green mb-1">{author.name}</h3>
-                </Link>
+                </a>
               ))}
             </div>
           </div>
@@ -653,7 +798,7 @@ export default function Home() {
           
           <div className="max-w-6xl mx-auto space-y-12">
             {/* Leadership */}
-            <div>
+            <div id="leadership">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Leadership</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
@@ -671,7 +816,7 @@ export default function Home() {
             </div>
 
             {/* Editorial Team */}
-            <div>
+            <div id="editorial-team">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Editorial Team</h3>
               <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-4">
                 <div className="text-sm font-semibold text-orange mb-2">EDITOR</div>
@@ -706,7 +851,7 @@ export default function Home() {
             </div>
 
             {/* Advisory Board */}
-            <div>
+            <div id="advisory-board">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Advisory Board</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white border border-gray-200 rounded p-4">
@@ -744,7 +889,7 @@ export default function Home() {
             </div>
 
             {/* Peer Review Committee */}
-            <div>
+            <div id="peer-review">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Peer Review Committee</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white border border-gray-200 rounded p-4">
