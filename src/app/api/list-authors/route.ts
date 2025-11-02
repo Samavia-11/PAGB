@@ -24,8 +24,29 @@ export async function GET() {
         }
       }
     }
+    // Also find the PDF URL for each author
+    const authorPdfs: Record<string, string> = {};
+    for (const ent of entries) {
+      if (ent.isFile() && /\.pdf$/i.test(ent.name)) {
+        const nameNoExt = ent.name.replace(/\.pdf$/i, '');
+        const parts = nameNoExt.split('___');
+        const authorRaw = (parts.length > 1 ? parts[1] : nameNoExt).trim();
+        if (authorRaw) {
+          const key = normalize(authorRaw);
+          if (!authorPdfs[key]) {
+            authorPdfs[key] = `/authorsname/${encodeURIComponent(ent.name)}`;
+          }
+        }
+      }
+    }
+
     const authors = Object.keys(counts)
-      .map((key) => ({ slug: displayByKey[key], name: displayByKey[key], count: counts[key] }))
+      .map((key) => ({ 
+        slug: displayByKey[key], 
+        name: displayByKey[key], 
+        count: counts[key],
+        pdfUrl: authorPdfs[key] || ''
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json({ authors });
