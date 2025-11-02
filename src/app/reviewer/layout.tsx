@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, FileText, Clock, CheckCircle, Archive, LogOut, Search, Bell } from 'lucide-react';
+import { Menu, X, LayoutGrid, FileText, Clock, CheckCircle, Archive, LogOut, Search, Bell, MessageSquare } from 'lucide-react';
 
 export default function ReviewerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -66,7 +66,7 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
   const NavLink = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const active = pathname === href;
     return (
-      <Link href={href} className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${active ? 'bg-purple-900/60 text-white' : 'text-purple-50 hover:bg-purple-900/30'}`}>
+      <Link href={href} className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${active ? 'bg-[forestgreen]/60 text-white' : 'text-white/80 hover:bg-[forestgreen]/30'}`}>
         <Icon className="w-4 h-4" />
         {open && <span>{label}</span>}
       </Link>
@@ -76,9 +76,9 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <aside className={`bg-purple-800 text-white transition-all duration-200 ${open ? 'w-64' : 'w-16'} hidden md:flex flex-col md:sticky md:top-0 md:h-screen overflow-hidden`}>
-        <div className="h-14 flex items-center px-3 border-b border-purple-700/60">
-          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-purple-900/40 mr-2">
+      <aside className={`bg-[forestgreen] text-white transition-all duration-200 ${open ? 'w-64' : 'w-16'} hidden md:flex flex-col md:sticky md:top-0 md:h-screen overflow-hidden`}>
+        <div className="h-14 flex items-center px-3 border-b border-[forestgreen]/80">
+          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-[forestgreen]/80 mr-2">
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
           {open && <span className="font-semibold">PAGB Journal</span>}
@@ -89,22 +89,23 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
           <NavLink href="/reviewer/in-progress" icon={FileText} label="In Progress" />
           <NavLink href="/reviewer/completed" icon={CheckCircle} label="Completed" />
           <NavLink href="/reviewer/archive" icon={Archive} label="Archive" />
+          <NavLink href="/reviewer/messages" icon={MessageSquare} label="Messages" />
         </nav>
-        <div className="p-3 mt-auto border-t border-purple-700/60">
+        <div className="p-3 mt-auto border-t border-[forestgreen]/80">
           {user && (
             <div className={`flex items-center gap-3 mb-3 ${!open && 'justify-center'}`}>
-              <div className="w-9 h-9 rounded-full bg-purple-900/50 flex items-center justify-center font-semibold text-purple-50">
+              <div className="w-9 h-9 rounded-full bg-[forestgreen]/70 flex items-center justify-center font-semibold text-white">
                 {(user.fullName || user.username || 'R').toString().charAt(0).toUpperCase()}
               </div>
               {open && (
                 <div className="min-w-0">
                   <div className="font-semibold truncate">{user.fullName || user.username}</div>
-                  <div className="text-[11px] text-purple-100/80 capitalize">{user.role || 'reviewer'}</div>
+                  <div className="text-[11px] text-white/80 capitalize">{user.role || 'reviewer'}</div>
                 </div>
               )}
             </div>
           )}
-          <button onClick={logout} className={`w-full flex items-center ${open ? 'justify-start' : 'justify-center'} gap-2 px-3 py-2 rounded-md text-sm bg-purple-900/30 hover:bg-purple-900/40 border border-purple-700/60`}>
+          <button onClick={logout} className={`w-full flex items-center ${open ? 'justify-start' : 'justify-center'} gap-2 px-3 py-2 rounded-md text-sm bg-[forestgreen]/50 hover:bg-[forestgreen]/60 border border-[forestgreen]/80`}>
             <LogOut className="w-4 h-4" />
             {open && <span>Logout</span>}
           </button>
@@ -114,9 +115,9 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
       {/* Mobile sidebar overlay */}
       {open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setOpen(false)}>
-          <aside className="bg-purple-800 text-white w-64 h-full">
-            <div className="h-14 flex items-center px-3 border-b border-purple-700/60">
-              <button onClick={() => setOpen(false)} className="p-2 rounded hover:bg-purple-900/40 mr-2">
+          <aside className="bg-[forestgreen] text-white w-64 h-full">
+            <div className="h-14 flex items-center px-3 border-b border-[forestgreen]/80">
+              <button onClick={() => setOpen(false)} className="p-2 rounded hover:bg-[forestgreen]/80 mr-2">
                 <X className="w-5 h-5" />
               </button>
               <span className="font-semibold">PAGB Journal</span>
@@ -127,20 +128,21 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
               <NavLink href="/reviewer/in-progress" icon={FileText} label="In Progress" />
               <NavLink href="/reviewer/completed" icon={CheckCircle} label="Completed" />
               <NavLink href="/reviewer/archive" icon={Archive} label="Archive" />
+              <NavLink href="/reviewer/messages" icon={MessageSquare} label="Messages" />
             </nav>
-            <div className="p-3 mt-auto border-t border-purple-700/60">
+            <div className="p-3 mt-auto border-t border-[forestgreen]/80">
               {user && (
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-purple-900/50 flex items-center justify-center font-semibold text-purple-50">
+                  <div className="w-9 h-9 rounded-full bg-[forestgreen]/70 flex items-center justify-center font-semibold text-white">
                     {(user.fullName || user.username || 'R').toString().charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="font-semibold truncate">{user.fullName || user.username}</div>
-                    <div className="text-[11px] text-purple-100/80 capitalize">{user.role || 'reviewer'}</div>
+                    <div className="text-[11px] text-white/80 capitalize">{user.role || 'reviewer'}</div>
                   </div>
                 </div>
               )}
-              <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm bg-purple-900/30 hover:bg-purple-900/40 border border-purple-700/60">
+              <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm bg-[forestgreen]/50 hover:bg-[forestgreen]/60 border border-[forestgreen]/80">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
               </button>
@@ -152,8 +154,8 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="h-14 bg-purple-800 text-white flex items-center px-3 md:px-5 gap-3 shadow relative">
-          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-purple-900/40 md:hidden">
+        <header className="h-14 bg-[forestgreen] text-white flex items-center px-3 md:px-5 gap-3 shadow relative">
+          <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-[forestgreen]/80 md:hidden">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1 max-w-2xl">
@@ -162,9 +164,9 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search articles, authors, keywords..."
-                className="w-full bg-purple-900/40 placeholder-purple-100/70 text-white rounded pl-9 pr-3 py-2 text-sm outline-none border border-purple-700/60 focus:border-purple-400"
+                className="w-full bg-[forestgreen]/60 placeholder-white/70 text-white rounded pl-9 pr-3 py-2 text-sm outline-none border border-[forestgreen]/80 focus:border-white/50"
               />
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-purple-100" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white" />
             </div>
           </div>
           
@@ -172,7 +174,7 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded hover:bg-purple-900/40 relative"
+              className="p-2 rounded hover:bg-[forestgreen]/80 relative"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (

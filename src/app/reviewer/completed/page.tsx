@@ -77,7 +77,7 @@ export default function CompletedReviews() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[forestgreen] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function CompletedReviews() {
                   <div className="flex-1">
                     <Link href={`/reviewer/articles/${article.id}`} className="block">
                       <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-medium text-gray-900 hover:text-purple-600">
+                        <h3 className="text-lg font-medium text-gray-900 hover:text-[forestgreen]">
                           {article.title}
                         </h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(article.status)}`}>

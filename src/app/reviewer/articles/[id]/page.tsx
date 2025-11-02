@@ -127,17 +127,40 @@ export default function ReviewerArticleChat() {
     });
   };
 
-  const handleFileDownload = (attachment: FileAttachment) => {
-    const fileData = localStorage.getItem(attachment.url);
-    if (fileData) {
-      const link = document.createElement('a');
-      link.href = fileData;
-      link.download = attachment.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      alert('File not found. It may have been deleted.');
+  const handleFileDownload = async (attachment: FileAttachment) => {
+    try {
+      // If URL is a local path (starts with /uploads), fetch from server
+      if (attachment.url.startsWith('/uploads')) {
+        const response = await fetch(attachment.url);
+        if (!response.ok) {
+          throw new Error('Failed to download file');
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = attachment.name;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // Try localStorage (for legacy messages)
+        const fileData = localStorage.getItem(attachment.url);
+        if (fileData) {
+          const link = document.createElement('a');
+          link.href = fileData;
+          link.download = attachment.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          throw new Error('File not found');
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download file. Please try again.');
     }
   };
 
@@ -171,36 +194,67 @@ export default function ReviewerArticleChat() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(prev => [...prev, data.message]);
+        
+        // Check if message data exists
+        if (!data.message) {
+          throw new Error('Invalid response format: message data missing');
+        }
+        
+        // Transform API response to match Message interface
+        const transformedMessage: Message = {
+          id: data.message.id.toString(),
+          sender: data.message.sender_id.toString(),
+          senderRole: data.message.sender_role as 'editor' | 'reviewer',
+          senderName: data.message.sender_name || user.fullName || user.username,
+          message: data.message.message || '',
+          timestamp: data.message.created_at,
+          read: false,
+          attachment: data.message.file_url ? {
+            name: data.message.file_name || selectedFile?.name || 'file',
+            type: data.message.file_type || selectedFile?.type || 'application/octet-stream',
+            size: selectedFile?.size || 0,
+            url: data.message.file_url
+          } : undefined
+        };
+        
+        // Update messages state
+        const updatedMessages = [...messages, transformedMessage];
+        setMessages(updatedMessages);
+        
+        // Save to localStorage
+        saveMessages(updatedMessages);
+        
+        // Clear form
         setNewMessage('');
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
+      } else {
+        // Handle error response
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: `Server returned ${response.status}: ${response.statusText}` };
+        }
+        
+        const errorMessage = errorData.error || `Failed to send message (Status: ${response.status})`;
+        console.error('Error sending message:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      alert('An error occurred while sending the message. Please try again.');
     } finally {
       setSending(false);
     }
   };
 
-  const handleDownloadFile = async (fileUrl: string, fileName: string) => {
-    try {
-      const response = await fetch(fileUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error downloading file:', error);
-    }
-  };
 
   const getFileIcon = (fileType: string) => {
     if (fileType?.startsWith('image/')) return <Image className="w-4 h-4" />;
@@ -223,10 +277,10 @@ export default function ReviewerArticleChat() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading article...</p>
-        </div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[forestgreen] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading article...</p>
+          </div>
       </div>
     );
   }
@@ -237,7 +291,7 @@ export default function ReviewerArticleChat() {
       <div className="bg-white shadow-sm border-b p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <MessageCircle className="w-6 h-6 text-purple-600" />
+            <MessageCircle className="w-6 h-6 text-[forestgreen]" />
             <div>
               <h1 className="text-xl font-semibold text-gray-900">{article?.title}</h1>
               <p className="text-sm text-gray-600">
@@ -277,14 +331,14 @@ export default function ReviewerArticleChat() {
               }`}>
                 <div className={`rounded-2xl px-4 py-2 ${
                   message.senderRole === 'reviewer'
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-[forestgreen] text-white'
                     : 'bg-blue-600 text-white'
                 }`}>
                   {message.message && <p className="text-sm mb-2">{message.message}</p>}
                   {message.attachment && (
                     <div className={`mt-2 p-3 rounded-lg border-2 ${
                       message.senderRole === 'reviewer'
-                        ? 'bg-purple-500 border-purple-300'
+                        ? 'bg-[forestgreen]/80 border-[forestgreen]/60'
                         : 'bg-blue-500 border-blue-300'
                     }`}>
                       <div className="flex items-center justify-between">
@@ -321,7 +375,7 @@ export default function ReviewerArticleChat() {
               
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ml-3 mr-3 ${
                 message.senderRole === 'reviewer' 
-                  ? 'bg-purple-600 order-2' 
+                  ? 'bg-[forestgreen] order-2' 
                   : 'bg-blue-600 order-1'
               }`}>
                 {message.senderName.charAt(0).toUpperCase()}
@@ -360,7 +414,7 @@ export default function ReviewerArticleChat() {
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg"
+            className="p-2 text-gray-500 hover:text-[forestgreen] hover:bg-green-50 rounded-lg"
             title="Attach file"
           >
             <Paperclip className="w-5 h-5" />
@@ -369,12 +423,16 @@ export default function ReviewerArticleChat() {
           <div className="flex-1">
             <textarea
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) => {
+                e.stopPropagation();
+                setNewMessage(e.target.value);
+              }}
               placeholder="Type your message or share a file..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none bg-white text-gray-900 placeholder-gray-400"
               rows={3}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+              disabled={sending}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !sending) {
                   e.preventDefault();
                   handleSendMessage();
                 }
@@ -385,7 +443,7 @@ export default function ReviewerArticleChat() {
           <button
             onClick={handleSendMessage}
             disabled={sending || (!newMessage.trim() && !selectedFile)}
-            className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 bg-[forestgreen] text-white rounded-lg hover:bg-[#1d7a1d] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
