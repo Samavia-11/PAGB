@@ -610,7 +610,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Authors - Simplified */}
+      {/* Featured authors - Simplified */}
       <section className="bg-white border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
           <h2 className="section-heading text-center mb-8">Contributing Authors</h2>
