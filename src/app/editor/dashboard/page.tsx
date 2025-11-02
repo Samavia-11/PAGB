@@ -309,7 +309,7 @@ export default function EditorDashboard() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(article.status)}`}>
-                            {article.status === 'submitted' ? 'VIEW' : article.status.replace('_', ' ').toUpperCase()}
+                            {article.status.replace('_', ' ').toUpperCase()}
                           </span>
                         </div>
                       </div>
