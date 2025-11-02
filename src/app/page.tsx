@@ -299,7 +299,7 @@ export default function Home() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative h-full" style={{width: '60%', maxWidth: '800px'}}>
             <img 
-              src="/images/shanahan-1.webp" 
+              src="/images/firstpage.png" 
               alt="Military Personnel"
               className="w-full h-full object-cover object-center"
               style={{objectFit: 'cover'}}
