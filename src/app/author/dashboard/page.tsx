@@ -1,11 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD
 import { FileText, CheckCircle, Clock, Send, PlusCircle, Eye, BarChart3, TrendingUp, MessageSquare } from 'lucide-react';
-=======
-import Link from 'next/link';
-import { Bell, FileText, CheckCircle, XCircle, Clock, Send, PlusCircle, Eye, BarChart3, TrendingUp, MessageSquare } from 'lucide-react';
->>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
 
 interface Article { 
   id: number; 
@@ -263,7 +258,6 @@ export default function AuthorDashboard() {
                   Submit Your First Article
                 </a>
               </div>
-<<<<<<< HEAD
             ) : (
               articles.map(article => (
                 <div key={article.id} className="border-b pb-4">
@@ -273,62 +267,6 @@ export default function AuthorDashboard() {
                       <p className="text-xs text-gray-500 mt-1">
                         Submitted: {new Date(article.created_at).toLocaleString()}
                       </p>
-=======
-              <div className="space-y-4">
-                {articles.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">
-                    <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-medium mb-2">No articles yet</p>
-                    <p className="text-sm mb-4">Get started by submitting your first article to the journal.</p>
-                    <a
-                      href="/author/submit"
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      <PlusCircle className="w-4 h-4 mr-2" />
-                      Submit Your First Article
-                    </a>
-                  </div>
-                ) : (
-                  articles.map(article => (
-                    <div key={article.id} className="border-b pb-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-bold">{article.title}</h3>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Submitted: {new Date(article.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(article.status)}`}>
-                            {article.status.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex space-x-2">
-                        <Link
-                          href={`/Author/articles/${article.id}`}
-                          className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Link>
-                        <Link
-                          href={`/Author/articles/${article.id}/chat`}
-                          className="flex items-center px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
-                        >
-                          <MessageSquare className="w-4 h-4 mr-1" />
-                          Chat
-                        </Link>
-                        {article.status === 'draft' && (
-                          <Link
-                            href={`/Author/drafts/${article.id}`}
-                            className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                          >
-                            Edit
-                          </Link>
-                        )}
-                      </div>
->>>>>>> 1776109875e81daf9676e64909e469df46dc16a1
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(article.status)}`}>
