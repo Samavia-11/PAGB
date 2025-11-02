@@ -2,19 +2,24 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Send, Paperclip, Download, FileText, Image, File, Eye, MessageCircle, User } from 'lucide-react';
+import { Send, Paperclip, Download, FileText, Image, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
+
+interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+}
 
 interface Message {
-  id: number;
-  article_id: number;
-  sender_id: number;
-  sender_name: string;
-  sender_role: string;
+  id: string;
+  sender: string;
+  senderRole: 'editor' | 'reviewer';
+  senderName: string;
   message: string;
-  file_url?: string;
-  file_name?: string;
-  file_type?: string;
-  created_at: string;
+  timestamp: string;
+  read: boolean;
+  attachment?: FileAttachment;
 }
 
 interface Article {
@@ -58,7 +63,14 @@ export default function ReviewerArticleChat() {
 
     setUser(parsedUser);
     fetchArticle();
-    fetchMessages();
+    loadMessages();
+    
+    // Simulate real-time updates
+    const interval = setInterval(() => {
+      loadMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, [articleId, router]);
 
   useEffect(() => {
@@ -82,24 +94,50 @@ export default function ReviewerArticleChat() {
       }
     } catch (error) {
       console.error('Error fetching article:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`/api/articles/${articleId}/comments`, {
-        headers: {
-          'x-user-role': 'reviewer'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setLoading(false);
+  const loadMessages = () => {
+    const chatKey = `reviewer_chat_${articleId}`;
+    const savedMessages = localStorage.getItem(chatKey);
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  };
+
+  const saveMessages = (updatedMessages: Message[]) => {
+    const chatKey = `reviewer_chat_${articleId}`;
+    localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
+    setMessages(updatedMessages);
+  };
+
+  const uploadFile = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        const fileKey = `file_${Date.now()}_${file.name}`;
+        localStorage.setItem(fileKey, base64String);
+        resolve(fileKey);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileDownload = (attachment: FileAttachment) => {
+    const fileData = localStorage.getItem(attachment.url);
+    if (fileData) {
+      const link = document.createElement('a');
+      link.href = fileData;
+      link.download = attachment.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert('File not found. It may have been deleted.');
     }
   };
 
@@ -170,8 +208,16 @@ export default function ReviewerArticleChat() {
     return <File className="w-4 h-4" />;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
   };
 
   if (loading) {
@@ -224,54 +270,61 @@ export default function ReviewerArticleChat() {
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.sender_role === 'reviewer' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.senderRole === 'reviewer' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.sender_role === 'reviewer'
-                  ? 'bg-purple-600 text-white'
-                  : message.sender_role === 'editor'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-green-600 text-white'
+              <div className={`max-w-xs lg:max-w-md xl:max-w-lg ${
+                message.senderRole === 'reviewer' ? 'order-1' : 'order-2'
               }`}>
-                <div className="flex items-center space-x-2 mb-1">
-                  <User className="w-3 h-3" />
-                  <span className="text-xs font-medium">
-                    {message.sender_name} ({message.sender_role})
-                  </span>
-                </div>
-                
-                {message.message && (
-                  <p className="text-sm mb-2">{message.message}</p>
-                )}
-                
-                {message.file_url && (
-                  <div className="bg-white bg-opacity-20 rounded p-2 mb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        {getFileIcon(message.file_type || '')}
-                        <span className="text-xs truncate">{message.file_name}</span>
-                      </div>
-                      <div className="flex space-x-1">
+                <div className={`rounded-2xl px-4 py-2 ${
+                  message.senderRole === 'reviewer'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {message.message && <p className="text-sm mb-2">{message.message}</p>}
+                  {message.attachment && (
+                    <div className={`mt-2 p-3 rounded-lg border-2 ${
+                      message.senderRole === 'reviewer'
+                        ? 'bg-purple-500 border-purple-300'
+                        : 'bg-blue-500 border-blue-300'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center flex-1 min-w-0">
+                          <FileText className="w-5 h-5 mr-2 flex-shrink-0 text-white" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate text-white">
+                              {message.attachment.name}
+                            </p>
+                            <p className="text-xs text-white opacity-75">
+                              {Math.round(message.attachment.size / 1024)} KB
+                            </p>
+                          </div>
+                        </div>
                         <button
-                          onClick={() => window.open(message.file_url, '_blank')}
-                          className="p-1 hover:bg-white hover:bg-opacity-20 rounded"
-                          title="Preview"
+                          onClick={() => handleFileDownload(message.attachment!)}
+                          className="ml-2 p-1.5 rounded hover:bg-opacity-20 hover:bg-black transition-colors text-white"
+                          title="Download file"
                         >
-                          <Eye className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDownloadFile(message.file_url!, message.file_name!)}
-                          className="p-1 hover:bg-white hover:bg-opacity-20 rounded"
-                          title="Download"
-                        >
-                          <Download className="w-3 h-3" />
+                          <Download className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                <p className="text-xs opacity-75">{formatDate(message.created_at)}</p>
+                  )}
+                </div>
+                <div className={`flex items-center mt-1 space-x-2 text-xs text-gray-500 ${
+                  message.senderRole === 'reviewer' ? 'justify-end' : 'justify-start'
+                }`}>
+                  <span>{message.senderName}</span>
+                  <span>•</span>
+                  <span>{formatTime(message.timestamp)}</span>
+                </div>
+              </div>
+              
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ml-3 mr-3 ${
+                message.senderRole === 'reviewer' 
+                  ? 'bg-purple-600 order-2' 
+                  : 'bg-blue-600 order-1'
+              }`}>
+                {message.senderName.charAt(0).toUpperCase()}
               </div>
             </div>
           ))
