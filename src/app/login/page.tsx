@@ -46,7 +46,7 @@ export default function LoginPage() {
     }
 
     try {
-      const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
+      const endpoint = isSignUp ? '/api/auth/signup' : '/api/auth/login';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
