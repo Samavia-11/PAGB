@@ -531,7 +531,7 @@ export default function EditArticle() {
                 {parsedManuscript?.authors && parsedManuscript.authors.length > 0 ? (
                   <div className="space-y-3">
                     {parsedManuscript.authors.map((author: any, index: number) => (
-                      <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div key={`editor-author-${index}-${author.name || author.email || index}`} className="p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <User className="w-4 h-4 text-gray-400" />
                           <div>

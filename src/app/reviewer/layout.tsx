@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, FileText, Clock, CheckCircle, Archive, LogOut, Search, Bell, MessageSquare } from 'lucide-react';
+import { Menu, X, LayoutGrid, Archive, LogOut, Search, Bell, MessageSquare } from 'lucide-react';
 
 export default function ReviewerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -85,9 +85,6 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
         </div>
         <nav className="flex-1 p-3 space-y-1">
           <NavLink href="/reviewer/dashboard" icon={LayoutGrid} label="Dashboard" />
-          <NavLink href="/reviewer/pending" icon={Clock} label="Pending Reviews" />
-          <NavLink href="/reviewer/in-progress" icon={FileText} label="In Progress" />
-          <NavLink href="/reviewer/completed" icon={CheckCircle} label="Completed" />
           <NavLink href="/reviewer/archive" icon={Archive} label="Archive" />
           <NavLink href="/reviewer/messages" icon={MessageSquare} label="Messages" />
         </nav>
@@ -124,9 +121,6 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
             </div>
             <nav className="flex-1 p-3 space-y-1">
               <NavLink href="/reviewer/dashboard" icon={LayoutGrid} label="Dashboard" />
-              <NavLink href="/reviewer/pending" icon={Clock} label="Pending Reviews" />
-              <NavLink href="/reviewer/in-progress" icon={FileText} label="In Progress" />
-              <NavLink href="/reviewer/completed" icon={CheckCircle} label="Completed" />
               <NavLink href="/reviewer/archive" icon={Archive} label="Archive" />
               <NavLink href="/reviewer/messages" icon={MessageSquare} label="Messages" />
             </nav>
@@ -197,9 +191,9 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
                       <p>No notifications</p>
                     </div>
                   ) : (
-                    notifications.slice(0, 10).map((notif: any) => (
+                    notifications.slice(0, 10).map((notif: any, index: number) => (
                       <div
-                        key={notif.id}
+                        key={`reviewer-notification-${notif.id}-${index}`}
                         onClick={() => !notif.is_read && markAsRead(notif.id)}
                         className={`p-4 hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-blue-50' : ''}`}
                       >

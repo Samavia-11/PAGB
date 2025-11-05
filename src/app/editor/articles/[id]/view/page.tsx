@@ -278,7 +278,7 @@ export default function EditorArticleView() {
                       <h2 className="text-xl font-bold text-gray-800 mb-3">Authors</h2>
                       <div className="bg-gray-50 p-4 rounded-lg">
                         {parsedContent.authors.map((author, index) => (
-                          <div key={index} className="mb-4 last:mb-0 p-3 bg-white rounded border">
+                          <div key={`author-${index}-${author.name || index}`} className="mb-4 last:mb-0 p-3 bg-white rounded border">
                             <div className="flex items-start space-x-3">
                               <User className="w-5 h-5 text-blue-500 mt-1" />
                               <div className="flex-1">
@@ -331,7 +331,7 @@ export default function EditorArticleView() {
                       <div className="flex flex-wrap gap-2">
                         {parsedContent.manuscript.keywords.map((keyword, index) => (
                           <span
-                            key={index}
+                            key={`keyword-${index}-${keyword}`}
                             className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
                           >
                             {keyword}

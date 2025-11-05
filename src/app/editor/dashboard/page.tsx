@@ -238,8 +238,8 @@ export default function EditorDashboard() {
 
       <div className="container mx-auto p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Link href="/editor/submissions" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
             <div className="w-9 h-9 rounded bg-blue-100 text-blue-700 flex items-center justify-center">
               <FileText className="w-5 h-5" />
             </div>
@@ -247,7 +247,16 @@ export default function EditorDashboard() {
               <div className="text-gray-500 text-sm">New Submissions</div>
               <div className="text-2xl font-bold">{articles.filter(a => a.status === 'submitted' || a.status === 'under_review').length}</div>
             </div>
-          </div>
+          </Link>
+          <Link href="/editor/forwarded-articles" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="w-9 h-9 rounded bg-purple-100 text-purple-700 flex items-center justify-center">
+              <Send className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-gray-500 text-sm">Forwarded Articles</div>
+              <div className="text-2xl font-bold">{articles.filter(a => a.status === 'accepted').length}</div>
+            </div>
+          </Link>
           <Link href="/editor/reviewers" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
             <div className="w-9 h-9 rounded bg-orange-100 text-orange-700 flex items-center justify-center">
               <Users className="w-5 h-5" />
@@ -317,7 +326,7 @@ export default function EditorDashboard() {
                           className="flex items-center px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
                         >
                           <MessageSquare className="w-4 h-4 mr-1" />
-                          Comments
+                          Chat
                         </Link>
                         {article.status === 'with_editor' && (
                           <>
@@ -355,7 +364,7 @@ export default function EditorDashboard() {
                 </h2>
               </div>
               <div className="space-y-3">
-                <div className="p-3 rounded border bg-blue-50">
+                <Link href="/editor/submissions" className="p-3 rounded border bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer block">
                   <div className="flex items-start space-x-2">
                     <FileText className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
@@ -365,7 +374,7 @@ export default function EditorDashboard() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
                 
                 <Link href="/editor/reviewers" className="p-3 rounded border bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer block">
                   <div className="flex items-start space-x-2">

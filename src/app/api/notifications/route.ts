@@ -4,6 +4,19 @@ import { query } from '@/lib/db';
 export async function GET(request: NextRequest) {
   const userId = request.headers.get('x-user-id');
   const unreadOnly = request.nextUrl.searchParams.get('unread') === 'true';
+  const type = request.nextUrl.searchParams.get('type');
+  const userRole = request.nextUrl.searchParams.get('user_role');
+
+  // Handle forwarded article requests
+  if (type === 'forwarded') {
+    try {
+      const sql = 'SELECT * FROM notifications WHERE type = ? AND title LIKE ? ORDER BY created_at DESC';
+      const notifications = await query(sql, ['review_submitted', '%Article Forwarded%']);
+      return NextResponse.json({ notifications });
+    } catch (error) {
+      return NextResponse.json({ error: 'Failed to fetch forwarded records' }, { status: 500 });
+    }
+  }
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
