@@ -103,8 +103,8 @@ export default function SubmitArticlePage() {
   const removeKeyword = (i: number) => setKeywordList(prev => prev.filter((_, idx) => idx !== i));
 
   const saveDraft = async () => {
-    if (!user) return alert('Login required');
-    if (!validateAffiliations()) return alert('Affiliation is mandatory for all authors and co-authors.');
+    if (!user) return alert('🔐 Authentication Required\n\nPlease log in to save your draft.');
+    if (!validateAffiliations()) return alert('📋 Missing Information\n\nAffiliation is mandatory for all authors and co-authors. Please fill in all required fields.');
     setSaving(true);
     try {
       const res = await fetch('/api/articles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
@@ -132,17 +132,17 @@ export default function SubmitArticlePage() {
       })});
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      alert('Draft saved');
+      alert('💾 Draft Saved Successfully!\n\nYour article draft has been saved. You can continue editing it later.');
       router.push(`/Author/drafts/${data.id}`);
-    } catch (e:any) { alert(e.message || 'Failed to save draft'); }
+    } catch (e:any) { alert('❌ Save Failed\n\n' + (e.message || 'Unable to save draft. Please try again.')); }
     finally { setSaving(false); }
   };
 
   const submitNow = async () => {
-    if (!user) return alert('Login required');
-    if (!title) return alert('Title is required');
+    if (!user) return alert('🔐 Authentication Required\n\nPlease log in to submit your article.');
+    if (!title) return alert('📝 Title Required\n\nPlease enter a title for your article before submitting.');
     const v = validateSubmit();
-    if (v) return alert(v);
+    if (v) return alert('⚠️ Validation Error\n\n' + v);
     // First create draft, then submit workflow
     setSaving(true);
     try {
@@ -174,9 +174,9 @@ export default function SubmitArticlePage() {
       await fetch(`/api/articles/${data.id}/workflow`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         action: 'submit', from_user_id: user.id, from_role: 'author'
       })});
-      alert('Article submitted');
+      alert('🎉 Article Submitted Successfully!\n\nYour article has been submitted for review. You will be notified of any updates.');
       router.push('/Author/dashboard');
-    } catch (e:any) { alert(e.message || 'Failed to submit'); }
+    } catch (e:any) { alert('❌ Submission Failed\n\n' + (e.message || 'Unable to submit article. Please try again.')); }
     finally { setSaving(false); }
   };
 
@@ -283,7 +283,7 @@ export default function SubmitArticlePage() {
                   onChange={(e)=>{
                     const f = e.target.files && e.target.files[0];
                     if (f && !/\.(docx?|DOCX?)$/.test(f.name)) {
-                      alert('Please upload a Word file (.doc or .docx)');
+                      alert('📄 Invalid File Format\n\nPlease upload a Word document (.doc or .docx file only).');
                       (e.target as HTMLInputElement).value = '';
                       return;
                     }
@@ -311,7 +311,7 @@ export default function SubmitArticlePage() {
                   onChange={(e)=>{
                     const f = e.target.files && e.target.files[0];
                     if (f && !/\.(docx?|DOCX?)$/.test(f.name)) {
-                      alert('Please upload a Word file (.doc or .docx)');
+                      alert('📄 Invalid File Format\n\nPlease upload a Word document (.doc or .docx file only).');
                       (e.target as HTMLInputElement).value = '';
                       return;
                     }

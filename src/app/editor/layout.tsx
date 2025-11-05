@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, Search, Bell } from 'lucide-react';
+import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, Search, Bell, FileText, Send } from 'lucide-react';
 
 interface Notification {
   id: number;
@@ -95,6 +95,8 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
         </div>
         <nav className="flex-1 p-3 space-y-1">
           <NavLink href="/editor/dashboard" icon={LayoutGrid} label="Dashboard" />
+          <NavLink href="/editor/submissions" icon={FileText} label="New Submissions" />
+          <NavLink href="/editor/forwarded-articles" icon={Send} label="Forwarded Articles" />
           <NavLink href="/editor/articles" icon={Edit3} label="Edit Articles" />
           <NavLink href="/editor/published" icon={FileCheck} label="Published" />
           <NavLink href="/editor/settings" icon={Settings} label="Settings" />
@@ -164,9 +166,9 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
                   <p>No notifications</p>
                 </div>
               ) : (
-                notifications.slice(0, 10).map(notif => (
+                notifications.slice(0, 10).map((notif, index) => (
                   <div
-                    key={notif.id}
+                    key={`notification-${notif.id}-${index}`}
                     onClick={() => !notif.is_read && markAsRead(notif.id)}
                     className={`p-4 hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-green-50' : ''}`}
                   >

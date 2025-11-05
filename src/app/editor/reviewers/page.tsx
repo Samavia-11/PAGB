@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Users, MessageSquare, Search, User } from 'lucide-react';
+import { Users, MessageSquare, Search, User, Send, Clock } from 'lucide-react';
 
 interface Reviewer {
   id: number;
@@ -13,6 +13,14 @@ interface Reviewer {
   role: string;
 }
 
+interface ReviewRequest {
+  id: number;
+  editor_id: number;
+  reviewer_id: number;
+  status: string;
+  created_at: string;
+}
+
 export default function ReviewersPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -20,6 +28,8 @@ export default function ReviewersPage() {
   const [filteredReviewers, setFilteredReviewers] = useState<Reviewer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sendingRequest, setSendingRequest] = useState<number | null>(null);
+  const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -36,6 +46,7 @@ export default function ReviewersPage() {
 
     setUser(parsedUser);
     fetchReviewers();
+    fetchReviewRequests(parsedUser.id);
   }, [router]);
 
   useEffect(() => {
@@ -64,6 +75,61 @@ export default function ReviewersPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReviewRequests = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/review-requests?user_id=${userId}&role=editor`);
+      if (response.ok) {
+        const data = await response.json();
+        setReviewRequests(data.requests || []);
+      }
+    } catch (error) {
+      console.error('Error fetching review requests:', error);
+    }
+  };
+
+  const handleSendRequest = async (reviewerId: number) => {
+    if (!user) return;
+    
+    console.log('Sending request from editor ID:', user.id, 'to reviewer ID:', reviewerId);
+    setSendingRequest(reviewerId);
+    try {
+      const response = await fetch('/api/review-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          editor_id: user.id,
+          reviewer_id: reviewerId,
+          status: 'pending'
+        })
+      });
+
+      if (response.ok) {
+        alert('🎉 Review Request Sent Successfully!\n\nYour review request has been sent to the reviewer. They will receive a notification and can accept or decline your request.');
+        fetchReviewRequests(user.id); // Refresh the requests
+      } else {
+        const error = await response.json();
+        alert('❌ Request Failed\n\n' + (error.error || 'Unable to send review request. Please try again.'));
+      }
+    } catch (error) {
+      console.error('Error sending review request:', error);
+      alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
+    } finally {
+      setSendingRequest(null);
+    }
+  };
+
+  const isChatAllowed = (reviewerId: number) => {
+    const request = reviewRequests.find(r => r.reviewer_id === reviewerId);
+    return request && request.status === 'accepted';
+  };
+
+  const getRequestStatus = (reviewerId: number) => {
+    const request = reviewRequests.find(r => r.reviewer_id === reviewerId);
+    return request ? request.status : null;
   };
 
   if (loading) {
@@ -151,13 +217,59 @@ export default function ReviewersPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/editor/reviewers/${reviewer.id}/chat`}
-                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Chat
-                    </Link>
+                    {(() => {
+                      const requestStatus = getRequestStatus(reviewer.id);
+                      
+                      if (!requestStatus) {
+                        // No request sent yet
+                        return (
+                          <button
+                            onClick={() => handleSendRequest(reviewer.id)}
+                            disabled={sendingRequest === reviewer.id}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            {sendingRequest === reviewer.id ? 'Sending...' : 'Request'}
+                          </button>
+                        );
+                      } else if (requestStatus === 'pending') {
+                        // Request pending
+                        return (
+                          <span className="flex items-center px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+                            <Clock className="w-4 h-4 mr-2" />
+                            Pending
+                          </span>
+                        );
+                      } else if (requestStatus === 'rejected') {
+                        // Request rejected - allow new request
+                        return (
+                          <button
+                            onClick={() => handleSendRequest(reviewer.id)}
+                            disabled={sendingRequest === reviewer.id}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            {sendingRequest === reviewer.id ? 'Sending...' : 'Request Again'}
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()}
+                    
+                    {isChatAllowed(reviewer.id) ? (
+                      <Link
+                        href={`/editor/reviewers/${reviewer.id}/chat`}
+                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat
+                      </Link>
+                    ) : (
+                      <span className="flex items-center px-4 py-2 bg-gray-300 text-gray-600 rounded-lg text-sm cursor-not-allowed">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat Disabled
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

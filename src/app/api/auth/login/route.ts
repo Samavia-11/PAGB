@@ -1,41 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-
-// Mock users for testing (replace with database later)
-const mockUsers = [
-  {
-    id: 1,
-    username: 'author',
-    email: 'author@journal.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: author123
-    full_name: 'Author User',
-    role: 'author',
-  },
-  {
-    id: 2,
-    username: 'reviewer',
-    email: 'reviewer@journal.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: reviewer123
-    full_name: 'Reviewer User',
-    role: 'reviewer',
-  },
-  {
-    id: 3,
-    username: 'editor',
-    email: 'editor@journal.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: editor123
-    full_name: 'Editor User',
-    role: 'editor',
-  },
-  {
-    id: 4,
-    username: 'administrator',
-    email: 'admin@journal.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password: admin123
-    full_name: 'Administrator User',
-    role: 'administrator',
-  },
-];
+import { query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,25 +15,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user in mock data
-    const user = mockUsers.find(u => u.username === username);
+    // Find user in database
+    console.log('Looking for user:', username);
+    const userResult: any = await query(
+      'SELECT * FROM users WHERE username = ? OR email = ?',
+      [username, username]
+    );
+    console.log('User query result:', userResult);
 
-    if (!user) {
+    if (!userResult || userResult.length === 0) {
+      console.log('User not found in database');
       return NextResponse.json(
         { message: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    // For demo purposes, accept simple passwords
-    const validPasswords = {
-      'author': 'author123',
-      'reviewer': 'reviewer123', 
-      'editor': 'editor123',
-      'administrator': 'admin123'
-    };
+    const user = userResult[0];
+    console.log('Found user:', { id: user.id, username: user.username, role: user.role });
+
+    // Check password
+    let isValidPassword = false;
     
-    const isValidPassword = validPasswords[username as keyof typeof validPasswords] === password;
+    if (user.password) {
+      // If password is hashed, use bcrypt
+      if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+        isValidPassword = await bcrypt.compare(password, user.password);
+      } else {
+        // If password is plain text (for testing), compare directly
+        isValidPassword = user.password === password;
+      }
+    }
 
     if (!isValidPassword) {
       return NextResponse.json(

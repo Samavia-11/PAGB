@@ -76,14 +76,14 @@ export default function UserRequestsPage() {
 
       if (response.ok) {
         await fetchRequests(); // Refresh the list
-        alert(`Request ${status} successfully!`);
+        alert(`✅ Request ${status.charAt(0).toUpperCase() + status.slice(1)} Successfully!\n\nThe user request has been processed and the user will be notified.`);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.error}`);
+        alert(`❌ Processing Failed\n\n${error.error || 'Unable to process the request. Please try again.'}`);
       }
     } catch (error) {
       console.error('Error processing request:', error);
-      alert('Failed to process request');
+      alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
     } finally {
       setProcessing(null);
     }
