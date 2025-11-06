@@ -56,8 +56,8 @@ export default function AssignReviewersPage() {
     fetchAssignments();
 
     // Set up real-time polling for new articles and assignments
-    const articlesInterval = setInterval(fetchSubmittedArticles, 10000); // Poll every 10 seconds
-    const assignmentsInterval = setInterval(fetchAssignments, 15000); // Poll every 15 seconds
+    const articlesInterval = setInterval(fetchSubmittedArticles, 5000); // Poll every 5 seconds
+    const assignmentsInterval = setInterval(fetchAssignments, 7000); // Poll every 7 seconds
 
     return () => {
       clearInterval(articlesInterval);
