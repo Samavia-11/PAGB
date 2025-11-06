@@ -18,6 +18,14 @@ export async function GET(request: NextRequest) {
     } else if (role === 'author') {
       sql += ' WHERE a.author_id = ?';
       params.push(userId);
+    } else if (role === 'reviewer') {
+      // Reviewers only see articles specifically assigned to them
+      sql = `SELECT a.*, u.full_name as author_name 
+             FROM articles a 
+             JOIN users u ON a.author_id = u.id
+             JOIN article_assignments aa ON a.id = aa.article_id
+             WHERE aa.reviewer_id = ? AND aa.status = 'assigned'`;
+      params.push(userId);
     }
 
     sql += ' ORDER BY a.created_at DESC';

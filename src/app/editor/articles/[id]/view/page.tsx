@@ -54,8 +54,15 @@ export default function EditorArticleView() {
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'editor') {
+    try {
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser.role !== 'editor') {
+        router.push('/login');
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to parse user data from localStorage:', error);
+      localStorage.removeItem('user'); // Clear corrupted data
       router.push('/login');
       return;
     }
@@ -110,9 +117,23 @@ export default function EditorArticleView() {
 
   const parseContent = (contentString: string): ParsedContent | null => {
     try {
-      return JSON.parse(contentString);
+      // Check if contentString is valid and not empty
+      if (!contentString || typeof contentString !== 'string') {
+        console.warn('Invalid content string provided to parseContent');
+        return null;
+      }
+
+      // Trim whitespace and check if it looks like JSON
+      const trimmedContent = contentString.trim();
+      if (!trimmedContent.startsWith('{') && !trimmedContent.startsWith('[')) {
+        console.warn('Content does not appear to be JSON format');
+        return null;
+      }
+
+      return JSON.parse(trimmedContent);
     } catch (error) {
       console.error('Failed to parse content JSON:', error);
+      console.error('Content that failed to parse:', contentString?.substring(0, 100) + '...');
       return null;
     }
   };
@@ -261,6 +282,14 @@ export default function EditorArticleView() {
                 return (
                   <div className="mb-8">
                     <h2 className="text-xl font-bold text-gray-800 mb-3">Content</h2>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center">
+                        <FileText className="w-5 h-5 text-yellow-600 mr-2" />
+                        <p className="text-yellow-800 text-sm">
+                          <strong>Note:</strong> This article's content could not be parsed as structured data. Displaying raw content below.
+                        </p>
+                      </div>
+                    </div>
                     <div className="prose max-w-none">
                       <div className="text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
                         {article.content || 'No content available.'}

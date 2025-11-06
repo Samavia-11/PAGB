@@ -257,13 +257,13 @@ export default function EditorDashboard() {
               <div className="text-2xl font-bold">{articles.filter(a => a.status === 'accepted').length}</div>
             </div>
           </Link>
-          <Link href="/editor/reviewers" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
+          <Link href="/editor/assign-reviewers" className="bg-white rounded-lg shadow p-4 flex items-center gap-3 hover:shadow-lg transition-shadow cursor-pointer">
             <div className="w-9 h-9 rounded bg-orange-100 text-orange-700 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-gray-500 text-sm">Reviewers</div>
-              <div className="text-2xl font-bold">{reviewers.length}</div>
+              <div className="text-gray-500 text-sm">Assign Reviewers</div>
+              <div className="text-2xl font-bold">{articles.filter(a => a.status === 'submitted').length}</div>
             </div>
           </Link>
           <div className="bg-white rounded-lg shadow p-4 flex items-center gap-3">

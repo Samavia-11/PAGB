@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, Search, Bell, FileText, Send } from 'lucide-react';
+import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, Search, Bell, FileText, Send, Users } from 'lucide-react';
 
 interface Notification {
   id: number;
@@ -96,6 +96,7 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
         <nav className="flex-1 p-3 space-y-1">
           <NavLink href="/editor/dashboard" icon={LayoutGrid} label="Dashboard" />
           <NavLink href="/editor/submissions" icon={FileText} label="New Submissions" />
+          <NavLink href="/editor/assign-reviewers" icon={Users} label="Assign Reviewers" />
           <NavLink href="/editor/forwarded-articles" icon={Send} label="Forwarded Articles" />
           <NavLink href="/editor/articles" icon={Edit3} label="Edit Articles" />
           <NavLink href="/editor/published" icon={FileCheck} label="Published" />
