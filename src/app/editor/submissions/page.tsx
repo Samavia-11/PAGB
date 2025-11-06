@@ -163,6 +163,7 @@ export default function NewSubmissionsPage() {
         body: JSON.stringify({
           editor_id: user.id,
           reviewer_id: selectedReviewer,
+          article_id: selectedArticle.id,
           status: 'pending'
         })
       });
@@ -171,9 +172,14 @@ export default function NewSubmissionsPage() {
         setShowAssignModal(false);
         alert('📧 Review Request Sent Successfully!\n\nThe reviewer has been notified and will receive your request. They need to accept before they can start reviewing the article.');
       } else {
-        const errorData = await response.json();
-        console.error('Request error:', errorData);
-        alert(`❌ Request Failed\n\n${errorData.error || 'Unable to send review request. Please try again later.'}`);
+        let errorMessage = 'Unable to send review request. Please try again later.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          console.warn('Could not parse error response:', parseError);
+        }
+        alert(`❌ Request Failed\n\n${errorMessage}`);
       }
     } catch (error) {
       console.error('Error sending review request:', error);

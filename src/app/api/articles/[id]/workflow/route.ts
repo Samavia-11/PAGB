@@ -55,6 +55,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
                          VALUES (?, ?, ?, ?, ?, ?, ?)`;
     await query(workflowSql, [articleId, from_user_id, to_user_id, from_role, to_role, workflowAction, comments]);
 
+    // No auto-assignment - editors will manually send review requests for specific articles
+
     // Create assignment if needed
     if (to_user_id && ['assign_assistant_editor', 'send_to_peer_review'].includes(action)) {
       const assignSql = `INSERT INTO article_assignments (article_id, assigned_to, assigned_by, assignment_type, status)

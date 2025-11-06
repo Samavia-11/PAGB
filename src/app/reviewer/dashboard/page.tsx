@@ -123,11 +123,11 @@ export default function ReviewerDashboard() {
     // Set up real-time polling for both articles and review requests
     const articlesInterval = setInterval(() => {
       fetchArticles(parsedUser.id);
-    }, 5000); // Check for new articles every 5 seconds
+    }, 3000); // Check for new articles every 3 seconds (faster for real-time feel)
 
     const requestsInterval = setInterval(() => {
       fetchReviewRequests(parsedUser.id);
-    }, 3000); // Check for review requests every 3 seconds
+    }, 2000); // Check for review requests every 2 seconds (faster for real-time feel)
 
     // Cleanup intervals on component unmount
     return () => {
