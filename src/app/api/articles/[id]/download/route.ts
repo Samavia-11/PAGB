@@ -3,10 +3,11 @@ import { query } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const articleId = params.id;
+    const resolvedParams = await params;
+    const articleId = resolvedParams.id;
 
     // Get article details
     const articleResult: any = await query(

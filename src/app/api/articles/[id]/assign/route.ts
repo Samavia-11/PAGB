@@ -3,11 +3,12 @@ import { query } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { reviewer_id } = await request.json();
-    const articleId = params.id;
+    const resolvedParams = await params;
+    const articleId = resolvedParams.id;
 
     if (!reviewer_id) {
       return NextResponse.json({ error: 'Reviewer ID is required' }, { status: 400 });

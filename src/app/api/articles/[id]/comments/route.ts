@@ -6,9 +6,10 @@ import { join } from 'path';
 // GET - Fetch all messages for an article
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const articleId = parseInt(params.id);
+  const resolvedParams = await params;
+  const articleId = parseInt(resolvedParams.id);
   
   try {
     // Fetch messages with sender information
@@ -50,9 +51,10 @@ export async function GET(
 // POST - Send a new message with optional file
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const articleId = parseInt(params.id);
+  const resolvedParams = await params;
+  const articleId = parseInt(resolvedParams.id);
   
   try {
     const formData = await request.formData();
