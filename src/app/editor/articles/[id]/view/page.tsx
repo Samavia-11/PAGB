@@ -286,7 +286,7 @@ export default function EditorArticleView() {
                       <div className="flex items-center">
                         <FileText className="w-5 h-5 text-yellow-600 mr-2" />
                         <p className="text-yellow-800 text-sm">
-                          <strong>Note:</strong> This article's content could not be parsed as structured data. Displaying raw content below.
+                          <strong>Note:</strong> This article&apos;s content could not be parsed as structured data. Displaying raw content below.
                         </p>
                       </div>
                     </div>
