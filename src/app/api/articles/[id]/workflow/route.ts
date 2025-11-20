@@ -7,11 +7,12 @@ async function createNotification(userId: number, type: string, title: string, m
   await query(sql, [userId, type, title, message, articleId, relatedUserId, `/dashboard/articles/${articleId}`]);
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await request.json();
     const { action, from_user_id, to_user_id, comments, from_role, to_role } = body;
-    const articleId = parseInt(params.id);
+    const resolvedParams = await params;
+    const articleId = parseInt(resolvedParams.id);
 
     let newStatus = '';
     let workflowAction = action;

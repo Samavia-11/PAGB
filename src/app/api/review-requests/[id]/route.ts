@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { action, reviewer_id } = await request.json();
-    const requestId = params.id;
+    const resolvedParams = await params;
+    const requestId = resolvedParams.id;
 
     if (!action || !reviewer_id) {
       return NextResponse.json({ error: 'Action and reviewer ID are required' }, { status: 400 });

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log('Simple comments API called for article:', params.id);
+    const resolvedParams = await params;
+    console.log('Simple comments API called for article:', resolvedParams.id);
     
     const body = await request.json();
     console.log('Request body received:', body);
@@ -15,7 +16,7 @@ export async function POST(
       success: true,
       message: 'Simple test successful - comments would be sent to author',
       received_data: {
-        article_id: params.id,
+        article_id: resolvedParams.id,
         from_user_id: body.from_user_id,
         from_role: body.from_role,
         comments: body.comments?.substring(0, 50) + '...'
