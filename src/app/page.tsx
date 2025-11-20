@@ -65,33 +65,33 @@ export default function Home() {
       pdfUrl: "/pdfs/PAGB%202024%20(4)___Pakistan-Afghanistan%20Relations%20Relations%20A%20Historical%20Perspective.pdf",
       thumbnail: "/images/thumbnails/article-4.jpg"
     },
-    {
-      title: "Modi's Neighbourhood First Policy: Implications for Pakistan",
-      author: "Various Contributors",
-      date: "2024",
-      description: "An assessment of India's neighbourhood-first diplomatic strategy and its strategic implications for Pakistan and regional stability.",
-      published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(5)___Modi%E2%80%99s%20Neighbourhood%20First%20Policy%20Implications%20for%20Pakistan.pdf",
-      thumbnail: "/images/thumbnails/article-5.jpg"
-    },
-    {
-      title: "Character of Future Military Conflict in Subcontinent",
-      author: "Various Contributors",
-      date: "2024",
-      description: "Exploring the evolving nature of warfare in South Asia, including emerging technologies, hybrid threats, and strategic doctrines.",
-      published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(6)___%20Character%20of%20Future%20Character%20Military%20Conflict%20in%20Subcontinent.pdf",
-      thumbnail: "/images/thumbnails/article-6.jpg"
-    },
-    {
-      title: "Unravelling the Intriguing Nexus: Socially Disruptive Proxies and Security Milieu of Pakistan",
-      author: "Various Contributors",
-      date: "2024",
-      description: "An analysis of non-state actors, proxy warfare, and their impact on Pakistan's internal security environment.",
-      published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(7)___Unravelling%20the%20Intriguing%20Nexus%20Socially%20Disruptive%20Proxies%20%20and%20Security%20Milieu%20of%20Pakistan.pdf",
-      thumbnail: "/images/thumbnails/article-7.jpg"
-    }
+    // {
+    //   title: "Modi's Neighbourhood First Policy: Implications for Pakistan",
+    //   author: "Various Contributors",
+    //   date: "2024",
+    //   description: "An assessment of India's neighbourhood-first diplomatic strategy and its strategic implications for Pakistan and regional stability.",
+    //   published: "2024",
+    //   pdfUrl: "/pdfs/PAGB%202024%20(5)___Modi%E2%80%99s%20Neighbourhood%20First%20Policy%20Implications%20for%20Pakistan.pdf",
+    //   thumbnail: "/images/thumbnails/article-5.jpg"
+    // },
+    // // {
+    //   title: "Character of Future Military Conflict in Subcontinent",
+    //   author: "Various Contributors",
+    //   date: "2024",
+    //   description: "Exploring the evolving nature of warfare in South Asia, including emerging technologies, hybrid threats, and strategic doctrines.",
+    //   published: "2024",
+    //   pdfUrl: "/pdfs/PAGB%202024%20(6)___%20Character%20of%20Future%20Character%20Military%20Conflict%20in%20Subcontinent.pdf",
+    //   thumbnail: "/images/thumbnails/article-6.jpg"
+    // },
+    // {
+    //   title: "Unravelling the Intriguing Nexus: Socially Disruptive Proxies and Security Milieu of Pakistan",
+    //   author: "Various Contributors",
+    //   date: "2024",
+    //   description: "An analysis of non-state actors, proxy warfare, and their impact on Pakistan's internal security environment.",
+    //   published: "2024",
+    //   pdfUrl: "/pdfs/PAGB%202024%20(7)___Unravelling%20the%20Intriguing%20Nexus%20Socially%20Disruptive%20Proxies%20%20and%20Security%20Milieu%20of%20Pakistan.pdf",
+    //   thumbnail: "/images/thumbnails/article-7.jpg"
+    // }
   ];
 
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -142,7 +142,7 @@ export default function Home() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/random-articles?count=5');
+        const res = await fetch('/api/random-articles?count=3');
         const data = await res.json();
         if (!cancelled && data?.files && Array.isArray(data.files) && data.files.length > 0) {
           setArticles(data.files);
