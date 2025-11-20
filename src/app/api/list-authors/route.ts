@@ -1,56 +1,48 @@
+// app/api/list-authors/route.ts   ← make sure the file is exactly at this path
+
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
 export async function GET() {
   try {
-    const baseDir = path.join(process.cwd(), 'public', 'authorsname');
-    if (!fs.existsSync(baseDir)) {
+    // CORRECT folder: public/authors (not authorsname)
+    const authorsDir = path.join(process.cwd(), 'public', 'authors');
+
+    if (!fs.existsSync(authorsDir)) {
       return NextResponse.json({ authors: [] });
     }
-    const entries = fs.readdirSync(baseDir, { withFileTypes: true });
-    const counts: Record<string, number> = {};
-    const displayByKey: Record<string, string> = {};
-    const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-    for (const ent of entries) {
-      if (ent.isFile() && /\.pdf$/i.test(ent.name)) {
-        const nameNoExt = ent.name.replace(/\.pdf$/i, '');
-        const parts = nameNoExt.split('___');
-        const authorRaw = (parts.length > 1 ? parts[1] : nameNoExt).trim();
-        if (authorRaw) {
-          const key = normalize(authorRaw);
-          counts[key] = (counts[key] || 0) + 1;
-          if (!displayByKey[key]) displayByKey[key] = authorRaw.replace(/\s+/g, ' ').trim();
-        }
-      }
-    }
-    // Also find the PDF URL for each author
-    const authorPdfs: Record<string, string> = {};
-    for (const ent of entries) {
-      if (ent.isFile() && /\.pdf$/i.test(ent.name)) {
-        const nameNoExt = ent.name.replace(/\.pdf$/i, '');
-        const parts = nameNoExt.split('___');
-        const authorRaw = (parts.length > 1 ? parts[1] : nameNoExt).trim();
-        if (authorRaw) {
-          const key = normalize(authorRaw);
-          if (!authorPdfs[key]) {
-            authorPdfs[key] = `/Authorsname/${encodeURIComponent(ent.name)}`;
-          }
-        }
-      }
-    }
 
-    const authors = Object.keys(counts)
-      .map((key) => ({ 
-        slug: displayByKey[key], 
-        name: displayByKey[key], 
-        count: counts[key],
-        pdfUrl: authorPdfs[key] || ''
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const folders = fs
+      .readdirSync(authorsDir)
+      .filter(name => fs.statSync(path.join(authorsDir, name)).isDirectory());
+
+    const authors = folders.map(folder => {
+      const folderPath = path.join(authorsDir, folder);
+      const pdfs = fs.readdirSync(folderPath).filter(f => f.toLowerCase().endsWith('.pdf'));
+
+      // Convert "adnan-ali" → "Adnan Ali"
+      const name = folder
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      return {
+        slug: folder,           // ← kebab-case (used in URL)
+        name: name,             // ← pretty name for display
+        count: pdfs.length,     // ← number of PDFs
+      };
+    });
+
+    // Sort by most articles first
+    authors.sort((a, b) => b.count - a.count);
 
     return NextResponse.json({ authors });
-  } catch (e: any) {
-    return NextResponse.json({ authors: [], error: e?.message || 'Unexpected error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('list-authors API error:', error);
+    return NextResponse.json(
+      { authors: [], error: error.message },
+      { status: 500 }
+    );
   }
 }
