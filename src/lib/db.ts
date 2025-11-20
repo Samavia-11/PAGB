@@ -46,4 +46,5 @@ export async function testConnection() {
   }
 }
 
-export default { query, testConnection, getPool };
+const db = { query, testConnection, getPool };
+export default db;

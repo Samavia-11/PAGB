@@ -246,7 +246,7 @@ export default function ReviewerArchive() {
               </h3>
               <p className="text-gray-600">
                 {forwardedRecords.length === 0 
-                  ? 'You haven\'t forwarded any articles to the editor yet.' 
+                  ? 'You haven&#39;t forwarded any articles to the editor yet.' 
                   : 'No records match your search criteria.'
                 }
               </p>

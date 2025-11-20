@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, User, Calendar, Download, MessageSquare, Eye, Clock } from 'lucide-react';
@@ -25,25 +25,7 @@ export default function ReviewerArticleView() {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check authentication
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      router.push('/login');
-      return;
-    }
-
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'reviewer') {
-      router.push('/login');
-      return;
-    }
-
-    setUser(parsedUser);
-    fetchArticle();
-  }, [router, articleId]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
     try {
       const response = await fetch(`/api/articles/${articleId}`, {
         headers: {
@@ -64,7 +46,25 @@ export default function ReviewerArticleView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [articleId, router]);
+
+  useEffect(() => {
+    // Check authentication
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/login');
+      return;
+    }
+
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.role !== 'reviewer') {
+      router.push('/login');
+      return;
+    }
+
+    setUser(parsedUser);
+    fetchArticle();
+  }, [router, articleId, fetchArticle]);
 
   const parseArticleContent = (content: string) => {
     try {

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Paperclip, Download, FileText, Image, File, MessageCircle, ArrowLeft, Users } from 'lucide-react';
+import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, MessageCircle, ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
 
 interface FileAttachment {
@@ -60,39 +60,7 @@ export default function ReviewerMessagesPage() {
     fetchEditors();
   }, [router]);
 
-  useEffect(() => {
-    if (user && selectedEditor) {
-      loadMessages();
-      const interval = setInterval(() => {
-        loadMessages();
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [user, selectedEditor]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchEditors = async () => {
-    try {
-      const response = await fetch('/api/users?role=editor');
-      if (response.ok) {
-        const data = await response.json();
-        setEditors(data.users || []);
-      }
-    } catch (error) {
-      console.error('Error fetching editors:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!user || !selectedEditor) return;
     
     try {
@@ -126,6 +94,38 @@ export default function ReviewerMessagesPage() {
     } catch (error) {
       // Silently handle errors - don't break the UI
       console.warn('Error loading messages (non-critical):', error);
+    }
+  }, [user, selectedEditor]);
+
+  useEffect(() => {
+    if (user && selectedEditor) {
+      loadMessages();
+      const interval = setInterval(() => {
+        loadMessages();
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [user, selectedEditor, loadMessages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchEditors = async () => {
+    try {
+      const response = await fetch('/api/users?role=editor');
+      if (response.ok) {
+        const data = await response.json();
+        setEditors(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error fetching editors:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -282,7 +282,7 @@ export default function ReviewerMessagesPage() {
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType?.startsWith('image/')) return <Image className="w-4 h-4" />;
+    if (fileType?.startsWith('image/')) return <ImageIcon className="w-4 h-4" />;
     if (fileType?.includes('document') || fileType?.includes('word')) return <FileText className="w-4 h-4" />;
     return <File className="w-4 h-4" />;
   };
