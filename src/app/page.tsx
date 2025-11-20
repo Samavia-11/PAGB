@@ -1,8 +1,7 @@
 'use client';
-
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe, ChevronLeft, ChevronRight,Phone, Mail } from 'lucide-react';
 
 interface Article {
   title: string;
@@ -18,7 +17,6 @@ interface Author {
   name: string;
   slug: string;
   count: number;
-  pdfUrl: string;
 }
 
 interface Stats {
@@ -32,31 +30,6 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [editorialDropdownOpen, setEditorialDropdownOpen] = useState<boolean>(false);
-
-  // Smooth scroll to section and close dropdowns
-  const scrollToSection = (sectionId: string) => {
-    setEditorialDropdownOpen(false);
-    setMobileMenuOpen(false);
-
-    setTimeout(() => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        try {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } catch {
-          const top = element.offsetTop - 100;
-          window.scrollTo({ top, behavior: 'smooth' });
-        }
-        setTimeout(() => {
-          const cur = window.pageYOffset;
-          const target = element.offsetTop - 100;
-          if (Math.abs(cur - target) > 50) window.scrollTo(0, target);
-        }, 1000);
-      } else {
-        window.location.hash = sectionId;
-      }
-    }, 100);
-  };
 
   const [stats, setStats] = useState<Stats>({
     publishedArticles: 0,
@@ -126,13 +99,16 @@ export default function Home() {
   const [articles, setArticles] = useState<Article[]>(initialArticles);
   const articlesRef = useRef<HTMLDivElement | null>(null);
 
+  // Fetch authors dynamically
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const res = await fetch('/api/list-authors');
         const data = await res.json();
-        if (!cancelled && data?.authors) setAuthors(data.authors);
+        if (!cancelled && data?.authors) {
+          setAuthors(data.authors);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -140,6 +116,7 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Fetch stats
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -160,6 +137,7 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
+  // Fetch random articles
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -175,6 +153,29 @@ export default function Home() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    setEditorialDropdownOpen(false);
+    setMobileMenuOpen(false);
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        try {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch {
+          const top = element.offsetTop - 100;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+        setTimeout(() => {
+          const cur = window.pageYOffset;
+          const target = element.offsetTop - 100;
+          if (Math.abs(cur - target) > 50) window.scrollTo(0, target);
+        }, 1000);
+      } else {
+        window.location.hash = sectionId;
+      }
+    }, 100);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,14 +215,13 @@ export default function Home() {
                 <span className="hidden md:inline">+92 (051) 123-4567</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Link href="/login" className="hover:text-gray-300">Login</Link>
+                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="hover:text-gray-300">Login</Link>
                 <span>|</span>
-                <Link href="/signup" className="hover:text-gray-300">Sign Up</Link>
+                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/user/register?source=" className="hover:text-gray-300">Sign Up</Link>
               </div>
             </div>
           </div>
         </div>
-
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
@@ -233,15 +233,11 @@ export default function Home() {
                 <p className="text-xs text-gray-600">Pakistan Army Green Book</p>
               </div>
             </Link>
-
-            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="nav-link active">Home</Link>
               <Link href="/current-issue" className="nav-link">Current Issue</Link>
               <Link href="/archives" className="nav-link">Archives</Link>
               <Link href="/about" className="nav-link">About</Link>
-
-              {/* Editorial Dropdown - Desktop */}
               <div className="relative">
                 <button
                   onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
@@ -250,7 +246,6 @@ export default function Home() {
                   <span>Editorial</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${editorialDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-
                 {editorialDropdownOpen && (
                   <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                     <div className="py-2">
@@ -270,11 +265,8 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
               <Link href="#footer" className="nav-link">Contact</Link>
             </nav>
-
-            {/* Search & Mobile */}
             <div className="flex items-center space-x-4">
               <div className="relative">
                 {searchOpen ? (
@@ -302,7 +294,7 @@ export default function Home() {
                     </button>
                   </form>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => setSearchOpen(true)}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     aria-label="Open search"
@@ -311,8 +303,7 @@ export default function Home() {
                   </button>
                 )}
               </div>
-
-              <button 
+              <button
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
@@ -320,8 +311,6 @@ export default function Home() {
               </button>
             </div>
           </div>
-
-          {/* Mobile Nav */}
           {mobileMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t pt-4">
               <nav className="flex flex-col space-y-2">
@@ -329,8 +318,6 @@ export default function Home() {
                 <Link href="/current-issue" className="nav-link">Current Issue</Link>
                 <Link href="/archives" className="nav-link">Archives</Link>
                 <Link href="/about" className="nav-link">About</Link>
-
-                {/* Editorial Dropdown - Mobile */}
                 <div>
                   <button
                     onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
@@ -339,7 +326,6 @@ export default function Home() {
                     <span>Editorial</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${editorialDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
-
                   {editorialDropdownOpen && (
                     <div className="ml-4 mt-2 space-y-1">
                       <button onClick={() => scrollToSection('leadership')} className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600">
@@ -357,7 +343,6 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-
                 <Link href="#footer" className="nav-link">Contact</Link>
               </nav>
             </div>
@@ -370,8 +355,11 @@ export default function Home() {
         background: 'linear-gradient(90deg,rgba(26, 51, 32, 1) 17%, rgba(26, 51, 32, 1) 17%, rgba(25, 92, 17, 1) 52%, rgba(5, 56, 2, 1) 73%, rgba(10, 48, 4, 1) 88%)'
       }}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative h-full" style={{width: '60%', maxWidth: '800px'}}>
+          <div className="relative w-full h-full" style={{width: '80%', maxWidth: '1400px'}}>
+            <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
             <img src="/images/firstpage.png" alt="Military" className="w-full h-full object-cover object-center" />
+            <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
+            <img src="/images/pagb_2019_1.jpeg" alt="Military" className="w-full h-full object-cover object-center" />
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 py-6 md:py-10 z-10" style={{
@@ -464,7 +452,6 @@ export default function Home() {
                 ))}
               </div>
             </div>
-
             <div className="lg:col-span-1">
               <div className="bg-orange-50 border-2 border-orange rounded p-6 mb-6">
                 <div className="flex items-start space-x-2 mb-2">
@@ -475,15 +462,13 @@ export default function Home() {
                   Submit your research on <strong>"Future of Military Technology"</strong>
                 </p>
                 <p className="text-xs text-gray-600 mb-3">Deadline: March 31, 2025</p>
-                <Link href="/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
+                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
               </div>
-
               <div className="mb-12">
                 <h3 className="text-2xl font-bold mb-2" style={{color: '#5A6B4A', fontFamily: 'Arial, sans-serif', fontWeight: '700', letterSpacing: '0.02em'}}>
                   ARMY MAGAZINE
                 </h3>
               </div>
-
               <div>
                 <h3 className="text-2xl font-bold mb-2 pb-3 border-b-2 border-gray-300" style={{color: '#3A3A3A', fontFamily: 'Arial, sans-serif', fontWeight: '700', letterSpacing: '0.02em'}}>
                   OTHER ISSUES
@@ -501,7 +486,6 @@ export default function Home() {
                       </div>
                     </div>
                   </button>
-
                   <button onClick={() => loadIssue('2021')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
                     <div className="flex">
                       <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
@@ -514,9 +498,8 @@ export default function Home() {
                       </div>
                     </div>
                   </button>
-
                   <div className="text-center pt-4">
-                    <Link href="/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
+                    <Link href="http://localhost:3000/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
                       View All Issues & Articles <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
                     </Link>
                   </div>
@@ -528,7 +511,7 @@ export default function Home() {
       </div>
 
       {/* Quick Links & Recent Issues */}
-      <section className="bg-gray-50 border-t border-gray-200 py-12">
+      {/* <section className="bg-gray-50 border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
@@ -536,7 +519,6 @@ export default function Home() {
               <ul className="space-y-4">
                 <li><Link href="/archives" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Globe className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Browse Archives</span></Link></li>
                 <li><Link href="/about" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><BookOpen className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">About PAGB</span></Link></li>
-                <li><Link href="/submission" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><FileText className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Submission Guidelines</span></Link></li>
                 <li><Link href="#footer" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Users className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Contact Us</span></Link></li>
               </ul>
             </div>
@@ -546,29 +528,61 @@ export default function Home() {
                 <li className="border-b border-gray-300 pb-4"><Link href="/issue/2025-01" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">January 2025</div><div className="text-lg font-semibold text-green">Vol. 15, Issue 1</div></Link></li>
                 <li className="border-b border-gray-300 pb-4"><Link href="/issue/2024-12" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">December 2024</div><div className="text-lg font-semibold text-green">Vol. 14, Issue 12</div></Link></li>
                 <li className="border-b border-gray-300 pb-4"><Link href="/issue/2024-11" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">November 2024</div><div className="text-lg font-semibold text-green">Vol. 14, Issue 11</div></Link></li>
-                <li className="pt-2"><Link href="/archives" className="text-orange font-bold text-lg hover:underline">View All Issues</Link></li>
+                <li className="pt-2"><Link href="http://localhost:3000/current-issue" className="text-orange font-bold text-lg hover:underline">View All Issues</Link></li>
               </ul>
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* Authors */}
+      {/* Authors Section - FULLY UPDATED & DYNAMIC */}
       <section id="authors" className="bg-white border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
           <h2 className="section-heading text-center mb-8">Contributing Authors</h2>
-          <div className="relative">
-            <button aria-label="Previous" className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-gray-100 hover:bg-gray-200" onClick={() => setAuthorIndex(prev => Math.max(0, prev - 1))}><ChevronLeft className="w-5 h-5" /></button>
-            <button aria-label="Next" className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-gray-100 hover:bg-gray-200" onClick={() => setAuthorIndex(prev => Math.min(Math.max(0, authors.length - 3), prev + 1))}><ChevronRight className="w-5 h-5" /></button>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-10">
-              {authors.slice(authorIndex, authorIndex + 3).map(author => (
-                <a key={author.slug} href={author.pdfUrl} target="_blank" rel="noopener noreferrer" className="bg-white border border-gray-200 rounded p-6 text-center hover:shadow-md transition-shadow">
-                  <div className="w-20 h-20 bg-green text-white rounded-full flex items-center justify-center mx-auto mb-4 font-serif text-2xl">{author.count}</div>
-                  <h3 className="font-serif font-bold text-green mb-1">{author.name}</h3>
-                </a>
-              ))}
+
+          {authors.length === 0 ? (
+            <p className="text-center text-gray-500 text-lg">Loading authors...</p>
+          ) : (
+            <div className="relative">
+              <button
+                aria-label="Previous"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow-lg"
+                onClick={() => setAuthorIndex(prev => Math.max(0, prev - 1))}
+                disabled={authorIndex === 0}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              <button
+                aria-label="Next"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow-lg"
+                onClick={() => setAuthorIndex(prev => Math.min(authors.length - 3, prev + 1))}
+                disabled={authorIndex >= authors.length - 3}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-12">
+                {authors.slice(authorIndex, authorIndex + 3).map(author => (
+                  <Link
+                    key={author.slug}
+                    href={`/authors/${author.slug}`}
+                    className="block bg-white border border-gray-200 rounded-xl p-8 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer group"
+                  >
+                    <div className="w-24 h-24 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-5 font-serif text-4xl font-bold shadow-xl">
+                      {author.count}
+                    </div>
+                    <h3 className="font-serif font-bold text-green-700 text-2xl group-hover:text-green-800 transition">
+                      {author.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-4 opacity-0 group-hover:opacity-100 transition">
+                      View all articles →
+                    </p>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -680,8 +694,8 @@ export default function Home() {
               <h4 className="font-serif font-bold mb-4">Contact</h4>
               <ul className="space-y-3 text-sm text-gray-300">
                 <li className="flex items-start"><Globe className="w-4 h-4 mr-2 mt-0.5" /><span>Pakistan Army GHQ, Rawalpindi, Pakistan</span></li>
-                <li className="flex items-start"><span className="mr-2">email</span><a href="mailto:editor@pagb.army.mil" className="hover:text-white">editor@pagb.army.mil</a></li>
-                <li className="flex items-start"><span className="mr-2">phone</span><span>+92 (051) 123-4567</span></li>
+                <li className="flex items-start"><Mail className="w-4 h-4 mr-2 mt-0.5" /><span className="mr-2">email</span><a href="mailto:editor@pagb.army.mil" className="hover:text-white">editor@pagb.army.mil</a></li>
+                <li className="flex items-start"><Phone className="w-4 h-4 mr-2 mt-0.5" /><span className="mr-2">phone</span><span>+92 (051) 123-4567</span></li>
               </ul>
             </div>
           </div>
