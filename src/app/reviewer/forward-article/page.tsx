@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, XCircle, Upload, Edit3, Save } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
@@ -31,16 +31,7 @@ export default function ForwardArticle() {
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
-  useEffect(() => {
-    if (!articleId) {
-      router.push('/reviewer/dashboard');
-      return;
-    }
-    
-    fetchArticle();
-  }, [articleId, router]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
     try {
       const response = await fetch(`/api/articles/${articleId}`, {
         headers: {
@@ -63,7 +54,16 @@ export default function ForwardArticle() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [articleId, router]);
+
+  useEffect(() => {
+    if (!articleId) {
+      router.push('/reviewer/dashboard');
+      return;
+    }
+    
+    fetchArticle();
+  }, [articleId, router, fetchArticle]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

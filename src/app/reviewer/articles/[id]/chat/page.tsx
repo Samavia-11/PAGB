@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Send, Paperclip, Download, FileText, Image, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
+import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
 
 interface FileAttachment {
   name: string;
@@ -48,6 +48,44 @@ export default function ReviewerArticleChat() {
   const [sending, setSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const fetchArticle = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/articles/${articleId}`, {
+        headers: {
+          'x-user-role': 'reviewer'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setArticle(data.article);
+      }
+    } catch (error) {
+      console.error('Error fetching article:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [articleId]);
+
+  const loadMessages = useCallback(() => {
+    const storageKey = `chat_messages_article_${articleId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const parsedMessages = JSON.parse(stored);
+      setMessages(parsedMessages);
+      
+      // Mark messages as read
+      const updatedMessages = parsedMessages.map((msg: Message) => ({
+        ...msg,
+        read: msg.senderRole === 'reviewer' || msg.read
+      }));
+      
+      if (JSON.stringify(updatedMessages) !== stored) {
+        localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
+      }
+    }
+  }, [articleId]);
+
   useEffect(() => {
     // Check authentication
     const userData = localStorage.getItem('user');
@@ -69,49 +107,11 @@ export default function ReviewerArticleChat() {
     // Set up real-time message polling
     const interval = setInterval(loadMessages, 3000);
     return () => clearInterval(interval);
-  }, [router, articleId]);
+  }, [router, articleId, fetchArticle, loadMessages]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const fetchArticle = async () => {
-    try {
-      const response = await fetch(`/api/articles/${articleId}`, {
-        headers: {
-          'x-user-role': 'reviewer'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setArticle(data.article);
-      }
-    } catch (error) {
-      console.error('Error fetching article:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = () => {
-    const storageKey = `chat_messages_article_${articleId}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      const parsedMessages = JSON.parse(stored);
-      setMessages(parsedMessages);
-      
-      // Mark messages as read
-      const updatedMessages = parsedMessages.map((msg: Message) => ({
-        ...msg,
-        read: msg.senderRole === 'reviewer' || msg.read
-      }));
-      
-      if (JSON.stringify(updatedMessages) !== stored) {
-        localStorage.setItem(storageKey, JSON.stringify(updatedMessages));
-      }
-    }
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -200,7 +200,7 @@ export default function ReviewerArticleChat() {
   };
 
   const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="w-4 h-4" />;
+    if (type.startsWith('image/')) return <ImageIcon className="w-4 h-4" />;
     if (type.includes('pdf')) return <FileText className="w-4 h-4" />;
     return <File className="w-4 h-4" />;
   };
