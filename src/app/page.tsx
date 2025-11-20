@@ -459,7 +459,7 @@ export default function Home() {
                   <h3 className="font-serif font-bold text-lg text-green">Call for Papers</h3>
                 </div>
                 <p className="text-sm text-gray-700 mb-3">
-                  Submit your research on <strong>"Future of Military Technology"</strong>
+                  Submit your research on <strong>&#34;Future of Military Technology&#34;</strong>
                 </p>
                 <p className="text-xs text-gray-600 mb-3">Deadline: March 31, 2025</p>
                 <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>

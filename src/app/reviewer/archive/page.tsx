@@ -132,7 +132,7 @@ export default function ReviewerArchive() {
                 Forwarded Articles Archive
               </h1>
               <p className="text-gray-600 mt-1">
-                Real-time archive of all articles you've forwarded to editor ({forwardedRecords.length} total)
+                Real-time archive of all articles you&apos;ve forwarded to editor ({forwardedRecords.length} total)
               </p>
             </div>
             <div className="flex space-x-3">
