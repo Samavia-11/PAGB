@@ -499,8 +499,8 @@ export default function Home() {
                     </div>
                   </button>
                   <div className="text-center pt-4">
-                    <Link href="http://localhost:3000/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
-                      View All Issues & Articles <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
+                    <Link href="/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
+                      View All Issues & Articles <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]"/>
                     </Link>
                   </div>
                 </div>
