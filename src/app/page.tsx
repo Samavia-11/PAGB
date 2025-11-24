@@ -613,7 +613,7 @@ export default function Home() {
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Editorial Team</h3>
               <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-4">
                 <div className="text-sm font-semibold text-orange mb-2">EDITOR</div>
-                <h4 className="text-xl font-bold text-gray-900">Dir E Wing</h4>
+                <h4 className="text-xl font-bold text-gray-900">Brigadier Zahid Mehmood Awan</h4>
               </div>
               <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                 <div className="text-sm font-semibold text-orange mb-4">ASSISTANT EDITORS</div>
