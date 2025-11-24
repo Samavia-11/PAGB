@@ -211,8 +211,8 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center space-x-4">
-                <span>editor@pagb.army.mil</span>
-                <span className="hidden md:inline">+92 (051) 123-4567</span>
+                <span>senduspagb@gmail.com</span>
+                <span className="hidden md:inline">+92 (051) 5202339</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="hover:text-gray-300">Login</Link>
