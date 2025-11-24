@@ -399,6 +399,9 @@ export default function Home() {
               <p className="text-3xl font-bold text-green">{stats.issuesPublished}</p>
               <p className="text-sm text-gray-600">Issues Published</p>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">ISSN (Print): 2303-9973</p>
+            </div>
           </div>
         </div>
       </section>
@@ -598,8 +601,8 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                   <div className="text-sm font-semibold text-orange mb-2">PATRON-IN-CHIEF</div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-1">Field Marshal Syed Asim Munir, NI(M), SJ,  Patron-in-Chief</h4>
-                  <p className="text-gray-600">Chief of Army Staff</p>
+                  <h4 className="text-xl font-bold text-gray-900 mb-1">Field Marshal Syed Asim Munir, NI(M), SJ</h4>
+                  {/* <p className="text-gray-600">Chief of Army Staff</p> */}
                 </div>
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                   <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
