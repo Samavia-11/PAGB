@@ -598,13 +598,18 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                   <div className="text-sm font-semibold text-orange mb-2">PATRON-IN-CHIEF</div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-1">Field Marshal Syed Asim Munir, NI(M), SJ,  Patron-in-Chief</h4>
+                  <p className="text-gray-600">Chief of Army Staff</p>
+                </div>
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
                   <h4 className="text-xl font-bold text-gray-900 mb-1">Lieutenant General Muhammad Aamer Najam, HI (M)</h4>
                   <p className="text-gray-600">IGT&E</p>
                 </div>
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-1">Major General Muhammad Shahid Abro</h4>
-                  <p className="text-gray-600">DG HRD</p>
+                  <div className="text-sm font-semibold text-orange mb-2">Editor-in-Chief</div>
+                  <h4 className="text-xl font-bold text-gray-t-gray-900 mb-1">Major General Muhammad Shahid Abro, HI (M)</h4>
+                  <p className="text-gray-600">DG HRD Dte</p>
                 </div>
               </div>
             </div>
