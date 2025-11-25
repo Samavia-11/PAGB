@@ -356,7 +356,7 @@ export default function Home() {
       }}>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full h-full" style={{width: '80%', maxWidth: '1400px'}}>
-             <img src="/images/firstpage.png" alt="Military" className="w-full h-full object-cover object-center" />
+             <img src="/images/firstpage.jpg" alt="Military" className="w-full h-full object-cover object-center" />
             <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
             <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
            
