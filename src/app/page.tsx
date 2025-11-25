@@ -400,7 +400,7 @@ export default function Home() {
               <p className="text-sm text-gray-600">Issues Published</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">ISSN (Print): 2303-9973</p>
+              <p className="text-sm text-gray-600 mt-6 font-bold">ISSN (Print): 2303-9973</p>
             </div>
           </div>
         </div>
