@@ -371,7 +371,7 @@ export default function Home() {
         }}>
           <div className="container mx-auto px-4">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center" style={{
-              fontFamily: 'Impact, "Arial Bold", sans-serif',
+              fontFamily: 'Cambria, "Arial Bold", sans-serif',
               letterSpacing: '0.02em',
               fontWeight: '700',
               textTransform: 'uppercase',
