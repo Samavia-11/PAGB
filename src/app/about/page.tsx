@@ -102,7 +102,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-96 flex items-center justify-center">
-                <p className="text-gray-500 text-lg">[PAGB Cover Image Here]</p>
+                <img src="/images/icon1.JPG" alt="Military" className="w-full h-full object-cover object-center" />
               </div>
             </div>
           </div>
