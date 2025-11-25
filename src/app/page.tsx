@@ -605,7 +605,7 @@ export default function Home() {
                   {/* <p className="text-gray-600">Chief of Army Staff</p> */}
                 </div>
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
+                  <div className="text-sm font-semibold text-orange mb-2">c:\Users\HOME\OneDrive\Desktop\Quick Links\2.jpgPATRON</div>
                   <h4 className="text-xl font-bold text-gray-900 mb-1">Lieutenant General Muhammad Aamer Najam, HI (M)</h4>
                   <p className="text-gray-600">IGT&E</p>
                 </div>
