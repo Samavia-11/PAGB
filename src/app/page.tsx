@@ -597,7 +597,7 @@ export default function Home() {
                   <button onClick={() => loadIssue('2021')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
                     <div className="flex">
                       <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
-                        <img src="/images/icon.png" alt="2021" className="w-full h-full object-cover opacity-60" />
+                        <img src="/images/2021 title.png" alt="2021" className="w-full h-full object-cover opacity-60" />
                       </div>
                       <div className="flex-1 p-5">
                         <div className="text-sm text-gray-700 mb-2 font-semibold">2021 EDITION</div>
