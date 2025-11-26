@@ -1,7 +1,109 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe, ChevronLeft, ChevronRight,Phone, Mail } from 'lucide-react';
+import { FileText, Users, Search, Menu, X, ChevronDown, BookOpen, Award, Globe, ChevronLeft, ChevronRight, Phone, Mail } from 'lucide-react';
+
+// Image slider component
+const ImageSlider = ({ images }: { images: string[] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex === images.length - 1 ? 0 : prevIndex + 1));
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex === 0 ? images.length - 1 : prevIndex - 1));
+  };
+
+  useEffect(() => {
+    if (isPaused) return;
+    
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isPaused, currentIndex]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current - touchEndX.current > 50) {
+      nextSlide();
+    }
+    if (touchEndX.current - touchStartX.current > 50) {
+      prevSlide();
+    }
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+  };
+
+  return (
+    <div 
+      className="relative w-full h-full overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Slides */}
+      <div 
+        className="flex transition-transform duration-500 ease-in-out h-full"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {images.map((image, index) => (
+          <div key={index} className="w-full flex-shrink-0 h-full">
+            <img 
+              src={image} 
+              alt={`Slide ${index + 1}`} 
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Arrows */}
+      <button 
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all focus:outline-none"
+        aria-label="Previous slide"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+      <button 
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all focus:outline-none"
+        aria-label="Next slide"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all ${currentIndex === index ? 'bg-white w-6' : 'bg-white bg-opacity-50'}`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 interface Article {
   title: string;
@@ -354,15 +456,16 @@ export default function Home() {
       <section className="relative h-[500px] md:h-[600px] overflow-hidden" style={{
         background: 'linear-gradient(90deg,rgba(26, 51, 32, 1) 17%, rgba(26, 51, 32, 1) 17%, rgba(25, 92, 17, 1) 52%, rgba(5, 56, 2, 1) 73%, rgba(10, 48, 4, 1) 88%)'
       }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-full h-full" style={{width: '80%', maxWidth: '1400px'}}>
-             <img src="/images/firstpage.jpg" alt="Military" className="w-full h-full object-cover object-center" />
-            <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
-            <img src="/images/pagb_2019.jpeg" alt="Military" className="w-full h-full object-cover" />
-           
-            
-            <img src="/images/pagb_2019_1.jpeg" alt="Military" className="w-full h-full object-cover object-center" />
-          </div>
+        <div className="absolute inset-0">
+          <ImageSlider 
+            images={[
+              "/images/_DSC7755.JPG",
+              "/images/_DSC8067.JPG",
+              "/images/5.jpg",
+              "/images/DSC_2318.JPG",
+              "/images/DSC_9542.JPG"
+            ]} 
+          />
         </div>
         <div className="absolute bottom-0 left-0 right-0 py-6 md:py-10 z-10" style={{
           background: 'rgba(0, 0, 0, 0.5)',
