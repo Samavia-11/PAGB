@@ -695,7 +695,7 @@ export default function Home() {
       </section>
 
       {/* Editorial Board */}
-      <section className="bg-gray-50 border-t border-gray-200 py-16">
+      <section id="editorial-board" className="bg-gray-50 border-t border-gray-200 py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-12" style={{color: '#3A3A3A', fontFamily: 'Georgia, serif'}}>Editorial Board</h2>
           <div className="max-w-6xl mx-auto space-y-12">
@@ -708,7 +708,7 @@ export default function Home() {
                   {/* <p className="text-gray-600">Chief of Army Staff</p> */}
                 </div>
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">c:\Users\HOME\OneDrive\Desktop\Quick Links\2.jpgPATRON</div>
+                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
                   <h4 className="text-xl font-bold text-gray-900 mb-1">Lieutenant General Muhammad Aamer Najam, HI (M)</h4>
                   <p className="text-gray-600">IGT&E</p>
                 </div>
@@ -789,18 +789,28 @@ export default function Home() {
                 <li><Link href="/archives" className="text-gray-300 hover:text-white">Browse Archives</Link></li>
                 <li><Link href="/current-issue" className="text-gray-300 hover:text-white">Current Issue</Link></li>
                 <li><Link href="/submission" className="text-gray-300 hover:text-white">Submission Guidelines</Link></li>
-                <li><Link href="/editorial-board" className="text-gray-300 hover:text-white">Editorial Board</Link></li>
-                <li><Link href="/peer-review" className="text-gray-300 hover:text-white">Peer Review Process</Link></li>
+                <li>
+                  <a 
+                    href="#editorial-board" 
+                    className="text-gray-300 hover:text-white cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.getElementById('editorial-board');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    Editorial Board
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-serif font-bold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/about" className="text-gray-300 hover:text-white">About PAGB</Link></li>
-                <li><Link href="/Authors" className="text-gray-300 hover:text-white">For Authors</Link></li>
-                <li><Link href="/reviewers" className="text-gray-300 hover:text-white">For Reviewers</Link></li>
                 <li><Link href="/faq" className="text-gray-300 hover:text-white">FAQ</Link></li>
-                <li><Link href="/contact" className="text-gray-300 hover:text-white">Contact Us</Link></li>
               </ul>
             </div>
             <div>
