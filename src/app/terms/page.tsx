@@ -47,7 +47,7 @@ export default function TermsOfUse() {
 
             <Section number={2} title="Use License">
               <p className="text-gray-700 leading-relaxed">
-                Permission is granted to temporarily download one copy of the materials on PAGB's website for personal, non-commercial transitory viewing only.
+                Permission is granted to temporarily download one copy of the materials on PAGB&apos;s website for personal, non-commercial transitory viewing only.
               </p>
             </Section>
 
