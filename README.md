@@ -1,7 +1,10 @@
 
 # PAGB
 # JournalFlow - Your Digital Journaling Companion
-
+For production:
+pm2 stop pagb-app
+pm2 restart pagb-app
+pm2 delete pagb-app   
 A modern, beautiful, and secure journaling application built with Next.js, Node.js, and MySQL. Transform your manual journaling process into a seamless digital experience.
 
 ## 🌟 Features
