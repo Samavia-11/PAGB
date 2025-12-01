@@ -127,11 +127,17 @@ interface Stats {
   issuesPublished: number;
 }
 
+interface PolicyLink {
+  slug: string;
+  title: string;
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [editorialDropdownOpen, setEditorialDropdownOpen] = useState<boolean>(false);
+  const [policiesDropdownOpen, setPoliciesDropdownOpen] = useState<boolean>(false);
 
   const [stats, setStats] = useState<Stats>({
     publishedArticles: 0,
@@ -199,6 +205,7 @@ export default function Home() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [authorIndex, setAuthorIndex] = useState<number>(0);
   const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const [policies, setPolicies] = useState<PolicyLink[]>([]);
   const articlesRef = useRef<HTMLDivElement | null>(null);
 
   // Fetch authors dynamically
@@ -210,6 +217,23 @@ export default function Home() {
         const data = await res.json();
         if (!cancelled && data?.authors) {
           setAuthors(data.authors);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch policies for navigation
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/policies');
+        const data = await res.json();
+        if (!cancelled && data?.policies) {
+          setPolicies(data.policies as PolicyLink[]);
         }
       } catch (e) {
         console.error(e);
@@ -258,6 +282,7 @@ export default function Home() {
 
   const scrollToSection = (sectionId: string) => {
     setEditorialDropdownOpen(false);
+    setPoliciesDropdownOpen(false);
     setMobileMenuOpen(false);
     setTimeout(() => {
       const element = document.getElementById(sectionId);
@@ -342,7 +367,10 @@ export default function Home() {
               <Link href="/about" className="nav-link">About</Link>
               <div className="relative">
                 <button
-                  onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
+                  onClick={() => {
+                    setEditorialDropdownOpen(!editorialDropdownOpen);
+                    setPoliciesDropdownOpen(false);
+                  }}
                   className="nav-link flex items-center space-x-1 hover:text-green-700 transition-colors"
                 >
                   <span>Editorial</span>
@@ -363,6 +391,38 @@ export default function Home() {
                       <button onClick={() => scrollToSection('peer-review')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         Peer Review Committee
                       </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setPoliciesDropdownOpen(!policiesDropdownOpen);
+                    setEditorialDropdownOpen(false);
+                  }}
+                  className="nav-link flex items-center space-x-1 hover:text-green-700 transition-colors"
+                >
+                  <span>Journal Policies</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${policiesDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {policiesDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                    <div className="py-2">
+                      {policies.length === 0 && (
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          Policies will be available soon.
+                        </div>
+                      )}
+                      {policies.map((policy) => (
+                        <Link
+                          key={policy.slug}
+                          href={`/policies/${policy.slug}`}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {policy.title}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -422,7 +482,10 @@ export default function Home() {
                 <Link href="/about" className="nav-link">About</Link>
                 <div>
                   <button
-                    onClick={() => setEditorialDropdownOpen(!editorialDropdownOpen)}
+                    onClick={() => {
+                      setEditorialDropdownOpen(!editorialDropdownOpen);
+                      setPoliciesDropdownOpen(false);
+                    }}
                     className="nav-link flex items-center justify-between w-full"
                   >
                     <span>Editorial</span>
@@ -442,6 +505,34 @@ export default function Home() {
                       <button onClick={() => scrollToSection('peer-review')} className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600">
                         Peer Review Committee
                       </button>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <button
+                    onClick={() => {
+                      setPoliciesDropdownOpen(!policiesDropdownOpen);
+                      setEditorialDropdownOpen(false);
+                    }}
+                    className="nav-link flex items-center justify-between w-full"
+                  >
+                    <span>Journal Policies</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${policiesDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {policiesDropdownOpen && (
+                    <div className="ml-4 mt-2 space-y-1 max-h-64 overflow-y-auto">
+                      {policies.length === 0 && (
+                        <p className="py-1 text-sm text-gray-600">Policies will be available soon.</p>
+                      )}
+                      {policies.map((policy) => (
+                        <Link
+                          key={policy.slug}
+                          href={`/policies/${policy.slug}`}
+                          className="block w-full text-left py-1 text-sm text-gray-600 hover:text-green-600"
+                        >
+                          {policy.title}
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </div>
