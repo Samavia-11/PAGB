@@ -1,0 +1,92 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 210.56.14.242 >> ~/.ssh/known_hosts
+      
+      - name: Deploy to VM
+        id: deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no pagb@210.56.14.242 << 'ENDSSH'
+            set -e
+            
+            cd /home/pagb/pagb
+            
+            # Backup current build
+            if [ -d ".next" ]; then
+              rm -rf .next.backup
+              cp -r .next .next.backup
+              echo "✓ Backup created"
+            fi
+            
+            # Pull latest code
+            git fetch origin main
+            git reset --hard origin/main
+            git lfs pull
+            echo "✓ Code synced"
+            
+            # Install dependencies
+            npm install
+            echo "✓ Dependencies installed"
+            
+            # Try to build
+            if npm run build; then
+              echo "✓ Build successful"
+              # Remove backup after successful build
+              rm -rf .next.backup
+              # Restart the app
+              pm2 restart pagb-app || pm2 start npm --name "pagb-app" -- start
+              echo "✓ App restarted"
+            else
+              echo "✗ Build failed"
+              # Rollback to previous build
+              if [ -d ".next.backup" ]; then
+                rm -rf .next
+                mv .next.backup .next
+                echo "✓ Rolled back to previous build"
+              fi
+              exit 1
+            fi
+          ENDSSH
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: '❌ **Build Failed on VM**\n\nThe deployment to 210.56.14.242 failed. Previous build has been retained.\n\nCheck the [Actions log](' + context.serverUrl + '/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId + ') for details.'
+            })
+      
+      - name: Notify on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: '✅ **Deployed Successfully**\n\nCode synced and built on 210.56.14.242'
+            })
