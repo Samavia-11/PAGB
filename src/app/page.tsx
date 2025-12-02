@@ -225,21 +225,20 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fetch policies for navigation
+  // Static policies data
+  const staticPolicies: PolicyLink[] = [
+    { slug: 'publication-policy', title: 'Publication Policy' },
+    { slug: 'editorial-policy', title: 'Editorial Policy' },
+    { slug: 'peer-review-policy', title: 'Peer Review Policy' },
+    { slug: 'open-access-journal-policy', title: 'Open Access Journal Policy' },
+    { slug: 'plagiarism-policy', title: 'Plagiarism Policy' },
+    { slug: 'complaint-policy', title: 'Complaint Policy' },
+    { slug: 'repository-policy', title: 'Repository Policy' },
+  ];
+
+  // Set policies from static data
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/policies');
-        const data = await res.json();
-        if (!cancelled && data?.policies) {
-          setPolicies(data.policies as PolicyLink[]);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-    return () => { cancelled = true; };
+    setPolicies(staticPolicies);
   }, []);
 
   // Fetch stats
@@ -823,8 +822,6 @@ export default function Home() {
                   <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Brigadier Dr Shahid Yaqub Abbasi</h5><p className="text-sm text-gray-600">FGE&I Dte, Rawalpindi</p></div>
                   <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Colonel Dr Sayyam Bin Saeed</h5><p className="text-sm text-gray-600">HRD Dte, GHQ</p></div>
                   <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Lieutenant Colonel Dr Zillay Hussain Dar</h5><p className="text-sm text-gray-600">HRD Dte, (GSO-1 PAGB)</p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Lieutenant Col Dr Qasim Ali Shah</h5><p className="text-sm text-gray-600">ISPR, GHQ</p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Major Dr Muhammad Irfan</h5><p className="text-sm text-gray-600">Military College Jhelum</p></div>
                 </div>
               </div>
             </div>
@@ -848,13 +845,13 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Lubna Abid Ali</h5><p className="text-sm text-gray-600">Dean Faculty of Contemporary Studies (FCS), NDU</p></div>
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Maria Saifuddin Effendi</h5><p className="text-sm text-gray-600">Assistant Professor Peace & Conflict Studies, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Brig Dr Saif Ur Rehman, TI (M), (Retd)</h5><p className="text-sm text-gray-600">Regional Director NUML, Peshawar</p></div>
+                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Saif Ur Rehman</h5><p className="text-sm text-gray-600">Regional Director NUML, Peshawar</p></div>
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Bashir Khan</h5><p className="text-sm text-gray-600">Professor Govt & Public Policy, NDU</p></div>
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Riaz Shad</h5><p className="text-sm text-gray-600">Professor/Head of Department International Relations, NUML</p></div>
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Asma Shakir Khawaja</h5><p className="text-sm text-gray-600">Executive Director, CISS AJ&K</p></div>
                 <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Rubina Waseem</h5><p className="text-sm text-gray-600">Department of Strategic Studies, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Brig Dr Abdul Rauf</h5><p className="text-sm text-gray-600">Director Special Plans, C&IT Br, GHQ</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Brig Dr Muhammad Farooq</h5><p className="text-sm text-gray-600">Director B Wing, HRD Dte, GHQ</p></div>
+                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Abdul Rauf</h5></div>
+                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Farooq</h5></div>
               </div>
             </div>
           </div>

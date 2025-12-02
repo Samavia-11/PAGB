@@ -47,3 +47,6 @@ next-env.d.ts
 
 # large PDF files
 public/pdfs/*.pdf
+
+# Markdown files at root (documentation)
+/*.md
