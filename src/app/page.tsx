@@ -334,7 +334,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="bg-green text-white py-2">
+        <div className="bg-[#002300] text-white py-2">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center space-x-4">
@@ -352,8 +352,8 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green rounded flex items-center justify-center">
-                <BookOpen className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded flex items-center justify-center">
+                <img src="/images/pagblogo.png" alt="PAGB Logo" className="w-20 h-20 object-contain" />
               </div>
               <div>
                 <h1 className="text-2xl font-serif font-bold text-green">PAGB</h1>
@@ -571,7 +571,7 @@ export default function Home() {
               textTransform: 'uppercase',
               lineHeight: '1.1'
             }}>
-              ARMY GREEN BOOK
+              PAKISTAN ARMY GREEN BOOK
             </h1>
           </div>
         </div>
@@ -717,7 +717,7 @@ export default function Home() {
               <h2 className="text-4xl font-bold mb-8" style={{color: '#5A6B4A', fontFamily: 'Georgia, serif', letterSpacing: '0.02em', fontWeight: '700'}}>QUICK LINKS</h2>
               <ul className="space-y-4">
                 <li><Link href="/archives" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Globe className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Browse Archives</span></Link></li>
-                <li><Link href="/about" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><BookOpen className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">About PAGB</span></Link></li>
+                <li><Link href="/about" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><img src="/images/pagblogo.png" alt="PAGB Logo" className="w-6 h-6 object-contain" /></div><span className="text-lg text-gray-800 group-hover:text-orange">About PAGB</span></Link></li>
                 <li><Link href="#footer" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Users className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Contact Us</span></Link></li>
               </ul>
             </div>
@@ -862,7 +862,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer id="footer" className="bg-green text-white py-12 border-t-4 border-orange">
+      <footer id="footer" className="bg-[#002300] text-white py-12 border-t-4 border-orange">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>

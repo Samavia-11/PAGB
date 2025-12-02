@@ -14,7 +14,7 @@ export default function AboutPage() {
       <div className="min-h-screen bg-gray-50">
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-green-800 via-green-700 to-green-900 text-white py-24">
+        <section className="bg-gradient-to-br from-[#002300] via-[#002300] to-[#002300] text-white py-24">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6">About PAGB</h1>
             <p className="text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed opacity-95">
@@ -29,8 +29,8 @@ export default function AboutPage() {
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12">
               <div className="text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Target className="w-10 h-10 text-green-700" />
+                <div className="w-20 h-20 bg-green-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Target className="w-10 h-10 text-[#002300]" />
                 </div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-4">Our Mission</h2>
                 <p className="text-lg text-gray-600 leading-relaxed">
@@ -109,7 +109,7 @@ export default function AboutPage() {
         </section>
 
         {/* Call to Action */}
-        <section className="py-20 bg-green-700 text-white">
+        <section className="py-20 bg-[#002300] text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-4xl font-bold mb-8">Contribute to Strategic Thought</h2>
             <p className="text-xl mb-10 max-w-3xl mx-auto">
@@ -118,7 +118,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               
-              <Link href="/current-issue" className="bg-white text-green-700 hover:bg-gray-100 px-10 py-5 rounded-lg text-xl font-bold transition">
+              <Link href="/current-issue" className="bg-white text-[#002300] hover:bg-gray-100 px-10 py-5 rounded-lg text-xl font-bold transition">
                 View Current Issue →
               </Link>
             </div>

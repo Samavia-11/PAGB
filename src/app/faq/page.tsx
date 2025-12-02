@@ -44,7 +44,7 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-700 to-green-800 text-white py-20">
+      <section className="bg-gradient-to-r from-[#002300] to-[#002300] text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h1>
           <p className="text-xl opacity-90">Find answers to common questions about the Pakistan Army Green Book</p>

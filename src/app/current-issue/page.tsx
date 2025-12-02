@@ -20,7 +20,7 @@ export default function CurrentIssue() {
       <div className="min-h-screen bg-gray-50">
 
         {/* Hero */}
-        <section className="bg-gradient-to-r from-green-800 to-green-900 text-white py-20">
+        <section className="bg-gradient-to-r from-[#002300] to-[#002300] text-white py-20">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-4">Current Issue</h1>
             <p className="text-xl opacity-90">Pakistan Army Green Book</p>
@@ -39,8 +39,8 @@ export default function CurrentIssue() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-3 px-8 py-6 text-sm font-medium tracking-wider whitespace-nowrap transition-all border-b-4 ${
                       activeTab === tab.id
-                        ? 'border-green-600 text-green-700 bg-green-50'
-                        : 'border-transparent text-gray-600 hover:text-green-700 hover:border-green-300'
+                        ? 'border-[#002300] text-[#002300] bg-green-50'
+                        : 'border-transparent text-gray-600 hover:text-[#002300] hover:border-green-300'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -59,7 +59,7 @@ export default function CurrentIssue() {
             {/* Volume Tab */}
             {activeTab === 'volume' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-green-700 mb-4">Volume 15</h2>
+                <h2 className="text-6xl font-black text-[#002300] mb-4">Volume 15</h2>
                 <p className="text-2xl text-gray-700">2025</p>
                 <div className="mt-8 text-gray-600">
                   <p className="text-lg">Pakistan Army Green Book</p>
@@ -71,7 +71,7 @@ export default function CurrentIssue() {
             {/* Issue Tab */}
             {activeTab === 'issue' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-green-700 mb-4">Issue 01</h2>
+                <h2 className="text-6xl font-black text-[#002300] mb-4">Issue 01</h2>
                 <p className="text-2xl text-gray-700">January 2025</p>
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-gray-600">
                   <div>
@@ -119,7 +119,7 @@ export default function CurrentIssue() {
                         <h3 className="text-xl font-bold text-gray-800 mt-2">{title}</h3>
                         <p className="text-gray-600 mt-2">Lt Col Ahmed Raza, Dr. Maria Khan</p>
                       </div>
-                      <button className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition">
+                      <button className="bg-[#002300] hover:bg-green-800 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition">
                         <FileText className="w-5 h-5" />
                         View PDF
                       </button>
