@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
       
       - name: Setup SSH
         run: |
@@ -40,10 +40,9 @@ jobs:
               echo "✓ Backup created"
             fi
             
-            # Pull latest code
+            # Pull latest code (skip LFS - PDFs already on VM)
             git fetch origin main
             git reset --hard origin/main
-            git lfs pull
             echo "✓ Code synced"
             
             # Install dependencies
