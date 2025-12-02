@@ -40,7 +40,8 @@ jobs:
               echo "✓ Backup created"
             fi
             
-            # Pull latest code (skip LFS - PDFs already on VM)
+            # Skip LFS downloads (budget exceeded, PDFs already on VM)
+            git lfs install --skip-smudge
             git fetch origin main
             git reset --hard origin/main
             echo "✓ Code synced"
