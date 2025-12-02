@@ -59,11 +59,11 @@ export default function CurrentIssue() {
             {/* Volume Tab */}
             {activeTab === 'volume' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-green-700 mb-4">Volume 15</h2>
-                <p className="text-2xl text-gray-700">2025</p>
+                <h2 className="text-6xl font-black text-green-700 mb-4">Volume 26</h2>
+                <p className="text-2xl text-gray-700">2024</p>
                 <div className="mt-8 text-gray-600">
                   <p className="text-lg">Pakistan Army Green Book</p>
-                  <p className="text-sm mt-2">Annual Publication • ISSN: XXXX-XXXX</p>
+                  <p className="text-sm mt-2">Annual Publication • ISSN:  2303-9973</p>
                 </div>
               </div>
             )}

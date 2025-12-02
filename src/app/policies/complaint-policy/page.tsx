@@ -6,18 +6,23 @@ import { BookOpen, ChevronLeft } from 'lucide-react';
 export default function ComplaintPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-green-50">
-      <header className="bg-green-800 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2">
+      <header className="bg-green-800 text-white py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center space-x-3 mr-8">
+              <div className="w-10 h-10 bg-white/20 border border-white/40 rounded flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-serif font-bold text-white">PAGB</h1>
+                <p className="text-xs text-green-200">Pakistan Army Green Book</p>
+              </div>
+            </Link>
+            <div className="border-l border-white/30 pl-8">
+              <h2 className="text-2xl md:text-3xl font-bold font-serif">
                 Complaint Policy
-              </h1>
-              <div className="h-1 w-24 bg-orange-500 rounded-full"></div>
-            </div>
-            <div className="hidden md:flex items-center text-sm text-green-100">
-              <BookOpen className="w-5 h-5 mr-2" />
-              <span>Pakistan Army Green Book</span>
+              </h2>
+              <div className="h-1 w-20 bg-orange-500 rounded-full mt-1"></div>
             </div>
           </div>
         </div>
@@ -43,30 +48,53 @@ export default function ComplaintPolicyPage() {
 
           <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-green-100">
             <article className="prose max-w-none text-gray-800">
-              <div className="whitespace-pre-wrap break-words text-sm leading-relaxed font-sans">
-{`The editorial team of PAGB welcomes complaints/appeals as they provide an opportunity for improvement. Please write your complaint with the journal volume number, issue number, research paper title, and page number to Editor PAGB at editor@pagb.org.pk, and a team member will respond as quickly as possible.
+              <p className="text-base leading-relaxed mb-6">
+                The editorial team of PAGB welcomes complaints/appeals as they provide an opportunity for improvement. Please write your complaint with the journal volume number, issue number, research paper title, and page number to Editor PAGB at <a href="mailto:editor@pagb.org.pk" className="text-green-700 hover:underline">editor@pagb.org.pk</a>, and a team member will respond as quickly as possible.
+              </p>
 
-**Right to Appeal**
+              <h2 className="text-xl font-bold text-green-800 mt-8 mb-4 border-b border-green-200 pb-2">
+                Right to Appeal
+              </h2>
+              <p className="text-base leading-relaxed mb-6">
+                Author(s) has the right to appeal an editorial decision on his/her paper. If you wish to appeal a decision, write or email Editor PAGB explaining why the decision should be reversed. If reviewer reports were included with the previous rejection letter or email, the criticism would be responded to accordingly. All appeals are sent to the journal&apos;s Editor, who will assess your research paper and details of the peer review process before a final decision. We try to manage appeals as quickly as possible, but they can be complex, so we request the author(s) to be patient and cooperate. As with any complaint, we will acknowledge receipt and keep you informed during the appeal process.
+              </p>
 
-Author(s) has the right to appeal an editorial decision on his/her paper. If you wish to appeal a decision, write or email Editor PAGB explaining why the decision should be reversed. If reviewer reports were included with the previous rejection letter or email, the criticism would be responded to accordingly. All appeals are sent to the journal's Editor, who will assess your research paper and details of the peer review process before a final decision. We try to manage appeals as quickly as possible, but they can be complex, so we request the author(s) to be patient and cooperate. As with any complaint, we will acknowledge receipt and keep you informed during the appeal process.
+              <h2 className="text-xl font-bold text-green-800 mt-8 mb-4 border-b border-green-200 pb-2">
+                Post-Publication Issues
+              </h2>
+              <p className="text-base leading-relaxed mb-4">
+                While our editorial team strives to ensure that every research paper published in PAGB Journal is entirely accurate, there are instances where problems would be raised after publication. These may fall into the following categories and result in different responses:
+              </p>
+              <ul className="space-y-3 mb-6">
+                <li className="text-base leading-relaxed">
+                  <span className="font-semibold text-green-700">Erratum</span> – Where the production process has introduced an error in the paper.
+                </li>
+                <li className="text-base leading-relaxed">
+                  <span className="font-semibold text-green-700">Corrigendum</span> – Where the author(s) notices a mistake we have not introduced.
+                </li>
+                <li className="text-base leading-relaxed">
+                  <span className="font-semibold text-green-700">Expression of Concern</span> – Where there are issues that may affect the record&apos;s validity, such as suspected image manipulation, but the author(s) is not willing to publish a Corrigendum.
+                </li>
+                <li className="text-base leading-relaxed">
+                  <span className="font-semibold text-green-700">Retraction</span> – Where major issues are affecting the validity of the scientific record, such as duplicate publication or proven plagiarism.
+                </li>
+              </ul>
 
-**Post-Publication Issues**
+              <p className="text-base leading-relaxed mb-6">
+                In all such cases, our editorial team collaborates with the author(s) to determine the best option from available responses. If a third party raises the issue, all concerned are also informed.
+              </p>
 
-While our editorial team strives to ensure that every research paper published in NDU Journal is entirely accurate, there are instances where problems would be raised after publication. These may fall into the following categories and result in different responses:
+              <p className="text-base leading-relaxed mb-6">
+                Errata, Corrigenda, Expressions of Concern, and Retractions are free to view and digitally linked to the original published article on our website and third-party websites that collect our metadata.
+              </p>
 
-- Where the production process has introduced an error in the paper, we will publish an Erratum.
-- Where the author(s) notices a mistake, we have not introduced, we will publish a Corrigendum.
-- Where there are issues that may affect the record's validity, such as suspected image manipulation, but the author(s) is not willing to publish a Corrigendum, we will publish an Expression of Concern.
-- Where major issues are affecting the validity of the scientific record, such as duplicate publication or proven plagiarism, we will publish a Retraction.
+              <p className="text-base leading-relaxed mb-6">
+                If anyone suspects a post-publication issue, we request them to contact the editorial team of PAGB immediately, providing sufficient details to undertake an investigation.
+              </p>
 
-In all such cases, our editorial team collaborates with the author(s) to determine the best option from available responses. If a third party raises the issue, all concerned are also informed.
-
-Errata, Corrigenda, Expressions of Concern, and Retractions are free to view and digitally linked to the original published article on our website and third-party websites that collect our metadata.
-
-If anyone suspects a post-publication issue, we request them to contact the editorial team of PAGB immediately, providing sufficient details to undertake an investigation.
-
-PAGB follows Committee on Publication Ethics (COPE) guidelines regarding complaints and appeals.`}
-              </div>
+              <p className="text-base leading-relaxed p-4 bg-green-50 rounded-lg border-l-4 border-green-600">
+                PAGB follows Committee on Publication Ethics (COPE) guidelines regarding complaints and appeals.
+              </p>
             </article>
           </div>
         </div>
