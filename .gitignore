@@ -47,3 +47,6 @@ next-env.d.ts
 
 # large PDF files
 public/pdfs/*.pdf
+
+CHECKPOINT.md
+DOCUMENTATION_INDEX.md
