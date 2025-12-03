@@ -1,30 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function OpenAccessJournalPolicyPage() {
   return (
+    <>
+    <Header />
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-green-50">
       <header className="bg-green-800 text-white py-4">
         <div className="container mx-auto px-4">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 mr-8">
-              <div className="w-10 h-10 bg-white/20 border border-white/40 rounded flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-serif font-bold text-white">PAGB</h1>
-                <p className="text-xs text-green-200">Pakistan Army Green Book</p>
-              </div>
-            </Link>
-            <div className="border-l border-white/30 pl-8">
-              <h2 className="text-2xl md:text-3xl font-bold font-serif">
-                Open Access Journal Policy
-              </h2>
-              <div className="h-1 w-20 bg-orange-500 rounded-full mt-1"></div>
-            </div>
-          </div>
+          <h2 className="text-2xl md:text-3xl font-bold font-serif">
+            Open Access Journal Policy
+          </h2>
+          <div className="h-1 w-20 bg-orange-500 rounded-full mt-1"></div>
         </div>
       </header>
 
@@ -86,5 +77,7 @@ export default function OpenAccessJournalPolicyPage() {
         </div>
       </main>
     </div>
+    <Footer />
+    </>
   );
 }

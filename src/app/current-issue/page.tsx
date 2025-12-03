@@ -2,11 +2,38 @@
 
 'use client';
 
-import { useState } from 'react';
-import { FileText, Users, BookOpen, ScrollText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { FileText, Users, BookOpen, ScrollText, Download } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+
+interface Article {
+  title: string;
+  author: string;
+  pdfUrl: string;
+  thumbnail: string;
+}
 
 export default function CurrentIssue() {
   const [activeTab, setActiveTab] = useState('volume');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadArticles() {
+      try {
+        const res = await fetch('/api/list-pdfs?folder=2024');
+        const data = await res.json();
+        setArticles(data.files || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadArticles();
+  }, []);
 
   const tabs = [
     { id: 'volume', label: 'Volume', icon: BookOpen },
@@ -17,6 +44,7 @@ export default function CurrentIssue() {
 
   return (
     <>
+      <Header />
       <div className="min-h-screen bg-gray-50">
 
         {/* Hero */}
@@ -72,11 +100,11 @@ export default function CurrentIssue() {
             {activeTab === 'issue' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
                 <h2 className="text-6xl font-black text-[#002300] mb-4">Issue 01</h2>
-                <p className="text-2xl text-gray-700">January 2025</p>
+                <p className="text-2xl text-gray-700">September 2024</p>
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-gray-600">
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Published</p>
-                    <p className="text-xl font-bold">Jan 2025</p>
+                    <p className="text-xl font-bold">Sep 204</p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Articles</p>
@@ -99,33 +127,35 @@ export default function CurrentIssue() {
               <div className="space-y-6">
                 <div className="text-center mb-10">
                   <h2 className="text-4xl font-bold text-gray-800">Featured Articles</h2>
-                  <p className="text-gray-600 mt-3">Volume 15 • Issue 01 • January 2025</p>
+                  <p className="text-gray-600 mt-3">Volume 26 • Issue 01 • September 2024</p>
+                  <p className="text-2xl font-bold text-green-700 mt-2">{articles.length} Articles</p>
                 </div>
 
-                {[
-                  "Strategic Realignment in South Asia",
-                  "Cyber Warfare: Emerging Threats",
-                  "Climate Change & National Security",
-                  "Future of Hybrid Warfare",
-                  "CPEC Security Challenges",
-                  "AI in Modern Warfare",
-                  "Nuclear Deterrence in 21st Century",
-                  "Counter-Terrorism Strategies"
-                ].map((title, i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-md p-8 hover:shadow-xl transition-all border">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-sm font-semibold text-orange-600">Article {i + 1}</span>
-                        <h3 className="text-xl font-bold text-gray-800 mt-2">{title}</h3>
-                        <p className="text-gray-600 mt-2">Lt Col Ahmed Raza, Dr. Maria Khan</p>
-                      </div>
-                      <button className="bg-[#002300] hover:bg-green-800 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition">
-                        <FileText className="w-5 h-5" />
-                        View PDF
-                      </button>
-                    </div>
+                {loading ? (
+                  <div className="text-center py-10">
+                    <p className="text-xl text-gray-600">Loading articles...</p>
                   </div>
-                ))}
+                ) : (
+                  articles.map((article, i) => (
+                    <div key={i} className="bg-white rounded-xl shadow-md p-8 hover:shadow-xl transition-all border">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-orange-600">Article {i + 1}</span>
+                          <h3 className="text-xl font-bold text-gray-800 mt-2">{article.title}</h3>
+                          <p className="text-gray-600 mt-2">{article.author}</p>
+                        </div>
+                        <Link 
+                          href={article.pdfUrl} 
+                          target="_blank"
+                          className="bg-[#002300] hover:bg-green-800 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition flex-shrink-0"
+                        >
+                          <Download className="w-5 h-5" />
+                          View PDF
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
@@ -163,6 +193,7 @@ export default function CurrentIssue() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

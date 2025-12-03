@@ -207,6 +207,10 @@ export default function Home() {
     { slug: 'plagiarism-policy', title: 'Plagiarism Policy' },
     { slug: 'complaint-policy', title: 'Complaint Policy' },
     { slug: 'repository-policy', title: 'Repository Policy' },
+    { slug: 'privacy-statement', title: 'Privacy Statement' },
+    { slug: 'disclaimer', title: 'Disclaimer' },
+    { slug: 'processing-fee-subscription', title: 'Processing Fee & Subscription' },
+    { slug: 'submission-guidelines', title: 'Submission Guidelines' },
   ];
 
   // Set policies from static data
@@ -235,22 +239,36 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Static articles - disabled random fetch to show specific articles
-  // useEffect(() => {
-  //   let cancelled = false;
-  //   (async () => {
-  //     try {
-  //       const res = await fetch('/api/random-articles?count=3');
-  //       const data = await res.json();
-  //       if (!cancelled && data?.files && Array.isArray(data.files) && data.files.length > 0) {
-  //         setArticles(data.files);
-  //       }
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
-  //   })();
-  //   return () => { cancelled = true; };
-  // }, []);
+  // Fetch random articles from 2024 and 2021 on page load
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Fetch from both years
+        const [res2024, res2021] = await Promise.all([
+          fetch('/api/list-pdfs?folder=2024'),
+          fetch('/api/list-pdfs?folder=2021')
+        ]);
+        const data2024 = await res2024.json();
+        const data2021 = await res2021.json();
+        
+        // Combine all articles
+        const allArticles = [
+          ...(data2024?.files || []),
+          ...(data2021?.files || [])
+        ];
+        
+        // Shuffle and pick 3 random articles
+        if (!cancelled && allArticles.length > 0) {
+          const shuffled = allArticles.sort(() => Math.random() - 0.5);
+          setArticles(shuffled.slice(0, 3));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     setEditorialDropdownOpen(false);
@@ -591,7 +609,7 @@ export default function Home() {
               </div>
               <div className="space-y-8">
                 {articles.map((article, index) => (
-                  <article key={index} className="flex items-start space-x-8 pb-8 border-b border-gray-200 last:border-b-0">
+                  <article key={index} className="flex items-center space-x-8 pb-8 border-b border-gray-200 last:border-b-0">
                     <Link href={article.pdfUrl} target="_blank" className="flex-shrink-0 group ml-1 md:ml-2">
                       <div className="w-32 h-44 rounded shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 relative bg-white">
                         <img src={article.thumbnail || "/images/icon.png"} alt={article.title} className="w-full h-full object-cover absolute inset-0" />
@@ -763,7 +781,7 @@ export default function Home() {
           <h2 className="text-4xl font-bold text-center mb-12" style={{color: '#3A3A3A', fontFamily: 'Georgia, serif'}}>Editorial Board</h2>
           <div className="max-w-6xl mx-auto space-y-12">
             <div id="leadership">
-              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Leadership</h3>
+              <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Executive Leadership</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
                   <div className="text-sm font-semibold text-orange mb-2">PATRON-IN-CHIEF</div>
@@ -849,7 +867,7 @@ export default function Home() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/archives" className="text-gray-300 hover:text-white">Browse Archives</Link></li>
                 <li><Link href="/current-issue" className="text-gray-300 hover:text-white">Current Issue</Link></li>
-                <li><Link href="/submission" className="text-gray-300 hover:text-white">Submission Guidelines</Link></li>
+                <li><Link href="/policies/submission-guidelines" className="text-gray-300 hover:text-white">Submission Guidelines</Link></li>
                 <li>
                   <a 
                     href="#editorial-board" 

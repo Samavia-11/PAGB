@@ -48,6 +48,10 @@ export function getAllPolicies(): Policy[] {
       'PLAGIARISM POLICY',
       'COMPLAINT POLICY',
       'REPOSITORY POLICY',
+      'PRIVACY STATEMENT',
+      'DISCLAIMER',
+      'PROCESSING FEE AND SUBSCRIPTION',
+      'GUIDELINES FOR AUTHORS',
     ]);
 
     if (!importantTitles.has(key)) continue;
@@ -63,6 +67,10 @@ export function getAllPolicies(): Policy[] {
       'PLAGIARISM POLICY': 'Plagiarism Policy',
       'COMPLAINT POLICY': 'Complaint Policy',
       'REPOSITORY POLICY': 'Repository Policy',
+      'PRIVACY STATEMENT': 'Privacy Statement',
+      'DISCLAIMER': 'Disclaimer',
+      'PROCESSING FEE AND SUBSCRIPTION': 'Processing Fee & Subscription',
+      'GUIDELINES FOR AUTHORS': 'Submission Guidelines',
     };
 
     const displayTitle = displayTitleMap[key] ?? normalized;

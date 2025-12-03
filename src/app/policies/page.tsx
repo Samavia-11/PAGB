@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { BookOpen, ChevronRight } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface PolicyLink {
   slug: string;
@@ -44,12 +46,34 @@ const policies: PolicyLink[] = [
     slug: 'complaint-policy',
     title: 'Complaint Policy',
     description: 'Complaint procedures, appeals process, and post-publication issues'
+  },
+  {
+    slug: 'privacy-statement',
+    title: 'Privacy Statement',
+    description: 'How we handle names and email addresses entered on this journal site'
+  },
+  {
+    slug: 'disclaimer',
+    title: 'Disclaimer',
+    description: 'Statement regarding author views and official policy positions'
+  },
+  {
+    slug: 'processing-fee-subscription',
+    title: 'Processing Fee & Subscription',
+    description: 'Information about publication fees, subscriptions, and revenue sources'
+  },
+  {
+    slug: 'submission-guidelines',
+    title: 'Submission Guidelines',
+    description: 'Complete manuscript submission process and checklist for authors'
   }
 ];
 
 export default function PoliciesIndexPage() {
 
   return (
+    <>
+    <Header />
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-green-50">
       <header className="bg-green-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-8">
@@ -88,5 +112,7 @@ export default function PoliciesIndexPage() {
         </div>
       </main>
     </div>
+    <Footer />
+    </>
   );
 }
