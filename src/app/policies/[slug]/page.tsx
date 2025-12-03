@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookOpen, ChevronLeft } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface PolicyMeta {
   slug: string;
@@ -12,6 +14,39 @@ interface PolicyMeta {
 
 interface Policy extends PolicyMeta {
   content: string;
+}
+
+// Convert markdown-style content to HTML
+function formatPolicyContent(content: string): string {
+  let html = content
+    // Escape HTML entities first
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Convert **bold** to <strong>
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Convert headers (lines that are all caps or start with **)
+    .replace(/^([A-Z][A-Z\s&\-]+)$/gm, '<h2 class="text-xl font-bold text-green-800 mt-8 mb-4 border-b border-green-200 pb-2">$1</h2>')
+    // Convert bullet points
+    .replace(/^[-•]\s*(.+)$/gm, '<li class="ml-4">$1</li>')
+    // Wrap consecutive <li> items in <ul>
+    .replace(/(<li[^>]*>.*<\/li>\n?)+/g, '<ul class="list-disc list-inside space-y-2 mb-6 text-base">$&</ul>')
+    // Convert numbered lists
+    .replace(/^\d+\.\s*(.+)$/gm, '<li class="ml-4">$1</li>')
+    // Convert paragraphs (double newlines)
+    .replace(/\n\n+/g, '</p><p class="text-base leading-relaxed mb-4">')
+    // Convert single newlines within paragraphs
+    .replace(/\n/g, '<br/>');
+  
+  // Wrap in paragraph tags
+  html = '<p class="text-base leading-relaxed mb-4">' + html + '</p>';
+  
+  // Clean up empty paragraphs
+  html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
+  html = html.replace(/<p[^>]*>\s*<h2/g, '<h2');
+  html = html.replace(/<\/h2>\s*<\/p>/g, '</h2>');
+  
+  return html;
 }
 
 export default function PolicyPage() {
@@ -42,6 +77,8 @@ export default function PolicyPage() {
   }, [slug]);
 
   return (
+    <>
+    <Header />
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-green-50">
       <header className="bg-green-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-8">
@@ -89,14 +126,19 @@ export default function PolicyPage() {
 
             {policy && (
               <article className="prose max-w-none text-gray-800">
-                <pre className="whitespace-pre-wrap break-words text-sm leading-relaxed font-sans">
-                  {policy.content}
-                </pre>
+                <div 
+                  className="policy-content text-base leading-relaxed"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatPolicyContent(policy.content) 
+                  }}
+                />
               </article>
             )}
           </div>
         </div>
       </main>
     </div>
+    <Footer />
+    </>
   );
 }

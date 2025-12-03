@@ -5,8 +5,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FileText, Download, Search, Filter } from 'lucide-react';
-import fs from 'fs';
-import path from 'path';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Types
 interface Article {
@@ -44,6 +44,7 @@ export default function Archives() {
 
   return (
     <>
+      <Header />
       <div className="min-h-screen bg-gray-50">
         {/* Hero */}
         <section className="bg-gradient-to-br from-[#002300] to-[#002300] text-white py-20">
@@ -127,6 +128,7 @@ export default function Archives() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

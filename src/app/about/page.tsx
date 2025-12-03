@@ -1,16 +1,14 @@
-// app/about/page.tsx
+'use client';
 
 import Link from 'next/link';
 import { BookOpen, Target, Shield, Globe, Users, Award } from 'lucide-react';
-
-export const metadata = {
-  title: 'About PAGB | Pakistan Army Green Book',
-  description: 'Pakistan Army Green Book is a premier research publication dedicated to strategic studies, national security, and professional military education.',
-};
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function AboutPage() {
   return (
     <>
+      <Header />
       <div className="min-h-screen bg-gray-50">
 
         {/* Hero Section */}
@@ -126,6 +124,7 @@ export default function AboutPage() {
         </section>
 
       </div>
+      <Footer />
     </>
   );
 }
