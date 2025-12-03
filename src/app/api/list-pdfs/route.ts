@@ -8,7 +8,7 @@ export const runtime = 'edge';
 const AUTHOR_MAP: Record<string, string> = {
   // 2024 Articles
   'AFGHAN REFUGEES AND THE PRINCIPLE OF NON-REFOULEMENT.pdf': 'Barrister Ahmer Bilal Soofi',
-  'BRIDGING THE SKILL GAP.pdf': 'Raza Ali Khan HI(M),  Naveed Yussuf',
+  'BRIDGING THE SKILL GAP.pdf': 'Raza Ali Khan,  Naveed Yussuf',
   'CHARACTER OF FUTURE MILITARY CONFLICT IN SUBCONTINENT.pdf': 'Sajjad Hussain',
   'CLIMATE CHANGE AND NATIONAL SECURITY.pdf': 'Mr Adnan Ali',
   'ECONOMIC CHALLENGES FOR UNDERDEVELOPED AND OVERPOPULATED COUNTRIES.pdf': 'Dr Yasir Ali',
