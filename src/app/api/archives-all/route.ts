@@ -38,7 +38,7 @@ export async function GET() {
           title: cleanTitle,
           author: authorName,
           authorSlug: folder,
-          pdfUrl: `/authors/${folder}/${file}`,
+          pdfUrl: `/authors/${folder}/${encodeURIComponent(file)}`,
           fileName: file,
         });
       }

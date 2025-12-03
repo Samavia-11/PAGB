@@ -147,59 +147,32 @@ export default function Home() {
 
   const initialArticles: Article[] = [
     {
-      title: "Pakistan's National Security Policies",
+      title: "Economic Challenges for Underdeveloped and Overpopulated Countries",
       author: "Various Contributors",
       date: "2024",
-      description: "A comprehensive analysis of Pakistan's national security framework, strategic challenges, and policy recommendations for safeguarding national interests.",
+      description: "An analysis of economic challenges facing developing nations with high population density and strategies for sustainable growth.",
       published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(1)%20___Pakistan%E2%80%99s%20National%20Security%20National%20Security%20Policies.pdf",
-      thumbnail: "/images/thumbnails/article-1.jpg"
+      pdfUrl: "/pdfs/2024/ECONOMIC%20CHALLENGES%20FOR%20UNDERDEVELOPED%20AND%20OVERPOPULATED%20COUNTRIES.pdf",
+      thumbnail: "/images/icon.png"
     },
     {
-      title: "Afghan Refugees and The Principle of Non-Refoulement",
+      title: "Knowledge Economy as a Tool for Countering Extremism and Terrorism",
       author: "Various Contributors",
       date: "2024",
-      description: "An examination of the Afghan refugee crisis and international legal principles governing refugee protection and non-refoulement.",
+      description: "Exploring how knowledge-based economic development can serve as an effective strategy against extremism and terrorism.",
       published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(2)___Afghan%20Refugees%20Afghan%20Refugees%20and%20The%20Principle%20of%20and%20The%20Principle%20of%20Non-Refoulement.pdf",
-      thumbnail: "/images/thumbnails/article-2.jpg"
+      pdfUrl: "/pdfs/2024/KNOWLEDGE%20ECONOMY%20AS%20A%20TOOL%20FOR%20COUNTERING%20EXTREMISM%20AND%20TERRORISM.pdf",
+      thumbnail: "/images/icon.png"
     },
     {
-      title: "Pakistan-Afghanistan Relations: A Historical Perspective",
+      title: "Swarming Usage in Contemporary Armies vis a vis Effects of Indian Swarming Technology on Pakistan Army in Any Future Conflict",
       author: "Various Contributors",
       date: "2024",
-      description: "A historical analysis of Pakistan-Afghanistan bilateral relations, examining key events, challenges, and opportunities for regional cooperation.",
+      description: "An analysis of swarming tactics in modern warfare and implications of Indian swarming technology for Pakistan's defense strategy.",
       published: "2024",
-      pdfUrl: "/pdfs/PAGB%202024%20(4)___Pakistan-Afghanistan%20Relations%20Relations%20A%20Historical%20Perspective.pdf",
-      thumbnail: "/images/thumbnails/article-4.jpg"
+      pdfUrl: "/pdfs/2024/SWARMING%20USAGE%20INCONTEMPORARY%20ARMIES%20VIS%20A%20VIS%20EFFECTS%20OF%20INDIAN%20SWARMING%20TECHNOLOGY%20ON%20PAKISTAN%20ARMY%20IN%20ANY%20FUTURE%20CONFLICT.pdf",
+      thumbnail: "/images/icon.png"
     },
-    // {
-    //   title: "Modi's Neighbourhood First Policy: Implications for Pakistan",
-    //   author: "Various Contributors",
-    //   date: "2024",
-    //   description: "An assessment of India's neighbourhood-first diplomatic strategy and its strategic implications for Pakistan and regional stability.",
-    //   published: "2024",
-    //   pdfUrl: "/pdfs/PAGB%202024%20(5)___Modi%E2%80%99s%20Neighbourhood%20First%20Policy%20Implications%20for%20Pakistan.pdf",
-    //   thumbnail: "/images/thumbnails/article-5.jpg"
-    // },
-    // // {
-    //   title: "Character of Future Military Conflict in Subcontinent",
-    //   author: "Various Contributors",
-    //   date: "2024",
-    //   description: "Exploring the evolving nature of warfare in South Asia, including emerging technologies, hybrid threats, and strategic doctrines.",
-    //   published: "2024",
-    //   pdfUrl: "/pdfs/PAGB%202024%20(6)___%20Character%20of%20Future%20Character%20Military%20Conflict%20in%20Subcontinent.pdf",
-    //   thumbnail: "/images/thumbnails/article-6.jpg"
-    // },
-    // {
-    //   title: "Unravelling the Intriguing Nexus: Socially Disruptive Proxies and Security Milieu of Pakistan",
-    //   author: "Various Contributors",
-    //   date: "2024",
-    //   description: "An analysis of non-state actors, proxy warfare, and their impact on Pakistan's internal security environment.",
-    //   published: "2024",
-    //   pdfUrl: "/pdfs/PAGB%202024%20(7)___Unravelling%20the%20Intriguing%20Nexus%20Socially%20Disruptive%20Proxies%20%20and%20Security%20Milieu%20of%20Pakistan.pdf",
-    //   thumbnail: "/images/thumbnails/article-7.jpg"
-    // }
   ];
 
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -262,22 +235,22 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fetch random articles
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/random-articles?count=3');
-        const data = await res.json();
-        if (!cancelled && data?.files && Array.isArray(data.files) && data.files.length > 0) {
-          setArticles(data.files);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  // Static articles - disabled random fetch to show specific articles
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   (async () => {
+  //     try {
+  //       const res = await fetch('/api/random-articles?count=3');
+  //       const data = await res.json();
+  //       if (!cancelled && data?.files && Array.isArray(data.files) && data.files.length > 0) {
+  //         setArticles(data.files);
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   })();
+  //   return () => { cancelled = true; };
+  // }, []);
 
   const scrollToSection = (sectionId: string) => {
     setEditorialDropdownOpen(false);
@@ -621,7 +594,7 @@ export default function Home() {
                   <article key={index} className="flex items-start space-x-8 pb-8 border-b border-gray-200 last:border-b-0">
                     <Link href={article.pdfUrl} target="_blank" className="flex-shrink-0 group ml-1 md:ml-2">
                       <div className="w-32 h-44 rounded shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 relative bg-white">
-                        <img src="/images/icon.png" alt={article.title} className="w-full h-full object-cover absolute inset-0" />
+                        <img src={article.thumbnail || "/images/icon.png"} alt={article.title} className="w-full h-full object-cover absolute inset-0" />
                         <div className="absolute inset-0 bg-orange opacity-0 group-hover:opacity-20 transition-opacity"></div>
                         <div className="absolute top-2 right-2 bg-orange rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <FileText className="w-3 h-3 text-white" />
@@ -679,7 +652,7 @@ export default function Home() {
                       </div>
                       <div className="flex-1 p-5">
                         <div className="text-sm text-gray-700 mb-2 font-semibold">2024 EDITION</div>
-                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2024 - COMPLETE ISSUE</h4>
+                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2024</h4>
                         <p className="text-xs text-gray-600 mt-2">18 Articles | 145 MB</p>
                       </div>
                     </div>
@@ -687,11 +660,11 @@ export default function Home() {
                   <button onClick={() => loadIssue('2021')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
                     <div className="flex">
                       <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
-                        <img src="/images/2021 title.png" alt="2021" className="w-full h-full object-cover opacity-60" />
+                        <img src="/images/2023.png" alt="2021" className="w-full h-full object-cover opacity-60" />
                       </div>
                       <div className="flex-1 p-5">
-                        <div className="text-sm text-gray-700 mb-2 font-semibold">2021 EDITION</div>
-                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2021 - COMPLETE ISSUE</h4>
+                        <div className="text-sm text-gray-700 mb-2 font-semibold">2023 EDITION</div>
+                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2023 </h4>
                         <p className="text-xs text-gray-600 mt-2">Multiple Articles</p>
                       </div>
                     </div>
