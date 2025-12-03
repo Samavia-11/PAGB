@@ -328,7 +328,7 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center space-x-4">
-                <span>senduspagb@gmail.com</span>
+                <span>info@pagb.org.pk</span>
                 <span className="hidden md:inline">+92 (051) 5202339</span>
               </div>
               <div className="flex items-center space-x-3">
@@ -896,7 +896,7 @@ export default function Home() {
               <h4 className="font-serif font-bold mb-4">Contact</h4>
               <ul className="space-y-3 text-sm text-gray-300">
                 <li className="flex items-start"><Globe className="w-4 h-4 mr-2 mt-0.5" /><span>Pakistan Army GHQ, Rawalpindi, Pakistan</span></li>
-                <li className="flex items-start"><Mail className="w-4 h-4 mr-2 mt-0.5" /><span className="mr-2">email</span><a href="mailto:senduspagb@gmail.com" className="hover:text-white">senduspagb@gmail.com</a></li>
+                <li className="flex items-start"><Mail className="w-4 h-4 mr-2 mt-0.5" /><span className="mr-2">email</span><a href="mailto:info@pagb.org.pk" className="hover:text-white">info@pagb.org.pk</a></li>
                 <li className="flex items-start"><Phone className="w-4 h-4 mr-2 mt-0.5" /><span className="mr-2">phone</span><span>+92 (051) 5202339</span></li>
               </ul>
             </div>

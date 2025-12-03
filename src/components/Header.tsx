@@ -49,7 +49,7 @@ export default function Header() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-4">
-              <span>senduspagb@gmail.com</span>
+              <span>info@pagb.org.pk</span>
               <span className="hidden md:inline">+92 (051) 5202339</span>
             </div>
             <div className="flex items-center space-x-3">
