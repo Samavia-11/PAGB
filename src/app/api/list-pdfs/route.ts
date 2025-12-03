@@ -2,21 +2,57 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
-// Static list of PDFs since Edge Runtime can't access filesystem
+// -------------------------------------------------
+// STATIC PDF LIST
+// -------------------------------------------------
 const PDF_CATALOG = {
   '2024': [
-    'PAGB_2024_Article_1.pdf',
-    'PAGB_2024_Article_2.pdf',
-    'PAGB_2024_Article_3.pdf',
-    // Add more 2024 PDFs as needed
+    'AFGHAN REFUGEES AND THE PRINCIPLE OF NON-REFOULEMENT.pdf',
+    'BRIDGING THE SKILL GAP.pdf',
+    'CHARACTER OF FUTURE MILITARY CONFLICT IN SUBCONTINENT.pdf',
+    'CLIMATE CHANGE AND NAMTIONAL SECURITY.pdf',
+    'ECONOMIC CHALLENGES FOR UNDERDEVELOPED AND OVERPOPULATED COUNTRIES.pdf',
+    'EMERGING DISRUPTIVE TECHNOLOGIES LESSONS FROM CHINA AND OTHER COUNTRIES.pdf',
+    'ILLEGAL FOREIGNERS REPATRIATION PLAN AND PAKISTAN STANDS NATIONAL SECURITY A LEGAL PRISM OF INTERNATIONAL LAW.pdf',
+    'IMPACT OF AI GENERATED DEEPFAKES ON NATIONAL SECURITY.pdf',
+    'IMPACT OF CHINA-PAKISTAN ECONOMIC CORRIDOR ON DYNAMICS OF PEACE AND CONFLICT IN SOUTH ASIA.pdf',
+    'KNOWLEDGE ECONOMY AS A TOOL FOR COUNTERING EXTREMISM AND TERRORISM.pdf',
+    'MODERNISING THE AGRICULTURE SECTOR IN PAKISTAN.pdf',
+    'MODI\'S NEIGHBOURHOOD FIRST POLICY IMPLICATIONS FOR PAKISTAN.pdf',
+    'NATIONAL SECURITY POLICIESPOLICIES PAKISTAN\'S.pdf',
+    'PAKISTAN-AFGHANISTAN RELATIONS A HISTORICAL PERSPECTIVE.pdf',
+    'PROWESS OF GEOGRAPHIC INFORMATION SYSTEM A PREMEDITATED ADVANTAGE TO STURDIER ARMY.pdf',
+    'SWARMING USAGE INCONTEMPORARY ARMIES VIS A VIS EFFECTS OF INDIAN SWARMING TECHNOLOGY ON PAKISTAN ARMY IN ANY FUTURE CONFLICT.pdf',
+    'THE ROLE OF ARTIFICIAL INTELLIGENCE IN TERRORISM AND COUNTER MEASURES.pdf',
+    'UNRAVELLING THE INTRIGUING NEXUS SOCIALLY DISRUPTIVE PROXIES AND SECURITY MILIEU OF PAKISTAN.pdf',
+
+    // Your newly added article
+    'A TALE OF UNENDING ATROCITIES.pdf'
   ],
   '2021': [
-    'PAGB_2021_Article_1.pdf',
-    'PAGB_2021_Article_2.pdf',
-    // Add more 2021 PDFs as needed
+    'A TALE OF UNENDING ATROCITIES.pdf',
+    'APPLICATION OF WARFARE STRATEGIES CYBER SECURITY MANAGEMENT IN ORGANIZATIONS.pdf',
+    'EFFICACY OF INTERNATIONAL SANCTIONS AGAINST TALIBAN REGIME.pdf',
+    'FOREIGN POLICY NATIONAL INTEREST AND SECURITY.pdf',
+    'GLOBAL TOURISM ECONOMY AND ECONOMIC GAINS FOR PAKISTAN.pdf',
+    'HYBRID WARFARE AND THREATS TO PAKISTAN.pdf',
+    'IMPACT OF FRAGILE NEIGHBOURHOOD THE CASE OF PAKISTAN-AFGHANISTAN.pdf',
+    'INDIA\'S SPACE PROGRAMME IMPLICATIONS FOR PAKISTAN\'S SECURITY.pdf',
+    'INTERNET OF THINGS - A MILITARY PERSPECTIVE.pdf',
+    'PAKISTAN FOR A TECHNOLOGY DRIVEN KNOWLEDGE ECONOMY.pdf',
+    'PAKISTAN\'S COMPLEX INTERNAL INSTABILITY CHALLENGE A STRUCTURAL PERSPECTIVE.pdf',
+    'PAKISTAN\'S GEOPOLITICAL EQUATION WITH EURASIA.pdf',
+    'POWER TUSSLE IN INDO-PACIFIC IMPLICATIONS FOR PAKISTAN.pdf',
+    'PREVENTING THE STRETCH OF FLAT GROWTH IN EXPORTS OF PAKISTAN.pdf',
+    'REDUCING RELIANCE ON IMPORTED OIL AND GAS FOR PAKISTAN\'S POWER NEEDS.pdf',
+    'THE THREAT TO NATIONAL MORALE THROUGH SOCIAL MEDIA.pdf',
+    'THE WAR OF NARRATIVES NATIONAL SECURITY IN THE AGE OF SOCIAL MEDIA.pdf'
   ]
 };
 
+// -------------------------------------------------
+// API ROUTE
+// -------------------------------------------------
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -24,22 +60,29 @@ export async function GET(request: Request) {
 
     const pdfList = PDF_CATALOG[folder as keyof typeof PDF_CATALOG] || [];
 
-    const pdfs = pdfList.map((filename) => {
+    const files = pdfList.map((filename) => {
       const title = filename.replace(/\.pdf$/i, '');
-      const url = `/pdfs/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
+      const pdfUrl = `/pdfs/${folder}/${encodeURIComponent(filename)}`;
+
+      // AUTO-MATCH PNG with same name
+      const pngFilename = title + '.jpg';
+      const thumbnail = `/images/${folder}/${encodeURIComponent(pngFilename)}`;
+
       return {
         title,
         author: 'Various Contributors',
-        date: folder,
-        description: '',
         published: folder,
-        pdfUrl: url,
-        thumbnail: '/images/thumbnails/article-generic.jpg',
+        pdfUrl,
+        thumbnail,
       };
     });
 
-    return NextResponse.json({ files: pdfs });
-  } catch (e: any) {
-    return NextResponse.json({ files: [], error: e?.message || 'Unexpected error' }, { status: 500 });
+    return NextResponse.json({ files });
+
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'Unexpected error' },
+      { status: 500 }
+    );
   }
 }

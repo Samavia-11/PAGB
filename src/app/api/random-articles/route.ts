@@ -43,15 +43,28 @@ export async function GET(request: Request) {
       return NextResponse.json({ files: [] });
     }
 
-    const entries = fs.readdirSync(baseDir, { withFileTypes: true });
-    const all = entries
-      .filter((ent) => ent.isFile() && isPdf(ent.name))
-      .map((ent) => {
-        const filename = ent.name;
+    // Get all author subdirectories
+    const authorFolders = fs.readdirSync(baseDir, { withFileTypes: true })
+      .filter((ent) => ent.isDirectory());
+
+    const all: { filename: string; title: string; author: string; url: string; description: string }[] = [];
+
+    // Scan each author folder for PDFs
+    for (const folder of authorFolders) {
+      const authorSlug = folder.name;
+      const authorPath = path.join(baseDir, authorSlug);
+      const pdfFiles = fs.readdirSync(authorPath).filter((f) => isPdf(f));
+
+      // Convert slug to readable author name
+      const authorName = authorSlug
+        .split('-')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+
+      for (const filename of pdfFiles) {
         const title = parseTitle(filename);
-        const author = parseAuthor(filename);
-        const url = `/authors/${encodeURIComponent(filename)}`;
-        
+        const url = `/authors/${authorSlug}/${encodeURIComponent(filename)}`;
+
         // Generate description based on title
         let description = '';
         if (title.toLowerCase().includes('security')) {
@@ -65,9 +78,10 @@ export async function GET(request: Request) {
         } else {
           description = 'A scholarly analysis contributing to military and strategic studies discourse.';
         }
-        
-        return { filename, title, author, url, description };
-      });
+
+        all.push({ filename, title, author: authorName, url, description });
+      }
+    }
 
     // Shuffle for random selection
     for (let i = all.length - 1; i > 0; i--) {
