@@ -650,7 +650,7 @@ export default function Home() {
                 <p className="text-sm text-gray-700 mb-3">
                   Submit your research on <strong>&#34;Future of Military Technology&#34;</strong>
                 </p>
-                <p className="text-xs text-gray-600 mb-3">Deadline: March 31, 2025</p>
+                <p className="text-xs text-gray-600 mb-3">Deadline: December 31, 2026</p>
                 <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
               </div>
               <div className="mb-12">
