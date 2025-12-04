@@ -152,7 +152,7 @@ PAGB accepts original and evidence-based research papers that add value to exist
 
 Research Papers shall be in MS Word, duly formatted according to the guidelines (given below) and [**Publication Policy**](/policies/publication-policy) of the Margalla Papers. The corresponding text, tables and figures shall be drafted in a single Microsoft Word file. Only Electronic submission (Soft Form) of manuscripts is allowed. The Journal website is not guaranteed manuscript acceptance until the editorial process is completed. 
 
-Author(s) are requested to register through their [ORCID IDs](https://pagb.org.pk/site/ORCID-ID) for paper(s) submission.
+Author(s) are requested to register through their (https://ojs-trial.infinityfreeapp.com/ojs) for paper(s) submission
 
 Please check your given emails for automated responses. There is a likelihood that these messages may fall into your SPAM directory, and if so, allow them to be in your INBOX for further correspondence.
 # Manuscript Requirements
@@ -167,27 +167,19 @@ The general guidelines for the authors are appended below:
 \-  **Spacing:**                                           1.5\
 \-  **Margin:**                                            1 Inch on each side\
 \-  **Biographic Sketch of Author:**    50 Words\
-\-  **Referencing (Endnotes only):**   The Chicago Manual of Style (17th Edition) - Click on [**Chicago Style of Referencing**](https://margallapapers.ndu.edu.pk/site/ref-style) for more details.
+\-  **Referencing (Endnotes only):** The Chicago Manual of Style (17th Edition) - Click on https://margallapapers.ndu.edu.pk/site/ref-style" Chicago Style of Referencing for more details. 
 
 **Formatting and  Style**
-
 Formatting includes the visual and physical presentation of the document. PAGB requires Word document, double-spaced, Times New Roman and 12-point font size. It ensures that a document is readable, professional, and adheres to a given set of visual and layout rules. Style set the specific rules for content, language, organization, and citation of a paper to ensure consistency and readability of the content and its sources across a specific field or publication. Following is the concise description of the manuscript divided into different sections:
-
 - Objectives. Briefly outline the background of the study, specify research objectives, and describe any hypotheses that have been tested;
 - Methods. Present methodology of the study, explain quantitative or qualitative methods, and specify the research instrument;
 - Results. Provide a concise summary of the most important results that have been obtained;
 - Conclusions. Indicate the main conclusions or interpretations. Explain why the study results are significant and give the key take-home message(s). 
-
 **Structure of the manuscript** 
-
 **Abstract**.  The abstract  (200-250 words) is published separately, so it should be complete and it must be able to stand alone. An abstract should briefly state the background, objective, time, and location of the study, basic procedures, main findings, and principal conclusions. Do not use references in abstracts. The structure of an abstract should be in accordance with the article type. Structured Abstracts (Original Research, Systematic Reviews & Meta-Analysis) should consist of five paragraphs, under the headings: background, objective, methods, results, and conclusion followed by keywords.
-
 Unstructured Abstracts 150 words :  should follow a logical sequence but does not require headings to be mentioned.
-
 **Keywords**, These words describe the content of the manuscript. They are used for indexing purposes. We recommend that the keywords are specific to the article, yet reasonably common within the subject discipline (3- 5 words should be provided).
-
 **Introduction**. The introduction provides an adequate background that contextualizes the study within the broader academic field. It identifies the existing knowledge gap that the study aims to address and outlines how the research will close this gap. The objective of the study is clearly defined, detailing the research question and underscoring its relevance to the field.
-
 **The main body.** The main body should present the analysis, results and discuss their significance. Research papers should provide sufficient methodological details to allow the work to be reproduced. This section must clarify the research procedures, how the study was conducted, the rationale for the sample size, and any tasks completed prior to the final measurement. The results section should be succinct, presenting outcomes both statistically and in the language of the research, with precise p-values, effect sizes, and confidence intervals where relevant. Experimental reports must include corresponding means and standard deviations, and these should be presented clearly, whether within the text or in a table. The findings should be contextualized within the existing body of work, illustrating how they build upon or contribute new knowledge to the field of War studies.
 ##### **Conclusion**. The conclusions address the purpose of the article stated in the introduction, provide a brief summary of the results and emphasize the broader implications of the findings. The findings and their implications should be discussed in the broadest context possible. Important limitations should also be addressed. Future research directions may also be mentioned.
 **References**. References include only the scientific publications cited in the paper. The references should be up-to-date and complete (preferably indexed in international databases, such as Scopus, Web of Science, DOAJ). Please ensure that every reference cited in the paper is also present  in the reference list (and vice versa). Try to cite the main sources instead of later replications (unless replication is the point). The full URL should be given and the date when the reference was last accessed. Any further information, if known (DOI, author names, dates, reference to a source publication, etc.), should also be given.
@@ -195,64 +187,40 @@ Unstructured Abstracts 150 words :  should follow a logical sequence but does no
 Chicago Manual of Style, especially for endnotes and headings. 
 
 ![](Aspose.Words.bf2621f0-cd88-4295-a982-28f61ea2910a.002.png)
-
 **Artwork**
-
 Sources need to be clearly identified; if permission is required, written evidence that permission has been granted must be provided. Once accepted, photos need to be minimum 300 dpi and jpg format, and original artwork files (e.g., PowerPoint for figures) must be submitted; authors must ensure all graphics for use from other publications are cleared.
 #### **Length of manuscripts** 
 The preferred length for feature articles is three to three to six thousand words. PAGB reserves the right to edit submitted manuscripts to conform to overall space requirements.
 #### ***Biographical information***
 Short biographies for each byline civilian author must be provided with article submissions. Such biographies should include significant positions or assignments, notes on civilian and military education together with degrees attained, and brief notation of other qualifications that establish the credibility of the author pertaining to the subject discussed in the submitted article. Abridged versions of these biographies will be included as part of articles selected for publication.
-
 **Peer Review Policy**
-
 PAGB operates as a **double-blind peer-reviewed journal**, ensuring the impartial evaluation of manuscripts by qualified reviewers and experts in the relevant field, both nationally and internationally. These reviewers are external to the journal's editorial board and the publishing institute, in strict compliance with the Higher Education Commission (HEC) of Pakistan’s J[ournals and Publications Policy](https://www.hec.gov.pk/english/services/faculty/journals/Documents/Policies/Research_Journals_and_Publications_Policy.pdf). All reviewers are expected to adhere to the ethical standards outlined in the **Committee on Publication Ethics (COPE) [Ethical Guidelines for Peer Reviewer(s)](https://publicationethics.org/sites/default/files/ethical-guidelines-peer-reviewers-cope.pdf)**.
-
 Following an initial editorial assessment at PAGB, manuscripts deemed suitable are forwarded to reviewers with specialized expertise in the relevant research domains. The role of the reviewer is to assess the manuscript’s originality, validity, and overall significance to the field. Reviewers provide a comprehensive evaluation of the manuscript’s quality and offer a clear recommendation to the editorial team regarding whether the manuscript should be accepted, revised, or rejected.
-
 Reviewers are required to disclose any [conflict of interest](https://pagb.org.pk/site/Competing-Interests) that could potentially bias their assessment, whether positively or negatively. Timely submission of the review report is essential; however, reviewers may request an extension if necessary by notifying the editor promptly.
-
 The double-blind review process of peer review that is a fundamental scientific publication process is adopted by the foundation university journal of rehabilitation science. PAGB conducts an internal peer review of the submitted manuscripts to evaluate originality of manuscript, scope and content etc. Manuscripts found unsuitable for publication with reference to poor structure, writing or topics are rejected at this initial stage of peer review. Manuscripts that require any revision after internal review are returned for required amendments. Manuscript found suitable following internal review/revision by editor assigned are forwarded for at least two external reviews. The only exception to this process are invited editorials or the editorials and obituaries authored by the editor in chief and letter to editors. The submitted manuscript is a privileged communication; reviewers must treat it as confidential. It is recommended that reviewers should not be retained or copy manuscripts sent for review. Also, reviewers must not share the manuscript with any colleagues without the explicit permission of the editor. Reviewers and editors must not make any personal or professional use of the data, arguments, or interpretations (other than those directly involved in its peer review) prior to publication unless they have the authors' specific permission or are writing an editorial or commentary to accompany the art. Manuscripts are reviewed by two independent experts in the relevant area. The reviewers make a scientific assessment and a recommendation to the editors. Reviewers remain unknown to authors. The Handling editor considers the manuscript and the reviewers’ comments before making a final decision either to accept, accept with revision, return for revision or to reject a manuscript.
-
 The identities of both reviewers and authors are concealed from each other throughout the review. To facilitate this, authors must ensure that their manuscripts are prepared in such a way that they do not reveal their identities to reviewers, either directly or indirectly. Please therefore ensure that the following items are not present in your submission and are provided as separate file with title of “Title Page”. It should include:
-
 - Manuscript title
 - Article category, abstract word count, manuscript word count
 - All authors’ names and affiliations
 - Complete address for the corresponding author, including an e-mail address
 - Acknowledgments
-
 The title page will remain separate from the manuscript file throughout the peer review process and will not be sent to the reviewers. Please remove any identifying information, such as authors' names or affiliations, from your manuscript before submission. Reviewer Blinding further ensured by editor assigned by reviewing manuscript file for any author identification markers and removing them from document and document properties. Author anonymity prevents any reviewer bias, for example, based on an author’s country of origin or previous controversial work. Please be advised that even with extensive efforts it is still possible that reviewers might identify the author through their writing style, subject matter or self-citation. Author is blinded of reviewer by removing any identification markers from manuscript file returned by reviewer with reviewer’s comments by the assigned editor before sending file to authors for revisions. Additionally reviewer perform given to reviewers is not forwarded to authors and any comments specified in reviewer performa are provided to authors in revision request email under heading of reviewers comments.
-
 **Confidentiality and Anonymity**
-
 - The content of the manuscript must be treated as strictly confidential by the reviewers.
 - Authors’ identities are withheld from reviewers throughout the review process to maintain anonymity and prevent bias.
 - Likewise, the identities of the reviewers are not disclosed to the authors, ensuring a fair and unbiased evaluation.
-
 This rigorous double-blind peer review process upholds the integrity and quality of scholarly publishing at PAgb, fostering trust and credibility within the academic community.
-
 **Acknowledgments**
-
 Contributors who do not meet the COPE criteria for authorship, but helped in the study, may be listed in the acknowledgment section. These may be named, and their function or contribution should be defined. Authors are responsible for obtaining written permission from the person acknowledged by name.
-
 **Number of Authors**
-
 A Research Paper should not exceed three (3) Authors. The Principal/ Lead Author should provide each author's research contribution to the paper.
-
 **Open Access Journal Policy**
-
 PAGB operates as an Open Access Journal, providing unrestricted and free access for all individuals to read, download, copy, distribute, print, search, and cite its published content. Despite its open accessibility, the editorial board of PAGB emphasizes the importance of respecting intellectual property rights, including copyright. After PAGB recognition as Y category research journal will utilize the Open Journal System (OJS) software for its Open Access platform, with previous volumes and issues also accessible via the journal’s website under the [ARCHIVES](https://pagb.org.pk/site/issue/archive) section.
-
 **Open Access Information**
-
 All research articles disseminated through PAGB Journal are available globally under an Open Access policy. This framework signifies that:
-
 - The full texts of all papers published in PAGB are freely and unlimitedly accessible to all readers worldwide.
 - Users are permitted to reuse published materials provided that the original publication is properly credited through appropriate citation.
-
   **Advantages for Authors**
-
 - **Enhanced Visibility** – Open Access ensures that research articles are freely accessible on the Internet without restrictions, allowing a wide and diverse audience to access and download full-text papers. Additionally, Open Access publications have an increased likelihood of being indexed and discoverable through various search engines and academic databases.
 - **Increased Citation Impact** – The heightened visibility and accessibility of Open Access articles contribute to greater citation rates, as these publications benefit from broader dissemination and public exposure.
 - **Expedited Publication Process** – Articles accepted for publication in PAGB are typically made available online more swiftly compared to traditional, subscription-based, or print journals, facilitating rapid dissemination of research findings.
@@ -260,78 +228,45 @@ All research articles disseminated through PAGB Journal are available globally u
   This policy underlines the journal’s commitment to fostering scholarly communication by enhancing accessibility, promoting intellectual property respect, and supporting authors in achieving greater academic impact.
 
 **Plagiarism Policy**
-
 Plagiarism, as defined by the Concise Oxford Dictionary, constitutes the appropriation and utilization of the intellectual property, writings, or inventions of another individual without proper acknowledgment, thereby presenting such work as one’s own. This practice is categorically prohibited within academic contexts due to its nature as a breach of academic integrity and an act of intellectual theft that undermines the original contributions of authors.
-
 The PAGB adheres rigorously to the [plagiarism policy](https://www.hec.gov.pk/english/services/faculty/Documents/Plagiarism/Plagiarism%20Policy.pdf) promulgated by the Higher Education Commission (HEC) and employs the Turnitin Originality Report software as a critical tool to uphold academic integrity and promote originality in scholarly work. Manuscripts submitted for publication are subject to strict scrutiny, with an overall similarity index not exceeding 19%, and a maximum allowable similarity of 5% from any single source.
-
 The Editorial Board of the PAGB enforces a zero-tolerance stance towards any form of academic dishonesty, including but not limited to plagiarism, citation manipulation, and data falsification or fabrication, in any submitted manuscript. Authors bear full responsibility for maintaining ethical standards in research and publication. In instances where research misconduct is identified, the editorial team of the PAGB will adhere to the Committee on Publication Ethics (COPE) [Guidelines](https://publicationethics.org/sites/default/files/plagiarism-submitted-manuscript-cope-flowchart.pdf)—or equivalent frameworks—in addressing and resolving such allegations in a transparent and equitable manner.
-
 **COPE INSTRUCTIONS ON PLAGIARISM** 
-
 ![](Aspose.Words.bf2621f0-cd88-4295-a982-28f61ea2910a.003.png)
-
 **Use of AI Tools**
-
 According to the Committee on Publication Ethics (COPE) [Position Statement](https://publicationethics.org/cope-position-statements/ai-author) "AI tools cannot meet the requirements for authorship as they cannot take responsibility for the submitted work... Authors who use AI tools in the writing of a manuscript, production of images or graphical elements of the paper, or in the collection and analysis of data, must be transparent in disclosing in the Materials and Methods (or similar section) of the paper how the AI tool was used and which tool was used. Authors are fully responsible for the content of their manuscript, even those parts produced by an AI tool, and are thus liable for any breach of publication ethics." 
-
 **Complaint Policy**
-
 The editorial team of PAGB  welcomes complaints/ appeals as they provide an opportunity for improvement. Please write your complaint with the journal volume number, issue number, research paper title, and page number to Editor PAGB at editor@pagb.org.pk, and a team member will respond as quickly as possible.
-
 **Right to Appeal**
-
 Author(s) has the right to appeal an editorial decision on his/ her paper. If you wish to appeal a decision, write or email Editor PAGB explaining why the decision should be reversed. If reviewer reports were included with the previous rejection letter or email, the criticism would be responded to accordingly. All appeals are sent to the journal's Editor, who will assess your research paper and details of the peer review process before a final decision. We try to manage appeals as quickly as possible, but they can be complex, so we request the author(s) to be patient and cooperate. As with any complaint, we will acknowledge receipt and keep you informed during the appeal process.
-
 **Post-Publication Issues**
-
 While our editorial team strives to ensure that every research paper published in PAGB is entirely accurate, there are instances where problems would be raised after publication. These may fall into the following categories and result in different responses:
-
 - Where the production process has introduced an error in the paper, we will publish an **Erratum**.
 - Where the author(s) notices a mistake, we have not introduced, we will publish a **Corrigendum**.
 - Where there are issues that may affect the record's validity, such as suspected image manipulation, but the author(s) is not willing to publish a Corrigendum, we will publish an **Expression of Concern**.
 - Where major issues are affecting the validity of the scientific record, such as duplicate publication or proven plagiarism, we will publish a **Retraction**.
-
 In all such cases, our editorial team collaborates with the author(s) to determine the best option from available responses. If a third party raises the issue, all concerned are also informed.
-
 Errata, Corrigenda, Expressions of Concern, and Retractions are free to view and digitally linked to the original published article on our website and third-party websites that collect our metadata.
-
 If anyone suspects a post-publication issue, we request them to contact the editorial team of PAGB immediately, providing sufficient details to undertake an investigation.
-
 PAGB follows Committee on Publication Ethics (COPE) [guidelines](https://publicationethics.org/appeals) regarding complaints and appeals.
 
 **Competing Interests**
-
 **Conflict of Interest/ Competing Interests**
-
 PAGB adheres to the Conflict-of-Interest policy recommended by the Committee on Publication Ethics (COPE). In its [Guidelines on Good Publication Practice](https://publicationethics.org/news/revised-good-publication-practice-guidelines-published), COPE states that "Conflicts of interest arise when authors, reviewers, or editors have interests that are not fully apparent and that may influence their judgments on what is published."
-
 All individuals involved with a manuscript, including author(s), editor(s), reviewer(s), and commenter(s), must declare all potential competing interests. The intent of this policy is not to prevent author(s) with any relationship or interest from publishing their work but rather to adopt transparency such that reviewer(s), editor(s), the publisher, and, most importantly, the reader(s) can make objective judgments about the results.
-
 All authors must indicate, because of their biographical presentation, any conflicts of interest that may affect their proposed publication. 
-
 Funding for research projects (if any) that made the study possible must be indicated.
-
 If author(s) gives no competing interests, it will read, **"The author(s) declare that they have no competing interests."**
-
 The editorial team of PAGB may decide not to publish a paper if they believe that the competing interests declared by the author(s) have compromised the objectivity or validity of the research, analyses, or interpretations in the paper. If the editorial team finds that author(s) have competing interests not declared upon submission, the manuscript may be rejected, issued a formal correction, or retracted.
-
 **Declaration**
-
 While submitting your research paper to PAGB, please include such a declaration at the end of your manuscript.
-
 All forms of financial support, any commercial or financial involvements, and any agreement signed with any sponsor that might present a conflict of interest related to the contribution must be included in the declaration statement/acknowledgment.
 
 **Copyright and Licensing**
-
 All research papers published in PAGB are permanently available online without any restrictions. These can be read, downloaded, and cited on the condition that appropriate acknowledgement/ citation is included. 
-
 **Copyright**
-
 Copyright of an open-access research paper published in PAGB is retained by the Author(s) concerned due to his/ her original work. Author(s) grants a license to PAGB to publish his/ her research paper and identify itself as the original publisher. 
-
 Author(s) is encouraged to post his/ her research work, published in PAGB, online under their names or ID along with DOI/ URL (duly attributing to PAGB as original publisher) to make their publications available to a larger audience to increase the impact factor and citation levels. 
-
 If a research paper published in PAGB needs to be translated or republished in another journal (or any other publishing medium), prior permission must be obtained from the original publisher. In this regard, manuscripts and editorial communications may be directed to the Editor PAGB (editor@pagb.org.pk). 
 
 **Licensing**

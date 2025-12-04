@@ -23,6 +23,8 @@ function formatPolicyContent(content: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    // Convert markdown images ![alt](url) to <img>
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="mx-auto my-6 rounded-lg shadow-md max-w-full h-auto" />')
     // Convert markdown links [text](url) to anchor tags
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-green-700 underline hover:text-green-900" target="_blank" rel="noopener noreferrer">$1</a>')
     // Convert bare URLs to anchor tags
