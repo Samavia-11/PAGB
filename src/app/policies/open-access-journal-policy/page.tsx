@@ -65,7 +65,7 @@ export default function OpenAccessJournalPolicyPage() {
                   <span className="font-semibold text-green-700">Increased Citation Impact</span> – The heightened visibility and accessibility of Open Access articles contribute to greater citation rates, as these publications benefit from broader dissemination and public exposure.
                 </li>
                 <li className="text-base leading-relaxed">
-                  <span className="font-semibold text-green-700">Expedited Publication Process</span> – Articles accepted for publication in PAGB Journal are typically made available online more swiftly compared to traditional, subscription-based, or print journals, facilitating rapid dissemination of research findings.
+                  <span className="font-semibold text-green-700">Expedited Publication Process</span> – Articles accepted for publication in PAGB are typically made available online more swiftly compared to traditional, subscription-based, or print journals, facilitating rapid dissemination of research findings.
                 </li>
               </ul>
 
