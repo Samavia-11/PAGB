@@ -47,7 +47,7 @@ PAGB publication policy follows the Higher Education Commission of Pakistan (HEC
 
 **Editorial Policy**
 
-When a manuscript is submitted to PAGB, it is assessed to see if it meets the criteria for submission (given as [Guidelines for Authors](https://ndujournal.ndu.edu.pk/site/Guidelines-for-Authors)). If it does, the editorial team selects potential well-reputed experts/ reviewers within the field of research to blind peer-review the manuscript and make recommendations for the author(s), if necessary.
+When a manuscript is submitted to PAGB, it is assessed to see if it meets the criteria for submission (given as [Guidelines for Authors](/submission-guidelines)). If it does, the editorial team selects potential well-reputed experts/ reviewers within the field of research to blind peer-review the manuscript and make recommendations for the author(s), if necessary.
 
 **Editorial Independence**
 
@@ -72,7 +72,7 @@ PAGB’s publication policy adheres strictly to the Higher Education Commission 
 
 **Editorial Policy**
 
-Upon submission, each manuscript undergoes an initial assessment to determine its compliance with the submission criteria outlined in the [Guidelines for Authors](https://ndujournal.ndu.edu.pk/site/Guidelines-for-Authors). Manuscripts meeting these criteria are then forwarded to a panel of reputable experts within the relevant research field for blind peer review. These reviewers provide recommendations to the author(s) as deemed necessary.
+Upon submission, each manuscript undergoes an initial assessment to determine its compliance with the submission criteria outlined in the [Guidelines for Authors](https://pagb.org.pk/site/Guidelines-for-Authors). Manuscripts meeting these criteria are then forwarded to a panel of reputable experts within the relevant research field for blind peer review. These reviewers provide recommendations to the author(s) as deemed necessary.
 
 **Editorial Independence**
 
@@ -93,16 +93,16 @@ The editorial handling of submitted manuscripts follows a rigorous process:
 
 **Submission of Manuscript**
 
-Submission of any manuscript to NDU Journal means that:
+Submission of any manuscript to PAGB means that:
 
 - The author(s) work has not been published earlier in any other journal, book, or book chapter, be it printed or online (except in the form of an abstract or an academic thesis).
 - It is also not in any way under consideration for publication elsewhere.
 - The submitted manuscript has permission for publication from all the concerned author(s) and is approved by the responsible authorities where that work has been carried out.
-- If accepted in NDU Journal, it will not be published elsewhere in the same form, in any language, without the publisher's prior consent. See the [Copyright and Licensing](https://ndujournal.ndu.edu.pk/site/COPYRIGHT-AND-LICENSING) webpage.
+- If accepted in PAGB, it will not be published elsewhere in the same form, in any language, without the publisher's prior consent. See the [Copyright and Licensing](https://pagb.org.pk/site/COPYRIGHT-AND-LICENSING) webpage.
 
 **Authorship**
 
-According to the Committee on Publication Ethics (COPE) [Guidelines](https://publicationethics.org/sites/default/files/COPE_DD_A4_Authorship_SEPT19_SCREEN_AW.pdf), authorship refers to "the creator or originator of an idea or the individual(s) who develops and brings to fruition the product that disseminates intellectual or creative works (e.g., the author of a scholarly article)." The editorial team of NDU Journal encourages that the contributions of all authors must be described and the corresponding author is responsible for providing the contributions of all authors at the time of submission. We expect that all authors will have reviewed, discussed, and agreed to their contributions before submission. 
+According to the Committee on Publication Ethics (COPE) [Guidelines](https://publicationethics.org/sites/default/files/COPE_DD_A4_Authorship_SEPT19_SCREEN_AW.pdf), authorship refers to "the creator or originator of an idea or the individual(s) who develops and brings to fruition the product that disseminates intellectual or creative works (e.g., the author of a scholarly article)." The editorial team of PAGB encourages that the contributions of all authors must be described and the corresponding author is responsible for providing the contributions of all authors at the time of submission. We expect that all authors will have reviewed, discussed, and agreed to their contributions before submission. 
 
 **Research Paper Processing**
 
@@ -112,11 +112,11 @@ According to the Committee on Publication Ethics (COPE) [Guidelines](https://pu
 
 **Ethical Statement**
 
-NDU Journal establishes and maintains the highest quality of research work. It promotes freedom of expression within the cultural, constitutional, and legal framework. NDU Journal maintains impartiality, novelty, diversity of opinion, and avoidance of fallacies. It encourages new ideas and suggestions from readers, authors, peer reviewers, and members of editorial and advisory boards.
+PAGB establishes and maintains the highest quality of research work. It promotes freedom of expression within the cultural, constitutional, and legal framework. PAGB maintains impartiality, novelty, diversity of opinion, and avoidance of fallacies. It encourages new ideas and suggestions from readers, authors, peer reviewers, and members of editorial and advisory boards.
 
-NDU Journal supports and uses Higher Education of Pakistan (HEC) [Guidelines](https://www.hec.gov.pk/english/services/faculty/journals/Pages/default.aspx), Committee on Publication Ethics (COPE) [Guidelines on Good Publication Practice](https://publicationethics.org/files/u7141/1999pdf13.pdf) and [Core Practices](https://publicationethics.org/).
+PAGB supports and uses Higher Education of Pakistan (HEC) [Guidelines](https://www.hec.gov.pk/english/services/faculty/journals/Pages/default.aspx), Committee on Publication Ethics (COPE) [Guidelines on Good Publication Practice](https://publicationethics.org/files/u7141/1999pdf13.pdf) and [Core Practices](https://publicationethics.org/).
 
-NDU Journal is committed to publishing original material only, i.e., material that has neither been published nor is under review elsewhere. NDU Journal uses [Turnitin software](https://www.turnitin.com/) helps to detect overlapping/ similar text in submitted manuscripts. Duplicate Submission, Citation Manipulation, Data Fabrication/ Falsification, Improper Author Contribution or Attribution and Redundant Publications are strictly prohibited and discouraged. In case of any such violations, it will lead to the rejection of the manuscript submitted.
+PAGB is committed to publishing original material only, i.e., material that has neither been published nor is under review elsewhere. PAGB uses [Turnitin software](https://www.turnitin.com/) helps to detect overlapping/ similar text in submitted manuscripts. Duplicate Submission, Citation Manipulation, Data Fabrication/ Falsification, Improper Author Contribution or Attribution and Redundant Publications are strictly prohibited and discouraged. In case of any such violations, it will lead to the rejection of the manuscript submitted.
 
 ***Obligations of Editor(s)***
 
@@ -143,16 +143,16 @@ NDU Journal is committed to publishing original material only, i.e., material th
 - **Multiple Publications:** Author(s) should not submit manuscripts representing the same study to multiple journals (or books). In the case of multiple publications, the author(s) must give the reference of the first publication and be free from the copyright of the original publisher.
 - **Paternity of the Manuscript:** Only the person(s) who contributed significantly to the study in question should be the author(s). If other people have been involved in some aspects of the research project, they should be mentioned in the acknowledgments. The principal author must ensure that all co-authors are included in the list of authors of the manuscript and that they have seen and approved the final version of the manuscript and agreed to the submission of the manuscript.
 - **Number of Authors:** A Research Paper should not exceed 3 Authors, and the Principal/ Lead Author should provide each author's research contribution.
-- **Disclosure of Information and Conflicts of Interest**:  All authors must indicate, because of their biographical presentation, any conflicts of interest that may affect their proposed publication. Funding for research projects (if any) that made the study possible must be indicated. No [conflict of interest](https://ndujournal.ndu.edu.pk/site/Competing-Interests) among authors regarding the paper submitted.
+- **Disclosure of Information and Conflicts of Interest**:  All authors must indicate, because of their biographical presentation, any conflicts of interest that may affect their proposed publication. Funding for research projects (if any) that made the study possible must be indicated. No [conflict of interest](https://pagb.org.pk/site/Competing-Interests) among authors regarding the paper submitted.
 - **Errors in Publishing:** If the author(s) discovers a critical error or inaccuracy in its publication, his/ her obligation is to inform the editor(s) quickly and to consider, in agreement with the person in charge, the withdrawal of the article or the publication of the information about the error.
 - Authors to ensure that the manuscript contains nothing abusive, defamatory, libelous, obscene, fraudulent, or illegal and is not against any institution/ university, armed forces, or federal/ provincial governments.
 - **Authorship and Use of AI Tools:** According to the Committee on Publication Ethics (COPE) [Position Statement](https://publicationethics.org/cope-position-statements/ai-author) "AI tools cannot meet the requirements for authorship as they cannot take responsibility for the submitted work... Authors who use AI tools in the writing of a manuscript, production of images or graphical elements of the paper, or in the collection and analysis of data, must be transparent in disclosing in the Materials and Methods (or similar section) of the paper how the AI tool was used and which tool was used. Authors are fully responsible for the content of their manuscript, even those parts produced by an AI tool, and are thus liable for any breach of publication ethics." 
 # Guidelines for Authors
-NDU Journal accepts original and evidence-based research papers that add value to existing literature. A research paper must have clarity of argument and uses an appropriate methodology that is workable and applicable to the given environment pertaining to the journal's scope.
+PAGB accepts original and evidence-based research papers that add value to existing literature. A research paper must have clarity of argument and uses an appropriate methodology that is workable and applicable to the given environment pertaining to the journal's scope.
 
-Research Papers shall be in MS Word, duly formatted according to the guidelines (given below) and [**Publication Policy**](https://ndujournal.ndu.edu.pk/site/PUBLICATION-POLICY-POLICY) of the Margalla Papers. The corresponding text, tables and figures shall be drafted in a single Microsoft Word file. Only Electronic submission (Soft Form) of manuscripts is allowed. The Journal website is not guaranteed manuscript acceptance until the editorial process is completed. 
+Research Papers shall be in MS Word, duly formatted according to the guidelines (given below) and [**Publication Policy**](/policies/publication-policy) of the Margalla Papers. The corresponding text, tables and figures shall be drafted in a single Microsoft Word file. Only Electronic submission (Soft Form) of manuscripts is allowed. The Journal website is not guaranteed manuscript acceptance until the editorial process is completed. 
 
-Author(s) are requested to register through their [ORCID IDs](https://ndujournal.ndu.edu.pk/site/ORCID-ID) for paper(s) submission.
+Author(s) are requested to register through their [ORCID IDs](https://pagb.org.pk/site/ORCID-ID) for paper(s) submission.
 
 Please check your given emails for automated responses. There is a likelihood that these messages may fall into your SPAM directory, and if so, allow them to be in your INBOX for further correspondence.
 # Manuscript Requirements
@@ -210,7 +210,7 @@ PAGB operates as a **double-blind peer-reviewed journal**, ensuring the impartia
 
 Following an initial editorial assessment at PAGB, manuscripts deemed suitable are forwarded to reviewers with specialized expertise in the relevant research domains. The role of the reviewer is to assess the manuscript’s originality, validity, and overall significance to the field. Reviewers provide a comprehensive evaluation of the manuscript’s quality and offer a clear recommendation to the editorial team regarding whether the manuscript should be accepted, revised, or rejected.
 
-Reviewers are required to disclose any [conflict of interest](https://ndujournal.ndu.edu.pk/site/Competing-Interests) that could potentially bias their assessment, whether positively or negatively. Timely submission of the review report is essential; however, reviewers may request an extension if necessary by notifying the editor promptly.
+Reviewers are required to disclose any [conflict of interest](https://pagb.org.pk/site/Competing-Interests) that could potentially bias their assessment, whether positively or negatively. Timely submission of the review report is essential; however, reviewers may request an extension if necessary by notifying the editor promptly.
 
 The double-blind review process of peer review that is a fundamental scientific publication process is adopted by the foundation university journal of rehabilitation science. PAGB conducts an internal peer review of the submitted manuscripts to evaluate originality of manuscript, scope and content etc. Manuscripts found unsuitable for publication with reference to poor structure, writing or topics are rejected at this initial stage of peer review. Manuscripts that require any revision after internal review are returned for required amendments. Manuscript found suitable following internal review/revision by editor assigned are forwarded for at least two external reviews. The only exception to this process are invited editorials or the editorials and obituaries authored by the editor in chief and letter to editors. The submitted manuscript is a privileged communication; reviewers must treat it as confidential. It is recommended that reviewers should not be retained or copy manuscripts sent for review. Also, reviewers must not share the manuscript with any colleagues without the explicit permission of the editor. Reviewers and editors must not make any personal or professional use of the data, arguments, or interpretations (other than those directly involved in its peer review) prior to publication unless they have the authors' specific permission or are writing an editorial or commentary to accompany the art. Manuscripts are reviewed by two independent experts in the relevant area. The reviewers make a scientific assessment and a recommendation to the editors. Reviewers remain unknown to authors. The Handling editor considers the manuscript and the reviewers’ comments before making a final decision either to accept, accept with revision, return for revision or to reject a manuscript.
 
@@ -242,7 +242,7 @@ A Research Paper should not exceed three (3) Authors. The Principal/ Lead Author
 
 **Open Access Journal Policy**
 
-PAGB operates as an Open Access Journal, providing unrestricted and free access for all individuals to read, download, copy, distribute, print, search, and cite its published content. Despite its open accessibility, the editorial board of PAGB emphasizes the importance of respecting intellectual property rights, including copyright. After PAGB recognition as Y category research journal will utilize the Open Journal System (OJS) software for its Open Access platform, with previous volumes and issues also accessible via the journal’s website under the [ARCHIVES](https://ndujournal.ndu.edu.pk/site/issue/archive) section.
+PAGB operates as an Open Access Journal, providing unrestricted and free access for all individuals to read, download, copy, distribute, print, search, and cite its published content. Despite its open accessibility, the editorial board of PAGB emphasizes the importance of respecting intellectual property rights, including copyright. After PAGB recognition as Y category research journal will utilize the Open Journal System (OJS) software for its Open Access platform, with previous volumes and issues also accessible via the journal’s website under the [ARCHIVES](https://pagb.org.pk/site/issue/archive) section.
 
 **Open Access Information**
 
@@ -255,7 +255,7 @@ All research articles disseminated through PAGB Journal are available globally u
 
 - **Enhanced Visibility** – Open Access ensures that research articles are freely accessible on the Internet without restrictions, allowing a wide and diverse audience to access and download full-text papers. Additionally, Open Access publications have an increased likelihood of being indexed and discoverable through various search engines and academic databases.
 - **Increased Citation Impact** – The heightened visibility and accessibility of Open Access articles contribute to greater citation rates, as these publications benefit from broader dissemination and public exposure.
-- **Expedited Publication Process** – Articles accepted for publication in NDU Journal are typically made available online more swiftly compared to traditional, subscription-based, or print journals, facilitating rapid dissemination of research findings.
+- **Expedited Publication Process** – Articles accepted for publication in PAGB are typically made available online more swiftly compared to traditional, subscription-based, or print journals, facilitating rapid dissemination of research findings.
 
   This policy underlines the journal’s commitment to fostering scholarly communication by enhancing accessibility, promoting intellectual property respect, and supporting authors in achieving greater academic impact.
 
@@ -265,7 +265,7 @@ Plagiarism, as defined by the Concise Oxford Dictionary, constitutes the appropr
 
 The PAGB adheres rigorously to the [plagiarism policy](https://www.hec.gov.pk/english/services/faculty/Documents/Plagiarism/Plagiarism%20Policy.pdf) promulgated by the Higher Education Commission (HEC) and employs the Turnitin Originality Report software as a critical tool to uphold academic integrity and promote originality in scholarly work. Manuscripts submitted for publication are subject to strict scrutiny, with an overall similarity index not exceeding 19%, and a maximum allowable similarity of 5% from any single source.
 
-The Editorial Board of the PAGB enforces a zero-tolerance stance towards any form of academic dishonesty, including but not limited to plagiarism, citation manipulation, and data falsification or fabrication, in any submitted manuscript. Authors bear full responsibility for maintaining ethical standards in research and publication. In instances where research misconduct is identified, the editorial team of the NDU Journal will adhere to the Committee on Publication Ethics (COPE) [Guidelines](https://publicationethics.org/sites/default/files/plagiarism-submitted-manuscript-cope-flowchart.pdf)—or equivalent frameworks—in addressing and resolving such allegations in a transparent and equitable manner.
+The Editorial Board of the PAGB enforces a zero-tolerance stance towards any form of academic dishonesty, including but not limited to plagiarism, citation manipulation, and data falsification or fabrication, in any submitted manuscript. Authors bear full responsibility for maintaining ethical standards in research and publication. In instances where research misconduct is identified, the editorial team of the PAGB will adhere to the Committee on Publication Ethics (COPE) [Guidelines](https://publicationethics.org/sites/default/files/plagiarism-submitted-manuscript-cope-flowchart.pdf)—or equivalent frameworks—in addressing and resolving such allegations in a transparent and equitable manner.
 
 **COPE INSTRUCTIONS ON PLAGIARISM** 
 
@@ -285,7 +285,7 @@ Author(s) has the right to appeal an editorial decision on his/ her paper. If yo
 
 **Post-Publication Issues**
 
-While our editorial team strives to ensure that every research paper published in NDU Journal is entirely accurate, there are instances where problems would be raised after publication. These may fall into the following categories and result in different responses:
+While our editorial team strives to ensure that every research paper published in PAGB is entirely accurate, there are instances where problems would be raised after publication. These may fall into the following categories and result in different responses:
 
 - Where the production process has introduced an error in the paper, we will publish an **Erratum**.
 - Where the author(s) notices a mistake, we have not introduced, we will publish a **Corrigendum**.
@@ -360,7 +360,7 @@ The names and email addresses entered in this journal site will be used exclusiv
 
 **Disclaimer**
 
-The contents of this 'Journal' are the author(s) personal views. The statements, facts, and opinions given by the author(s) and published in the NDU Journal do not imply the official policy of the National Defence University, Editor(s), or the Publisher.
+The contents of this 'Journal' are the author(s) personal views. The statements, facts, and opinions given by the author(s) and published in the PAGB do not imply the official policy of the National Defence University, Editor(s), or the Publisher.
 
 **Processing Fee and Subscription**
 

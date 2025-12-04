@@ -23,6 +23,10 @@ function formatPolicyContent(content: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    // Convert markdown links [text](url) to anchor tags
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-green-700 underline hover:text-green-900" target="_blank" rel="noopener noreferrer">$1</a>')
+    // Convert bare URLs to anchor tags
+    .replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" class="text-green-700 underline hover:text-green-900" target="_blank" rel="noopener noreferrer">$1</a>')
     // Convert **bold** to <strong>
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // Convert headers (lines that are all caps or start with **)
