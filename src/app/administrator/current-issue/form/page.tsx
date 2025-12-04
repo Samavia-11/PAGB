@@ -298,7 +298,7 @@ export default function CreateIssuePage() {
                   </div>
                   <div>
                     <label htmlFor="managingEditor" className="block text-sm font-medium text-gray-700 mb-2">
-                      Managing Editor <span className="text-red-500">*</span>
+                    Editor <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"

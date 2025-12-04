@@ -72,6 +72,11 @@ export async function GET() {
 
         const author = authorMapping[file] || 'PAGB Contributors';
 
+        // Check if specific thumbnail exists for the article
+        const thumbnailBase = file.replace(/\.pdf$/i, '');
+        const thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+        const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', thumbnailPath));
+        
         allArticles.push({
           title: cleanTitle,
           author: author,
@@ -79,7 +84,7 @@ export async function GET() {
           pdfUrl: `/pdfs/${year}/${encodeURIComponent(file)}`,
           fileName: file,
           year: year,
-          thumbnail: `/images/${year === '2024' ? 'icon.png' : '2021/thumbnail.png'}`,
+          thumbnail: thumbnailExists ? thumbnailPath : `/images/${year === '2024' ? 'icon.png' : '2021/thumbnail.png'}`,
         });
       }
     }
