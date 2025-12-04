@@ -576,8 +576,8 @@ export default function Home() {
               <p className="text-sm text-gray-600">Published Articles</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-green">27</p>
-              <p className="text-sm text-gray-600">Contributing Authors</p>
+              <p className="text-3xl font-bold text-green">685</p>
+              <p className="text-sm text-gray-600">Authors</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-green">27</p>
