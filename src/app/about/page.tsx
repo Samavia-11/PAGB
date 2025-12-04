@@ -65,7 +65,7 @@ export default function AboutPage() {
                   <div className="mb-6">
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">Contribution Enhancement</h3>
                     <p className="text-gray-700 mb-6">
-                      The PAGB aims to enhance the value of contributions by engaging a wide spectrum of military professionals, academicians, scholars, and thought leaders. We look forward to your forthcoming intellectual discourse aligned with the journal's scope.
+                      The PAGB aims to enhance the value of contributions by engaging a wide spectrum of military professionals, academicians, scholars, and thought leaders. We look forward to your forthcoming intellectual discourse aligned with the journal&apos;s scope.
                     </p>
                   </div>
                   
