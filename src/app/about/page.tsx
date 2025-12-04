@@ -51,6 +51,147 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Scope & Aims */}
+        <section className="pt-20 pb-32 bg-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-12">
+              {/* Scope */}
+              <div className="text-center">
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Globe className="w-10 h-10 text-blue-700" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-6">Scope</h2>
+                <div className="bg-gray-50 p-8 rounded-lg text-left h-full">
+                  <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">Contribution Enhancement</h3>
+                    <p className="text-gray-700 mb-6">
+                      The PAGB aims to enhance the value of contributions by engaging a wide spectrum of military professionals, academicians, scholars, and thought leaders. We look forward to your forthcoming intellectual discourse aligned with the journal's scope.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">Primary Focus Areas</h3>
+                    <p className="text-gray-700 mb-4">
+                      The PAGB primarily addresses <span className="font-semibold">HARD CORE MILITARY SUBJECTS</span> and <span className="font-semibold">NATIONAL SECURITY ISSUES</span>, with particular emphasis on:
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-2">Military Focus</h4>
+                        <ul className="space-y-2 text-gray-700 pl-1">
+                          {[
+                            'Military Strategy',
+                            'Global Military Balance',
+                            'Military Modernization',
+                            'Asymmetric Warfare',
+                            'Cyber Warfare',
+                            'Artificial Intelligence in Warfare',
+                            'Drone Technology',
+                            'Space Technology',
+                            'Defense Procurement',
+                            'Art of Warfare'
+                          ].map((item, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-green-600 mr-2">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-2">National Security</h4>
+                        <ul className="space-y-2 text-gray-700 pl-1">
+                          {[
+                            'Threat Perceptions regarding National Defense',
+                            'Terrorism',
+                            'Extremism and Radicalization',
+                            'Media and Information Management',
+                            'Psychological/Social Media Issues',
+                            'Regional Conflicts (South Asia, Middle East, Afghanistan, Southeast Asia, Central Asia)',
+                            'Kashmir Dispute',
+                            'Afghanistan Issue',
+                            'Regional Water-Based Conflicts',
+                            'Economic Security',
+                            'Climate Change',
+                            'Any other subject matter that bears implications for the National Security of Pakistan'
+                          ].map((item, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-green-600 mr-2">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Aims & Objectives */}
+              <div className="text-center">
+                <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Target className="w-10 h-10 text-purple-700" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-800 mb-6">Aims & Objectives</h2>
+                <div className="bg-gray-50 p-8 rounded-lg text-left h-full">
+                  <ol className="space-y-6">
+                    <li className="flex">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold mr-4 mt-0.5">1</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Advancement of Research</h3>
+                        <p className="text-gray-700 mt-1">
+                          To enhance and advance research pertaining to Hard core Military Subjects and National Security to enhance the development and growth of Armed Forces Officers.
+                        </p>
+                      </div>
+                    </li>
+                    
+                    <li className="flex">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold mr-4 mt-0.5">2</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Promotion of Scholarly Publishing</h3>
+                        <p className="text-gray-700 mt-1">
+                          To encourage the publication of high-quality exploratory, analytical and empirical research manuscripts that contribute to the field.
+                        </p>
+                      </div>
+                    </li>
+                    
+                    <li className="flex">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold mr-4 mt-0.5">3</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Encouragement of Diverse Writing</h3>
+                        <p className="text-gray-700 mt-1">
+                          To promote a variety of genres in both creative and research writing, reflecting the multifaceted nature of national security issues and modern warfare.
+                        </p>
+                      </div>
+                    </li>
+                    
+                    <li className="flex">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold mr-4 mt-0.5">4</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Publication of Contemporary Research</h3>
+                        <p className="text-gray-700 mt-1">
+                          To disseminate new research findings that address contemporary challenges in national security.
+                        </p>
+                      </div>
+                    </li>
+                    
+                    <li className="flex">
+                      <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold mr-4 mt-0.5">5</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Provision of a Research Platform</h3>
+                        <p className="text-gray-700 mt-1">
+                          To offer a dedicated platform for researchers to explore pressing national security issues and propose tangible, actionable solutions to the security challenges faced by Pakistan.
+                        </p>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Key Features */}
         <section className="py-20 bg-gray-100">
           <div className="container mx-auto px-4">
