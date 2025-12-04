@@ -26,7 +26,7 @@ export default function AboutPage() {
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="grid md:grid-cols-2 gap-12">
-              <div className="text-center">
+              {/* <div className="text-center">
                 <div className="w-20 h-20 bg-green-10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Target className="w-10 h-10 text-[#002300]" />
                 </div>
@@ -36,8 +36,8 @@ export default function AboutPage() {
                   and contemporary military challenges through rigorous research and scholarly contributions 
                   from serving and retired officers, academics, and strategic thinkers.
                 </p>
-              </div>
-              <div className="text-center">
+              </div> */}
+              {/* <div className="text-center">
                 <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Shield className="w-10 h-10 text-orange-700" />
                 </div>
@@ -46,7 +46,7 @@ export default function AboutPage() {
                   To be Pakistan’s leading platform for professional military writing and strategic thought, 
                   fostering a culture of research and intellectual excellence within the armed forces and beyond.
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
