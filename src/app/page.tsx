@@ -572,16 +572,16 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-8 md:gap-12 text-center">
             <div>
-              <p className="text-3xl font-bold text-green">{stats.publishedArticles}</p>
+              <p className="text-3xl font-bold text-green">796</p>
               <p className="text-sm text-gray-600">Published Articles</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-green">{stats.activeAuthors}</p>
+              <p className="text-3xl font-bold text-green">27</p>
               <p className="text-sm text-gray-600">Contributing Authors</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-green">{stats.issuesPublished}</p>
-              <p className="text-sm text-gray-600">Issues Published</p>
+              <p className="text-3xl font-bold text-green">27</p>
+              <p className="text-sm text-gray-600">Volume</p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mt-6 font-bold">ISSN (Print): 2303-9973</p>
@@ -808,11 +808,11 @@ export default function Home() {
                 <h4 className="text-xl font-bold text-gray-900">Brigadier Zahid Mehmood Awan</h4>
               </div>
               <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                <div className="text-sm font-semibold text-orange mb-4">ASSISTANT EDITORS</div>
+                <div className="text-sm font-semibold text-orange mb-4">Sub-EDITORS</div>
                 <div className="space-y-3">
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Brigadier Dr Shahid Yaqub Abbasi</h5><p className="text-sm text-gray-600">FGE&I Dte, Rawalpindi</p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Colonel Dr Sayyam Bin Saeed</h5><p className="text-sm text-gray-600">HRD Dte, GHQ</p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Lieutenant Colonel Dr Zillay Hussain Dar</h5><p className="text-sm text-gray-600">HRD Dte, (GSO-1 PAGB)</p></div>
+                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Brigadier Dr Shahid Yaqub Abbasi</h5><p className="text-sm text-gray-600"></p></div>
+                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Colonel Dr Sayyam Bin Saeed</h5><p className="text-sm text-gray-600"></p></div>
+                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Lieutenant Colonel Dr Zillay Hussain Dar</h5><p className="text-sm text-gray-600"></p></div>
                 </div>
               </div>
             </div>
