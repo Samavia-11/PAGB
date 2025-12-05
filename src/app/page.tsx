@@ -181,22 +181,7 @@ export default function Home() {
   const [policies, setPolicies] = useState<PolicyLink[]>([]);
   const articlesRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch authors dynamically
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/list-authors');
-        const data = await res.json();
-        if (!cancelled && data?.authors) {
-          setAuthors(data.authors);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  // Authors will now be derived from the same article data used for OTHER ISSUES
 
   // Static policies data
   const staticPolicies: PolicyLink[] = [
@@ -239,7 +224,7 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fetch random articles from 2024 and 2021 on page load
+  // Fetch articles from 2024 and 2021 on page load and derive authors from the same data
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -253,15 +238,38 @@ export default function Home() {
         const data2021 = await res2021.json();
         
         // Combine all articles
-        const allArticles = [
+        const allArticles: Article[] = [
           ...(data2024?.files || []),
           ...(data2021?.files || [])
         ];
-        
-        // Shuffle and pick 3 random articles
+
         if (!cancelled && allArticles.length > 0) {
-          const shuffled = allArticles.sort(() => Math.random() - 0.5);
+          // Shuffle and pick 3 random articles for the ARTICLES section
+          const shuffled = [...allArticles].sort(() => Math.random() - 0.5);
           setArticles(shuffled.slice(0, 3));
+
+          // Build contributing authors from the same data
+          const authorCounts = new Map<string, number>();
+          for (const art of allArticles) {
+            if (!art.author) continue;
+            const name = art.author.trim();
+            if (!name) continue;
+            authorCounts.set(name, (authorCounts.get(name) || 0) + 1);
+          }
+
+          const derivedAuthors: Author[] = Array.from(authorCounts.entries()).map(([name, count]) => ({
+            name,
+            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            count,
+          }));
+
+          // Sort by article count (desc), then name
+          derivedAuthors.sort((a, b) => {
+            if (b.count !== a.count) return b.count - a.count;
+            return a.name.localeCompare(b.name);
+          });
+
+          setAuthors(derivedAuthors);
         }
       } catch (e) {
         console.error(e);
