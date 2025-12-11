@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
+import { isValidId, escapeHtml } from '@/lib/security';
+
+// Valid recommendations
+const VALID_RECOMMENDATIONS = ['accept', 'minor_revision', 'major_revision', 'reject'];
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user from middleware
+    const authUserId = request.headers.get('x-user-id');
+    const authUserRole = request.headers.get('x-user-role');
+
+    if (!authUserId || !authUserRole) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Only reviewers can forward articles
+    if (authUserRole !== 'reviewer' && authUserRole !== 'editor' && authUserRole !== 'administrator') {
+      return NextResponse.json({ error: 'Only reviewers can forward articles' }, { status: 403 });
+    }
+
     const formData = await request.formData();
     
     const articleId = formData.get('article_id') as string;
@@ -11,12 +28,20 @@ export async function POST(request: NextRequest) {
     const editorComments = formData.get('editor_comments') as string;
     const editedContent = formData.get('edited_content') as string;
 
-    console.log('Forwarding article:', { articleId, recommendation, reviewerComments });
+    // Validate article ID
+    if (!isValidId(articleId)) {
+      return NextResponse.json({ error: 'Invalid article ID' }, { status: 400 });
+    }
+
+    // Validate recommendation
+    if (!recommendation || !VALID_RECOMMENDATIONS.includes(recommendation)) {
+      return NextResponse.json({ error: 'Invalid recommendation' }, { status: 400 });
+    }
 
     // Validate required fields
-    if (!articleId || !recommendation || !reviewerComments) {
+    if (!reviewerComments || reviewerComments.trim().length < 10) {
       return NextResponse.json(
-        { error: 'Article ID, recommendation, and reviewer comments are required' },
+        { error: 'Reviewer comments are required (minimum 10 characters)' },
         { status: 400 }
       );
     }
@@ -77,7 +102,7 @@ export async function POST(request: NextRequest) {
         )`,
         [
           editorId,
-          `Article "${article.title}" has been reviewed and forwarded with recommendation: ${recommendation.replace('_', ' ').toUpperCase()}. Reviewer comments: ${reviewerComments}`,
+          `Article "${escapeHtml(article.title)}" has been reviewed and forwarded with recommendation: ${escapeHtml(recommendation.replace('_', ' ').toUpperCase())}. Reviewer comments: ${escapeHtml(reviewerComments.substring(0, 200))}`,
           articleId
         ]
       );

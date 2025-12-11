@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
+import { isValidId } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +23,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get reviewer info from session/auth (simplified for now)
-    const reviewerId = 1; // This should come from authentication
-    const reviewerName = 'Reviewer'; // This should come from authentication
+    // Get reviewer info from request headers (set by auth middleware)
+    const reviewerId = parseInt(request.headers.get('x-user-id') || '0');
+    const reviewerName = request.headers.get('x-user-name') || 'Unknown Reviewer';
+    const userRole = request.headers.get('x-user-role') || '';
+
+    // Validate authentication
+    if (!isValidId(reviewerId)) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Please log in to submit a review' },
+        { status: 401 }
+      );
+    }
+
+    // Validate user role
+    if (userRole !== 'reviewer' && userRole !== 'editor') {
+      return NextResponse.json(
+        { error: 'Forbidden: Only reviewers can submit reviews' },
+        { status: 403 }
+      );
+    }
 
     const pool = getPool();
     const connection = await pool.getConnection();

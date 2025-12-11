@@ -36,8 +36,26 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Only allow authenticated users with editor/admin role to create notifications
+    const requestingUserRole = request.headers.get('x-user-role');
+    const requestingUserId = request.headers.get('x-user-id');
+
+    if (!requestingUserId || !requestingUserRole) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Only editors and administrators can create notifications for other users
+    if (requestingUserRole !== 'editor' && requestingUserRole !== 'administrator') {
+      return NextResponse.json({ error: 'Forbidden: Insufficient permissions' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { user_id, type, title, message, article_id, related_user_id, action_url } = body;
+
+    // Validate required fields
+    if (!user_id || !type || !title || !message) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
 
     const sql = `INSERT INTO notifications (user_id, type, title, message, article_id, related_user_id, action_url) 
                  VALUES (?, ?, ?, ?, ?, ?, ?)`;

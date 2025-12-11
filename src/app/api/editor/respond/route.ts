@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
+import { isValidId } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,9 +21,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get editor info from session/auth (simplified for now)
-    const editorId = 1; // This should come from authentication
-    const editorName = 'Editor'; // This should come from authentication
+    // Get editor info from request headers (set by auth middleware)
+    const editorId = parseInt(request.headers.get('x-user-id') || '0');
+    const editorName = request.headers.get('x-user-name') || 'Unknown Editor';
+    const userRole = request.headers.get('x-user-role') || '';
+
+    // Validate authentication
+    if (!isValidId(editorId)) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Please log in to respond' },
+        { status: 401 }
+      );
+    }
+
+    // Validate user role
+    if (userRole !== 'editor' && userRole !== 'administrator') {
+      return NextResponse.json(
+        { error: 'Forbidden: Only editors can respond to forwarded articles' },
+        { status: 403 }
+      );
+    }
 
     const pool = getPool();
     const connection = await pool.getConnection();

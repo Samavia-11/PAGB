@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { escapeHtml } from '@/lib/security';
 
 export async function GET(
   request: NextRequest,
@@ -100,17 +101,17 @@ export async function GET(
           <div>Academic Journal for Military Research and Strategic Analysis</div>
         </div>
         
-        <h1 class="title">${article.title}</h1>
+        <h1 class="title">${escapeHtml(article.title)}</h1>
         
         <div class="authors">
-          <strong>Author:</strong> ${article.author_name}
+          <strong>Author:</strong> ${escapeHtml(article.author_name)}
         </div>
         
         ${parsedContent.manuscript?.abstract && parsedContent.manuscript.abstract !== 'nnn' ? `
         <div class="section">
           <div class="section-title">Abstract</div>
           <div class="abstract">
-            ${parsedContent.manuscript.abstract}
+            ${escapeHtml(parsedContent.manuscript.abstract)}
           </div>
         </div>
         ` : ''}
@@ -119,7 +120,7 @@ export async function GET(
         <div class="section">
           <div class="section-title">Keywords</div>
           <div class="keywords">
-            ${parsedContent.manuscript.keywords.join(', ')}
+            ${parsedContent.manuscript.keywords.map((k: string) => escapeHtml(k)).join(', ')}
           </div>
         </div>
         ` : ''}
@@ -127,14 +128,14 @@ export async function GET(
         ${parsedContent.manuscript?.articleType ? `
         <div class="section">
           <div class="section-title">Article Type</div>
-          <div>${parsedContent.manuscript.articleType.replace('_', ' ').toUpperCase()}</div>
+          <div>${escapeHtml(parsedContent.manuscript.articleType.replace('_', ' ').toUpperCase())}</div>
         </div>
         ` : ''}
         
         ${parsedContent.manuscript?.content ? `
         <div class="section">
           <div class="section-title">Content</div>
-          <div>${parsedContent.manuscript.content}</div>
+          <div>${escapeHtml(parsedContent.manuscript.content)}</div>
         </div>
         ` : ''}
         
@@ -143,9 +144,9 @@ export async function GET(
           <div class="section-title">Author Information</div>
           ${parsedContent.authors.map((author: any) => `
             <div style="margin-bottom: 10px;">
-              <strong>${author.name}</strong><br>
-              ${author.affiliation || 'No affiliation provided'}<br>
-              ${author.email || 'No email provided'}
+              <strong>${escapeHtml(author.name)}</strong><br>
+              ${escapeHtml(author.affiliation || 'No affiliation provided')}<br>
+              ${escapeHtml(author.email || 'No email provided')}
             </div>
           `).join('')}
         </div>
@@ -153,7 +154,7 @@ export async function GET(
         
         <div class="metadata">
           <div><strong>Submission Date:</strong> ${new Date(article.created_at).toLocaleDateString()}</div>
-          <div><strong>Status:</strong> ${article.status.replace('_', ' ').toUpperCase()}</div>
+          <div><strong>Status:</strong> ${escapeHtml(article.status.replace('_', ' ').toUpperCase())}</div>
           <div><strong>Article ID:</strong> ${article.id}</div>
           <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
         </div>

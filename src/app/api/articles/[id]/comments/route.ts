@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { isAllowedFileType, isFileSizeValid, sanitizeFileName, isValidId } from '@/lib/security';
 
 // GET - Fetch all messages for an article
 export async function GET(
@@ -63,7 +64,15 @@ export async function POST(
     const senderRole = formData.get('sender_role') as string;
     const file = formData.get('file') as File | null;
 
-    if (!senderId || !senderRole) {
+    // Validate sender ID
+    if (!isValidId(senderId)) {
+      return NextResponse.json(
+        { error: 'Invalid sender ID' },
+        { status: 400 }
+      );
+    }
+
+    if (!senderRole) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -84,6 +93,24 @@ export async function POST(
     // Handle file upload
     if (file) {
       try {
+        // Validate file type
+        const fileTypeCheck = isAllowedFileType(file);
+        if (!fileTypeCheck.valid) {
+          return NextResponse.json(
+            { error: fileTypeCheck.error },
+            { status: 400 }
+          );
+        }
+
+        // Validate file size
+        const fileSizeCheck = isFileSizeValid(file);
+        if (!fileSizeCheck.valid) {
+          return NextResponse.json(
+            { error: fileSizeCheck.error },
+            { status: 400 }
+          );
+        }
+
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         
@@ -91,13 +118,12 @@ export async function POST(
         const uploadsDir = join(process.cwd(), 'public', 'uploads', 'articles', articleId.toString());
         await mkdir(uploadsDir, { recursive: true });
         
-        // Generate unique filename - sanitize filename to prevent issues
+        // Generate unique filename with proper sanitization
         const timestamp = Date.now();
         const originalFileName = file.name;
-        // Replace problematic characters in filename
-        const sanitizedFileName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const sanitizedName = sanitizeFileName(originalFileName);
         fileName = originalFileName; // Keep original name for database
-        const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
+        const uniqueFileName = `${timestamp}-${sanitizedName}`;
         const filePath = join(uploadsDir, uniqueFileName);
         
         await writeFile(filePath, buffer);

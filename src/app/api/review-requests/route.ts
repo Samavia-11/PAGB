@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { isValidId, escapeHtml } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
-    const { editor_id, reviewer_id, article_id, status } = await request.json();
+    // Get authenticated user from middleware
+    const authUserId = request.headers.get('x-user-id');
+    const authUserRole = request.headers.get('x-user-role');
 
-    if (!editor_id || !reviewer_id || !article_id) {
-      return NextResponse.json({ error: 'Editor ID, Reviewer ID, and Article ID are required' }, { status: 400 });
+    if (!authUserId || !authUserRole) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // First, create the review_requests table if it doesn't exist (with article_id)
-    await query(`
-      CREATE TABLE IF NOT EXISTS review_requests (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        editor_id INT NOT NULL,
-        reviewer_id INT NOT NULL,
-        article_id INT NOT NULL,
-        status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
+    // Only editors can send review requests
+    if (authUserRole !== 'editor' && authUserRole !== 'administrator') {
+      return NextResponse.json({ error: 'Only editors can send review requests' }, { status: 403 });
+    }
+
+    const { reviewer_id, article_id } = await request.json();
+
+    // Validate IDs
+    if (!isValidId(reviewer_id) || !isValidId(article_id)) {
+      return NextResponse.json({ error: 'Invalid reviewer ID or article ID' }, { status: 400 });
+    }
+
+    // Use authenticated user as editor
+    const editor_id = parseInt(authUserId);
 
     // Check if a pending request already exists for this specific article and reviewer
     const existingRequest: any = await query(
@@ -89,7 +94,14 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('user_id');
     const role = searchParams.get('role');
 
-    console.log('GET review-requests - userId:', userId, 'role:', role);
+    // Use authenticated user info from middleware
+    const authUserId = request.headers.get('x-user-id');
+    const authUserRole = request.headers.get('x-user-role');
+
+    // Validate that user can only see their own requests
+    if (authUserId && userId !== authUserId) {
+      return NextResponse.json({ error: 'Can only view your own requests' }, { status: 403 });
+    }
 
     if (!userId || !role) {
       return NextResponse.json({ error: 'User ID and role are required' }, { status: 400 });

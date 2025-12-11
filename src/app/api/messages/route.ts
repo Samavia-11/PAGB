@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { isAllowedFileType, isFileSizeValid, sanitizeFileName, isValidId } from '@/lib/security';
 
 // GET - Fetch messages between two users
 export async function GET(request: NextRequest) {
@@ -66,7 +67,15 @@ export async function POST(request: NextRequest) {
     const message = formData.get('message') as string;
     const file = formData.get('file') as File | null;
 
-    if (!senderId || !receiverId || !senderRole) {
+    // Validate IDs to prevent path traversal
+    if (!isValidId(senderId) || !isValidId(receiverId)) {
+      return NextResponse.json(
+        { error: 'Invalid sender or receiver ID' },
+        { status: 400 }
+      );
+    }
+
+    if (!senderRole) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -87,6 +96,24 @@ export async function POST(request: NextRequest) {
     // Handle file upload
     if (file) {
       try {
+        // Validate file type
+        const fileTypeCheck = isAllowedFileType(file);
+        if (!fileTypeCheck.valid) {
+          return NextResponse.json(
+            { error: fileTypeCheck.error },
+            { status: 400 }
+          );
+        }
+
+        // Validate file size
+        const fileSizeCheck = isFileSizeValid(file);
+        if (!fileSizeCheck.valid) {
+          return NextResponse.json(
+            { error: fileSizeCheck.error },
+            { status: 400 }
+          );
+        }
+
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
         
@@ -94,12 +121,12 @@ export async function POST(request: NextRequest) {
         const uploadsDir = join(process.cwd(), 'public', 'uploads', 'messages', `${senderId}_${receiverId}`);
         await mkdir(uploadsDir, { recursive: true });
         
-        // Generate unique filename
+        // Generate unique filename with proper sanitization
         const timestamp = Date.now();
         const originalFileName = file.name;
-        const sanitizedFileName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const sanitizedName = sanitizeFileName(originalFileName);
         fileName = originalFileName;
-        const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
+        const uniqueFileName = `${timestamp}-${sanitizedName}`;
         const filePath = join(uploadsDir, uniqueFileName);
         
         await writeFile(filePath, buffer);
