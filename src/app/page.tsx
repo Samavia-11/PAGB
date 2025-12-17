@@ -671,6 +671,18 @@ export default function Home() {
                   OTHER ISSUES
                 </h3>
                 <div className="space-y-6 mt-8">
+                  <button onClick={() => loadIssue('2025')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
+                    <div className="flex">
+                      <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
+                        <img src="/images/2023.png" alt="2025" className="w-full h-full object-cover opacity-60" />
+                      </div>
+                      <div className="flex-1 p-5">
+                        <div className="text-sm text-gray-700 mb-2 font-semibold">2025 EDITION</div>
+                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2025 </h4>
+                        <p className="text-xs text-gray-600 mt-2">21 Articles</p>
+                      </div>
+                    </div>
+                  </button>
                   <button onClick={() => loadIssue('2024')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
                     <div className="flex">
                       <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
@@ -680,18 +692,6 @@ export default function Home() {
                         <div className="text-sm text-gray-700 mb-2 font-semibold">2024 EDITION</div>
                         <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2024</h4>
                         <p className="text-xs text-gray-600 mt-2">18 Articles | 145 MB</p>
-                      </div>
-                    </div>
-                  </button>
-                  <button onClick={() => loadIssue('2021')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
-                    <div className="flex">
-                      <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
-                        <img src="/images/2023.png" alt="2021" className="w-full h-full object-cover opacity-60" />
-                      </div>
-                      <div className="flex-1 p-5">
-                        <div className="text-sm text-gray-700 mb-2 font-semibold">2023 EDITION</div>
-                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2023 </h4>
-                        <p className="text-xs text-gray-600 mt-2">Multiple Articles</p>
                       </div>
                     </div>
                   </button>

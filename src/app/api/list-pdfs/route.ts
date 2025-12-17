@@ -3,6 +3,30 @@ import { NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 // -------------------------------------------------
+// PDF URL MAPPING FOR FILES WITH SPECIAL CHARACTERS
+// -------------------------------------------------
+const PDF_URL_MAP: Record<string, string> = {
+  'Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf': '/pdfs/2025/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.pdf',
+  'The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': '/pdfs/2025/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.pdf',
+  'Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf': '/pdfs/2025/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile,%20%20Dr%20Hasan%20Askari.pdf',
+  'Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf': '/pdfs/2025/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.pdf',
+  'China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf': '/pdfs/2025/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.pdf',
+  'Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf': '/pdfs/2025/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.pdf'
+};
+
+// -------------------------------------------------
+// THUMBNAIL MAPPING FOR FILES WITH SPECIAL CHARACTERS
+// -------------------------------------------------
+const THUMBNAIL_MAP: Record<string, string> = {
+  'Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf': '/pdfs/Thumnails/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.jpg',
+  'The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.jpg',
+  'Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf': '/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile,%20%20Dr%20Hasan%20Askari.jpg',
+  'Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf': '/pdfs/Thumnails/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.jpg',
+  'China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf': '/pdfs/Thumnails/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.jpg',
+  'Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf': '/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.jpg'
+};
+
+// -------------------------------------------------
 // AUTHOR MAPPING (filename -> author name)
 // -------------------------------------------------
 const AUTHOR_MAP: Record<string, string> = {
@@ -25,6 +49,29 @@ const AUTHOR_MAP: Record<string, string> = {
   'SWARMING USAGE INCONTEMPORARY ARMIES VIS A VIS EFFECTS OF INDIAN SWARMING TECHNOLOGY ON PAKISTAN ARMY IN ANY FUTURE CONFLICT.pdf': 'Sajjad Hussain',
   'THE ROLE OF ARTIFICIAL INTELLIGENCE IN TERRORISM AND COUNTER MEASURES.pdf': 'Dr Muhammad Sheharyar Khan',
   'UNRAVELLING THE INTRIGUING NEXUS SOCIALLY DISRUPTIVE PROXIES AND SECURITY MILIEU OF PAKISTAN.pdf': 'Zubair Yamin Rana',
+  
+  // 2025 Articles
+  'Akhand Bharat–Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf': 'Barrister Ahmer Bilal Soofi',
+  'Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf': 'Najam Ur Rehman',
+  'China Pakistan Economic Corridor (CPEC) - A Bridge to Peace and Prosperity in South Asia, Malik Amir Muhammad Khan.pdf': 'Malik Amir Muhammad Khan',
+  'China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf': 'Abdul Ghafoor Babar',
+  'Climate Change in Pakistan Challenges and Implications Khawar Nazir.pdf': 'Khawar Nazir',
+  'Conservation and Display of Military Heritage in Army Museum and its Psycho-Sociological Impact on Military Personnel and General Public; A Constructive View of Professionalism Dr Sayyam Bin Saeed.pdf': 'Dr Sayyam Bin Saeed',
+  'Drone - Warfare Prospects and Implications,  Abid Imtiaz.pdf': 'Abid Imtiaz',
+  'Evolving Character of War and Our Response to Bellum Verturum,  Shehbaz Khan.pdf': 'Shehbaz Khan',
+  'Geostrategic Perspectives on SCO, NATO and Beyond; Challenges & Opportunities for Pakistan, Sabtian Arif Magary.pdf': 'Sabtian Arif Magary',
+  'India, United Nations Security Council and Global Governance Changing Strategies and Response, Dr Muhammad Farooq.pdf': 'Dr Muhammad Farooq',
+  'Indo-Pacific Security Dynamics Implications for Pakistan, Farzana Shah.pdf': 'Farzana Shah',
+  'Internal Security in Pakistan A Comprehensive Analysis, Dr Tughral Yamin.pdf': 'Dr Tughral Yamin',
+  'Kalabagh Iron Ore Deposits to Play an Important Role in the Eco of Pakistan, Dr Samar Mubarakmand.pdf': 'Dr Samar Mubarakmand',
+  'Navigating China Pakistan Economic Corridor Pitfalls and Progress, Dr Khalid Rehman.pdf': 'Dr Khalid Rehman',
+  'Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf': 'Dr Sheharyar Khan',
+  'Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf': 'Dr Hasan Askari',
+  'The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': 'Omar Rashid Sheikh',
+  'Transitioning Into Next Generation of Warfare, Ozair Zafar.pdf': 'Ozair Zafar',
+  'Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf': 'Dr Maria Sultan',
+  'Utility of Centre of Gravity (CoG) Analysis for Operational Planning, Muhammad Saqib.pdf': 'Muhammad Saqib',
+  'What Are Leaders Made of,  Raza Muhammad Khan.pdf': 'Raza Muhammad Khan',
   
   // 2021/2023 Articles
   'A TALE OF UNENDING ATROCITIES.pdf': 'M Yousaf Malik',
@@ -50,6 +97,29 @@ const AUTHOR_MAP: Record<string, string> = {
 // STATIC PDF LIST
 // -------------------------------------------------
 const PDF_CATALOG = {
+  '2025': [
+    'Akhand Bharat–Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf',
+    'Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf',
+    'China Pakistan Economic Corridor (CPEC) - A Bridge to Peace and Prosperity in South Asia, Malik Amir Muhammad Khan.pdf',
+    'China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf',
+    'Climate Change in Pakistan Challenges and Implications Khawar Nazir.pdf',
+    'Conservation and Display of Military Heritage in Army Museum and its Psycho-Sociological Impact on Military Personnel and General Public; A Constructive View of Professionalism Dr Sayyam Bin Saeed.pdf',
+    'Drone - Warfare Prospects and Implications,  Abid Imtiaz.pdf',
+    'Evolving Character of War and Our Response to Bellum Verturum,  Shehbaz Khan.pdf',
+    'Geostrategic Perspectives on SCO, NATO and Beyond; Challenges & Opportunities for Pakistan, Sabtian Arif Magary.pdf',
+    'India, United Nations Security Council and Global Governance Changing Strategies and Response, Dr Muhammad Farooq.pdf',
+    'Indo-Pacific Security Dynamics Implications for Pakistan, Farzana Shah.pdf',
+    'Internal Security in Pakistan A Comprehensive Analysis, Dr Tughral Yamin.pdf',
+    'Kalabagh Iron Ore Deposits to Play an Important Role in the Eco of Pakistan, Dr Samar Mubarakmand.pdf',
+    'Navigating China Pakistan Economic Corridor Pitfalls and Progress, Dr Khalid Rehman.pdf',
+    'Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf',
+    'Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf',
+    'The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf',
+    'Transitioning Into Next Generation of Warfare, Ozair Zafar.pdf',
+    'Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf',
+    'Utility of Centre of Gravity (CoG) Analysis for Operational Planning, Muhammad Saqib.pdf',
+    'What Are Leaders Made of,  Raza Muhammad Khan.pdf'
+  ],
   '2024': [
     'AFGHAN REFUGEES AND THE PRINCIPLE OF NON-REFOULEMENT.pdf',
     'BRIDGING THE SKILL GAP.pdf',
@@ -104,11 +174,39 @@ export async function GET(request: Request) {
 
     const files = pdfList.map((filename) => {
       const title = filename.replace(/\.pdf$/i, '');
-      const pdfUrl = `/pdfs/${folder}/${encodeURIComponent(filename)}`;
+      
+      // Use PDF URL mapping for 2025 articles with special characters
+      const pdfUrl = PDF_URL_MAP[filename] || `/pdfs/${folder}/${encodeURIComponent(filename)}`;
 
-      // AUTO-MATCH PNG with same name
-      const pngFilename = title + '.jpg';
-      const thumbnail = `/images/${folder}/${encodeURIComponent(pngFilename)}`;
+      // AUTO-MATCH PNG with same name - use different logic for different years
+      let thumbnail = '/images/icon.png';
+      
+      if (folder === '2025') {
+        // Special handling for 2025 articles with proper URL encoding
+        if (title.includes('Akhand Bharat')) {
+          thumbnail = '/pdfs/Thumnails/Akhand%20Bharat%E2%80%93Violation%20of%20Internal%20Law,%20Barrister%20Ahmer%20Bilal%20Soofi.jpg';
+        } else if (title.includes('Unlocking Pakistan')) {
+          thumbnail = '/pdfs/Thumnails/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.jpg';
+        } else if (title.includes('Anatomy and Grammar')) {
+          thumbnail = '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.jpg';
+        } else if (title.includes('Strategic Culture')) {
+          thumbnail = '/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile,%20%20Dr%20Hasan%20Askari.jpg';
+        } else if (title.includes('Geo-economics Pivot')) {
+          thumbnail = '/pdfs/Thumnails/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.jpg';
+        } else if (title.includes('China\'s Rise')) {
+          thumbnail = '/pdfs/Thumnails/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.jpg';
+        } else if (title.includes('Building Economic Resilience')) {
+          thumbnail = '/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.jpg';
+        } else {
+          thumbnail = `/pdfs/Thumnails/${encodeURIComponent(title)}.jpg`;
+        }
+      } else if (folder === '2024') {
+        // For 2024 articles, use thumbnails from /images/2024/
+        thumbnail = `/images/2024/${encodeURIComponent(title)}.jpg`;
+      } else {
+        // For other years, use default icon
+        thumbnail = '/images/icon.png';
+      }
 
       // Look up author from mapping, fallback to 'Various Contributors'
       const author = AUTHOR_MAP[filename] || 'Various Contributors';

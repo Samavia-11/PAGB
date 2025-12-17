@@ -26,6 +26,29 @@ const authorMapping: Record<string, string> = {
   'THE ROLE OF ARTIFICIAL INTELLIGENCE IN TERRORISM AND COUNTER MEASURES.pdf': 'Dr Muhammad Sheharyar Khan',
   'UNRAVELLING THE INTRIGUING NEXUS SOCIALLY DISRUPTIVE PROXIES AND SECURITY MILIEU OF PAKISTAN.pdf': 'Zubair Yamin Rana',
   
+  // 2025 Articles
+  '1 Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf': 'Dr Hasan Askari',
+  '10 Internal Security in Pakistan A Comprehensive Analysis, Dr Tughral Yamin.pdf': 'Dr Tughral Yamin',
+  '11 China Pakistan Economic Corridor (CPEC) - A Bridge to Peace and Prosperity in South Asia, Malik Amir Muhammad Khan.pdf': 'Malik Amir Muhammad Khan',
+  '12 Navigating China Pakistan Economic Corridor Pitfalls and Progress, Dr Khalid Rehman.pdf': 'Dr Khalid Rehman',
+  '13 Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf': 'Dr Maria Sultan',
+  '14 Kalabagh Iron Ore Deposits to Play an Important Role in the Eco of Pakistan, Dr Samar Mubarakmand.pdf': 'Dr Samar Mubarakmand',
+  '15 Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf': 'Dr Sheharyar Khan',
+  '16 Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf': 'Najam Ur Rehman',
+  '17 Climate Change in Pakistan Challenges and Implications Khawar Nazir.pdf': 'Khawar Nazir',
+  '18 Geostrategic Perspectives on SCO, NATO and Beyond; Challenges & Opportunities for Pakistan, Sabtian Arif Magary.pdf': 'Sabtian Arif Magary',
+  '19 China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf': 'Abdul Ghafoor Babar',
+  '2 Indo-Pacific Security Dynamics Implications for Pakistan, Farzana Shah.pdf': 'Farzana Shah',
+  '20 What Are Leaders Made of,  Raza Muhammad Khan.pdf': 'Raza Muhammad Khan',
+  '21 Conservation and Display of Military Heritage in Army Museum and its Psycho-Sociological Impact on Military Personnel and General Public; A Constructive View of Professionalism Dr Sayyam Bin Saeed.pdf': 'Dr Sayyam Bin Saeed',
+  '3 Akhand Bharat–Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf': 'Barrister Ahmer Bilal Soofi',
+  '4 India, United Nations Security Council and Global Governance Changing Strategies and Response, Dr Muhammad Farooq.pdf': 'Dr Muhammad Farooq',
+  '5 The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': 'Omar Rashid Sheikh',
+  '6 Evolving Character of War and Our Response to Bellum Verturum,  Shehbaz Khan.pdf': 'Shehbaz Khan',
+  '7 Transitioning Into Next Generation of Warfare, Ozair Zafar.pdf': 'Ozair Zafar',
+  '8 Drone - Warfare Prospects and Implications,  Abid Imtiaz.pdf': 'Abid Imtiaz',
+  '9 Utility of Centre of Gravity (CoG) Analysis for Operational Planning, Muhammad Saqib.pdf': 'Muhammad Saqib',
+  
   // 2021/2023 Articles
   'A TALE OF UNENDING ATROCITIES.pdf': 'M Yousaf Malik',
   'APPLICATION OF WARFARE STRATEGIES CYBER SECURITY MANAGEMENT IN ORGANIZATIONS.pdf': 'Tughral Yamin',
@@ -51,8 +74,8 @@ export async function GET() {
     const pdfsDir = path.join(process.cwd(), 'public', 'pdfs');
     const allArticles: any[] = [];
 
-    // Check for year folders (2021, 2024, etc.)
-    const yearFolders = ['2021', '2024'];
+    // Check for year folders (2021, 2024, 2025)
+    const yearFolders = ['2021', '2024', '2025'];
 
     for (const year of yearFolders) {
       const yearPath = path.join(pdfsDir, year);
@@ -73,8 +96,17 @@ export async function GET() {
         const author = authorMapping[file] || 'PAGB Contributors';
 
         // Check if specific thumbnail exists for the article
-        const thumbnailBase = file.replace(/\.pdf$/i, '');
-        const thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+        let thumbnailPath;
+        if (year === '2025') {
+          // For 2025, use the thumbnail with same name as PDF from Thumnails folder
+          const thumbnailBase = file.replace(/\.pdf$/i, '');
+          thumbnailPath = `/pdfs/Thumnails/${thumbnailBase}.jpg`;
+        } else {
+          // For 2021 and 2024, use existing logic
+          const thumbnailBase = file.replace(/\.pdf$/i, '');
+          thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+        }
+        
         const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', thumbnailPath));
         
         allArticles.push({
