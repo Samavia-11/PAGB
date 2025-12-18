@@ -104,10 +104,10 @@ export async function GET() {
         } else {*/
           // For 2021 and 2024, use existing logic
           const thumbnailBase = file.replace(/\.pdf$/i, '');
-          thumbnailPath = `/images/${year}/${encodeURIComponent(thumbnailBase)}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+          thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
         // }
         
-        const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', thumbnailPath));
+        const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', encodeURIComponent(thumbnailPath)));
         
         allArticles.push({
           title: cleanTitle,
