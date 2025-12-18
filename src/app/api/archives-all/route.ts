@@ -100,11 +100,11 @@ export async function GET() {
         if (year === '2025') {
           // For 2025, use the thumbnail with same name as PDF from Thumnails folder
           const thumbnailBase = file.replace(/\.pdf$/i, '');
-          thumbnailPath = `/pdfs/Thumnails/${thumbnailBase}.jpg`;
+          thumbnailPath = `/pdfs/Thumnails/${encodeURIComponent(thumbnailBase)}.jpg`;
         } else {
           // For 2021 and 2024, use existing logic
           const thumbnailBase = file.replace(/\.pdf$/i, '');
-          thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+          thumbnailPath = `/images/${year}/${encodeURIComponent(thumbnailBase)}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
         }
         
         const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', thumbnailPath));
