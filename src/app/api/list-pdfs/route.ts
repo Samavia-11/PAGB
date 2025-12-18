@@ -184,19 +184,19 @@ export async function GET(request: Request) {
       if (folder === '2025') {
         // Special handling for 2025 articles with proper URL encoding
         if (title.includes('Akhand Bharat')) {
-          thumbnail = '/pdfs/Thumnails/Akhand%20Bharat%E2%80%93Violation%20of%20Internal%20Law,%20Barrister%20Ahmer%20Bilal%20Soofi.jpg';
+          thumbnail = '/pdfs/Thumnails/Akhand%20Bharat%E2%80%93Violation%20of%20Internal%20Law%2C%20Barrister%20Ahmer%20Bilal%20Soofi.jpg';
         } else if (title.includes('Unlocking Pakistan')) {
-          thumbnail = '/pdfs/Thumnails/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.jpg';
+          thumbnail = '/pdfs/Thumnails/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential%2C%20Dr%20Maria%20Sultan.jpg';
         } else if (title.includes('Anatomy and Grammar')) {
-          thumbnail = '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.jpg';
+          thumbnail = '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos)%2C%20Omar%20Rashid%20Sheikh.jpg';
         } else if (title.includes('Strategic Culture')) {
-          thumbnail = '/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile,%20%20Dr%20Hasan%20Askari.jpg';
+          thumbnail = '/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile%2C%20%20Dr%20Hasan%20Askari.jpg';
         } else if (title.includes('Geo-economics Pivot')) {
-          thumbnail = '/pdfs/Thumnails/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.jpg';
+          thumbnail = '/pdfs/Thumnails/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy%2C%20Dr%20Sheharyar%20Khan.jpg';
         } else if (title.includes('China\'s Rise')) {
-          thumbnail = '/pdfs/Thumnails/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.jpg';
+          thumbnail = '/pdfs/Thumnails/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan%2C%20%20Abdul%20Ghafoor%20Babar.jpg';
         } else if (title.includes('Building Economic Resilience')) {
-          thumbnail = '/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.jpg';
+          thumbnail = '/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth%2C%20Najam%20Ur%20Rehman.jpg';
         } else {
           thumbnail = `/pdfs/Thumnails/${encodeURIComponent(title)}.jpg`;
         }

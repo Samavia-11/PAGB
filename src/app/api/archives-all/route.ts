@@ -97,17 +97,17 @@ export async function GET() {
 
         // Check if specific thumbnail exists for the article
         let thumbnailPath;
-        /*if (year === '2025') {
+        if (year === '2025') {
           // For 2025, use the thumbnail with same name as PDF from Thumnails folder
           const thumbnailBase = file.replace(/\.pdf$/i, '');
           thumbnailPath = `/pdfs/Thumnails/${encodeURIComponent(thumbnailBase)}.jpg`;
-        } else {*/
+        } else {
           // For 2021 and 2024, use existing logic
           const thumbnailBase = file.replace(/\.pdf$/i, '');
-          thumbnailPath = `/images/${year}/${thumbnailBase}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
-        // }
+          thumbnailPath = `/images/${year}/${encodeURIComponent(thumbnailBase)}.${thumbnailBase.includes('GEOGRAPHIC INFORMATION SYSTEM') ? 'pdf.jpg' : 'jpg'}`;
+        }
         
-        const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', encodeURIComponent(thumbnailPath)));
+        const thumbnailExists = fs.existsSync(path.join(process.cwd(), 'public', thumbnailPath));
         
         allArticles.push({
           title: cleanTitle,
