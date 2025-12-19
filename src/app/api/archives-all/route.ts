@@ -4,6 +4,17 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+// Custom URL encoding - only encode spaces and special Unicode chars
+// Standard encodeURIComponent encodes too much (commas, parens, etc.)
+function encodeFilename(filename: string): string {
+  return filename
+    .replace(/ /g, '%20')           // spaces
+    .replace(/'/g, '%E2%80%99')     // curly apostrophe ' (U+2019)
+    .replace(/–/g, '%E2%80%93')     // en-dash – (U+2013)
+    .replace(/"/g, '%E2%80%9C')     // left curly quote " (U+201C)
+    .replace(/"/g, '%E2%80%9D');    // right curly quote " (U+201D)
+}
+
 // Static author mapping for PDFs (synced with list-pdfs/route.ts)
 const authorMapping: Record<string, string> = {
   // 2024 Articles
@@ -113,7 +124,7 @@ export async function GET() {
           title: cleanTitle,
           author: author,
           authorSlug: author.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          pdfUrl: `/pdfs/${year}/${encodeURIComponent(file)}`,
+          pdfUrl: `/pdfs/${year}/${encodeFilename(file)}`,
           fileName: file,
           year: year,
           thumbnail: thumbnailExists ? thumbnailPath : `/images/${year === '2024' ? 'icon.png' : '2021/thumbnail.png'}`,
