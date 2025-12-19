@@ -3,32 +3,17 @@ import { NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 // -------------------------------------------------
-// PDF URL MAPPING FOR FILES WITH SPECIAL CHARACTERS
+// CUSTOM URL ENCODING - only encode spaces and special Unicode chars
+// Standard encodeURIComponent encodes too much (commas, parens, etc.)
 // -------------------------------------------------
-const PDF_URL_MAP: Record<string, string> = {
-  // 2025 PDFs with special characters (curly apostrophes, em-dashes, curly quotes)
-  'Akhand Bharat–Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf': '/pdfs/2025/Akhand%20Bharat%E2%80%93Violation%20of%20Internal%20Law,%20Barrister%20Ahmer%20Bilal%20Soofi.pdf',
-  'Building Economic Resilience Pakistan\'s Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf': '/pdfs/2025/Building%20Economic%20Resilience%20Pakistan%E2%80%99s%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.pdf',
-  'China Pakistan Economic Corridor (CPEC) - A Bridge to Peace and Prosperity in South Asia, Malik Amir Muhammad Khan.pdf': '/pdfs/2025/China%20Pakistan%20Economic%20Corridor%20(CPEC)%20-%20A%20Bridge%20to%20Peace%20and%20Prosperity%20in%20South%20Asia,%20Malik%20Amir%20Muhammad%20Khan.pdf',
-  'China\'s Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf': '/pdfs/2025/China%E2%80%99s%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.pdf',
-  'Climate Change in Pakistan Challenges and Implications Khawar Nazir.pdf': '/pdfs/2025/Climate%20Change%20in%20Pakistan%20Challenges%20and%20Implications%20Khawar%20Nazir.pdf',
-  'Conservation and Display of Military Heritage in Army Museum and its Psycho-Sociological Impact on Military Personnel and General Public; A Constructive View of Professionalism Dr Sayyam Bin Saeed.pdf': '/pdfs/2025/Conservation%20and%20Display%20of%20Military%20Heritage%20in%20Army%20Museum%20and%20its%20Psycho-Sociological%20Impact%20on%20Military%20Personnel%20and%20General%20Public;%20A%20Constructive%20View%20of%20Professionalism%20Dr%20Sayyam%20Bin%20Saeed.pdf',
-  'Drone - Warfare Prospects and Implications,  Abid Imtiaz.pdf': '/pdfs/2025/Drone%20-%20Warfare%20Prospects%20and%20Implications,%20%20Abid%20Imtiaz.pdf',
-  'Evolving Character of War and Our Response to Bellum Verturum,  Shehbaz Khan.pdf': '/pdfs/2025/Evolving%20Character%20of%20War%20and%20Our%20Response%20to%20Bellum%20Verturum,%20%20Shehbaz%20Khan.pdf',
-  'Geostrategic Perspectives on SCO, NATO and Beyond; Challenges & Opportunities for Pakistan, Sabtian Arif Magary.pdf': '/pdfs/2025/Geostrategic%20Perspectives%20on%20SCO,%20NATO%20and%20Beyond;%20Challenges%20&%20Opportunities%20for%20Pakistan,%20Sabtian%20Arif%20Magary.pdf',
-  'India, United Nations Security Council and Global Governance Changing Strategies and Response, Dr Muhammad Farooq.pdf': '/pdfs/2025/India,%20United%20Nations%20Security%20Council%20and%20Global%20Governance%20Changing%20Strategies%20and%20Response,%20Dr%20Muhammad%20Farooq.pdf',
-  'Indo-Pacific Security Dynamics Implications for Pakistan, Farzana Shah.pdf': '/pdfs/2025/Indo-Pacific%20Security%20Dynamics%20Implications%20for%20Pakistan,%20Farzana%20Shah.pdf',
-  'Internal Security in Pakistan A Comprehensive Analysis, Dr Tughral Yamin.pdf': '/pdfs/2025/Internal%20Security%20in%20Pakistan%20A%20Comprehensive%20Analysis,%20Dr%20Tughral%20Yamin.pdf',
-  'Kalabagh Iron Ore Deposits to Play an Important Role in the Eco of Pakistan, Dr Samar Mubarakmand.pdf': '/pdfs/2025/Kalabagh%20Iron%20Ore%20Deposits%20to%20Play%20an%20Important%20Role%20in%20the%20Eco%20of%20Pakistan,%20Dr%20Samar%20Mubarakmand.pdf',
-  'Navigating China Pakistan Economic Corridor Pitfalls and Progress, Dr Khalid Rehman.pdf': '/pdfs/2025/Navigating%20China%20Pakistan%20Economic%20Corridor%20Pitfalls%20and%20Progress,%20Dr%20Khalid%20Rehman.pdf',
-  'Pakistan\'s Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf': '/pdfs/2025/Pakistan%E2%80%99s%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.pdf',
-  'Strategic Culture and Pakistan\'s Security Profile,  Dr Hasan Askari.pdf': '/pdfs/2025/Strategic%20Culture%20and%20Pakistan%E2%80%99s%20Security%20Profile,%20%20Dr%20Hasan%20Askari.pdf',
-  'The Anatomy and Grammar of India Pakistan Armed Conflict – 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': '/pdfs/2025/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20%E2%80%93%202025%20(Mil%20Conflict%20%E2%80%9CMarka-e-Haq%E2%80%9D-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.pdf',
-  'Transitioning Into Next Generation of Warfare, Ozair Zafar.pdf': '/pdfs/2025/Transitioning%20Into%20Next%20Generation%20of%20Warfare,%20Ozair%20Zafar.pdf',
-  'Unlocking Pakistan\'s Blue Economy Potential, Dr Maria Sultan.pdf': '/pdfs/2025/Unlocking%20Pakistan%E2%80%99s%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.pdf',
-  'Utility of Centre of Gravity (CoG) Analysis for Operational Planning, Muhammad Saqib.pdf': '/pdfs/2025/Utility%20of%20Centre%20of%20Gravity%20(CoG)%20Analysis%20for%20Operational%20Planning,%20Muhammad%20Saqib.pdf',
-  'What Are Leaders Made of,  Raza Muhammad Khan.pdf': '/pdfs/2025/What%20Are%20Leaders%20Made%20of,%20%20Raza%20Muhammad%20Khan.pdf'
-};
+function encodeFilename(filename: string): string {
+  return filename
+    .replace(/ /g, '%20')           // spaces
+    .replace(/'/g, '%E2%80%99')     // curly apostrophe ' (U+2019)
+    .replace(/–/g, '%E2%80%93')     // en-dash – (U+2013)
+    .replace(/"/g, '%E2%80%9C')     // left curly quote " (U+201C)
+    .replace(/"/g, '%E2%80%9D');    // right curly quote " (U+201D)
+}
 
 // -------------------------------------------------
 // THUMBNAIL MAPPING FOR FILES WITH SPECIAL CHARACTERS
@@ -191,8 +176,8 @@ export async function GET(request: Request) {
     const files = pdfList.map((filename) => {
       const title = filename.replace(/\.pdf$/i, '');
       
-      // Use PDF URL mapping for 2025 articles with special characters
-      const pdfUrl = PDF_URL_MAP[filename] || `/pdfs/${folder}/${encodeURIComponent(filename)}`;
+      // Use custom encoding that only encodes spaces and special Unicode chars
+      const pdfUrl = `/pdfs/${folder}/${encodeFilename(filename)}`;
 
       // AUTO-MATCH PNG with same name - use different logic for different years
       let thumbnail = '/images/icon.png';
