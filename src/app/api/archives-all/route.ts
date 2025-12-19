@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-// Custom URL encoding - only encode spaces
-// All filenames now use ASCII characters
+// Custom URL encoding - encode spaces and commas for Next.js static file serving
 function encodeFilename(filename: string): string {
-  return filename.replace(/ /g, '%20');
+  return filename
+    .replace(/ /g, '%20')
+    .replace(/,/g, '%2C');
 }
 
 // Static author mapping for PDFs (synced with list-pdfs/route.ts)

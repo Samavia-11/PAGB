@@ -7,8 +7,10 @@ export const runtime = 'edge';
 // Standard encodeURIComponent encodes too much (commas, parens, etc.)
 // -------------------------------------------------
 function encodeFilename(filename: string): string {
-  // Only encode spaces - all filenames now use ASCII characters
-  return filename.replace(/ /g, '%20');
+  // Encode spaces and commas for Next.js static file serving
+  return filename
+    .replace(/ /g, '%20')
+    .replace(/,/g, '%2C');
 }
 
 // -------------------------------------------------
@@ -16,13 +18,13 @@ function encodeFilename(filename: string): string {
 // Note: Thumbnails may still have special chars in filenames on disk
 // -------------------------------------------------
 const THUMBNAIL_MAP: Record<string, string> = {
-  "Unlocking Pakistan's Blue Economy Potential, Dr Maria Sultan.pdf": "/pdfs/Thumnails/Unlocking%20Pakistan's%20Blue%20Economy%20Potential,%20Dr%20Maria%20Sultan.jpg",
-  'The Anatomy and Grammar of India Pakistan Armed Conflict - 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20-%202025%20(Mil%20Conflict%20"Marka-e-Haq"-%20Op%20Bunyan-um-Marsoos),%20Omar%20Rashid%20Sheikh.jpg',
-  "Strategic Culture and Pakistan's Security Profile,  Dr Hasan Askari.pdf": "/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistan's%20Security%20Profile,%20%20Dr%20Hasan%20Askari.jpg",
-  "Pakistan's Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf": "/pdfs/Thumnails/Pakistan's%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy,%20Dr%20Sheharyar%20Khan.jpg",
-  "China's Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf": "/pdfs/Thumnails/China's%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan,%20%20Abdul%20Ghafoor%20Babar.jpg",
-  "Building Economic Resilience Pakistan's Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf": "/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistan's%20Road%20map%20to%20Sustainable%20Economic%20Growth,%20Najam%20Ur%20Rehman.jpg",
-  "Akhand Bharat-Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf": "/pdfs/Thumnails/Akhand%20Bharat-Violation%20of%20Internal%20Law,%20Barrister%20Ahmer%20Bilal%20Soofi.jpg"
+  "Unlocking Pakistans Blue Economy Potential, Dr Maria Sultan.pdf": "/pdfs/Thumnails/Unlocking%20Pakistans%20Blue%20Economy%20Potential%2C%20Dr%20Maria%20Sultan.jpg",
+  'The Anatomy and Grammar of India Pakistan Armed Conflict - 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf': '/pdfs/Thumnails/The%20Anatomy%20and%20Grammar%20of%20India%20Pakistan%20Armed%20Conflict%20-%202025%20(Mil%20Conflict%20"Marka-e-Haq"-%20Op%20Bunyan-um-Marsoos)%2C%20Omar%20Rashid%20Sheikh.jpg',
+  "Strategic Culture and Pakistans Security Profile,  Dr Hasan Askari.pdf": "/pdfs/Thumnails/Strategic%20Culture%20and%20Pakistans%20Security%20Profile%2C%20%20Dr%20Hasan%20Askari.jpg",
+  "Pakistans Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf": "/pdfs/Thumnails/Pakistans%20Geo-economics%20Pivot%20A%20Strategic%20Shift%20in%20Foreign%20Policy%2C%20Dr%20Sheharyar%20Khan.jpg",
+  "Chinas Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf": "/pdfs/Thumnails/Chinas%20Rise%20as%20A%20Major%20Space%20Power%20Lessons%20for%20Pakistan%2C%20%20Abdul%20Ghafoor%20Babar.jpg",
+  "Building Economic Resilience Pakistans Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf": "/pdfs/Thumnails/Building%20Economic%20Resilience%20Pakistans%20Road%20map%20to%20Sustainable%20Economic%20Growth%2C%20Najam%20Ur%20Rehman.jpg",
+  "Akhand Bharat-Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf": "/pdfs/Thumnails/Akhand%20Bharat-Violation%20of%20Internal%20Law%2C%20Barrister%20Ahmer%20Bilal%20Soofi.jpg"
 };
 
 // -------------------------------------------------
@@ -98,9 +100,9 @@ const AUTHOR_MAP: Record<string, string> = {
 const PDF_CATALOG = {
   '2025': [
     "Akhand Bharat-Violation of Internal Law, Barrister Ahmer Bilal Soofi.pdf",
-    "Building Economic Resilience Pakistan's Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf",
+    "Building Economic Resilience Pakistans Road map to Sustainable Economic Growth, Najam Ur Rehman.pdf",
     "China Pakistan Economic Corridor (CPEC) - A Bridge to Peace and Prosperity in South Asia, Malik Amir Muhammad Khan.pdf",
-    "China's Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf",
+    "Chinas Rise as A Major Space Power Lessons for Pakistan,  Abdul Ghafoor Babar.pdf",
     "Climate Change in Pakistan Challenges and Implications Khawar Nazir.pdf",
     "Conservation and Display of Military Heritage in Army Museum and its Psycho-Sociological Impact on Military Personnel and General Public; A Constructive View of Professionalism Dr Sayyam Bin Saeed.pdf",
     "Drone - Warfare Prospects and Implications,  Abid Imtiaz.pdf",
@@ -111,11 +113,11 @@ const PDF_CATALOG = {
     "Internal Security in Pakistan A Comprehensive Analysis, Dr Tughral Yamin.pdf",
     "Kalabagh Iron Ore Deposits to Play an Important Role in the Eco of Pakistan, Dr Samar Mubarakmand.pdf",
     "Navigating China Pakistan Economic Corridor Pitfalls and Progress, Dr Khalid Rehman.pdf",
-    "Pakistan's Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf",
-    "Strategic Culture and Pakistan's Security Profile,  Dr Hasan Askari.pdf",
+    "Pakistans Geo-economics Pivot A Strategic Shift in Foreign Policy, Dr Sheharyar Khan.pdf",
+    "Strategic Culture and Pakistans Security Profile,  Dr Hasan Askari.pdf",
     'The Anatomy and Grammar of India Pakistan Armed Conflict - 2025 (Mil Conflict "Marka-e-Haq"- Op Bunyan-um-Marsoos), Omar Rashid Sheikh.pdf',
     "Transitioning Into Next Generation of Warfare, Ozair Zafar.pdf",
-    "Unlocking Pakistan's Blue Economy Potential, Dr Maria Sultan.pdf",
+    "Unlocking Pakistans Blue Economy Potential, Dr Maria Sultan.pdf",
     "Utility of Centre of Gravity (CoG) Analysis for Operational Planning, Muhammad Saqib.pdf",
     "What Are Leaders Made of,  Raza Muhammad Khan.pdf"
   ],
