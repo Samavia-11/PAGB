@@ -7,12 +7,12 @@ export const runtime = 'edge';
 // Standard encodeURIComponent encodes too much (commas, parens, etc.)
 // -------------------------------------------------
 function encodeFilename(filename: string): string {
-  // Encode spaces and commas for Next.js static file serving
+  // Encode spaces, commas, semicolons, and ampersands for Next.js static file serving
   return filename
     .replace(/ /g, '%20')
     .replace(/,/g, '%2C')
     .replace(/;/g, '%3B')
-    .replace(/ /g, '%20');
+    .replace(/&/g, '%26');
 }
 
 // -------------------------------------------------

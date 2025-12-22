@@ -4,13 +4,13 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-// Custom URL encoding - encode spaces and commas for Next.js static file serving
+// Custom URL encoding - encode spaces, commas, semicolons, and ampersands for Next.js static file serving
 function encodeFilename(filename: string): string {
   return filename
     .replace(/ /g, '%20')
     .replace(/,/g, '%2C')
     .replace(/;/g, '%3B')
-    .replace(/ /g, '%20');
+    .replace(/&/g, '%26');
 }
 
 // Static author mapping for PDFs (synced with list-pdfs/route.ts)
