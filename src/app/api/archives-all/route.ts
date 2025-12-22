@@ -8,7 +8,9 @@ import path from 'path';
 function encodeFilename(filename: string): string {
   return filename
     .replace(/ /g, '%20')
-    .replace(/,/g, '%2C');
+    .replace(/,/g, '%2C')
+    .replace(/;/g, '%3B')
+    .replace(/ /g, '%20');
 }
 
 // Static author mapping for PDFs (synced with list-pdfs/route.ts)

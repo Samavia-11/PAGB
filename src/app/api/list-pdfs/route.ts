@@ -10,7 +10,9 @@ function encodeFilename(filename: string): string {
   // Encode spaces and commas for Next.js static file serving
   return filename
     .replace(/ /g, '%20')
-    .replace(/,/g, '%2C');
+    .replace(/,/g, '%2C')
+    .replace(/;/g, '%3B')
+    .replace(/ /g, '%20');
 }
 
 // -------------------------------------------------
