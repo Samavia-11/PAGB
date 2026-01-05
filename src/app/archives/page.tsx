@@ -25,9 +25,16 @@ export default function Archives() {
   useEffect(() => {
     async function loadAllArticles() {
       try {
-        const res = await fetch('/api/archives-all');
+        const res = await fetch('/api/pagb-public/archives');
         const data = await res.json();
-        setArticles(data.articles || []);
+        const mapped: Article[] = (data.articles || []).map((a: any) => ({
+          title: a.title,
+          author: a.authors || a.primary_author_name || 'Various Contributors',
+          authorSlug: a.primary_author_slug || 'unknown',
+          pdfUrl: a.pdf_path || '#',
+          fileName: String(a.id),
+        }));
+        setArticles(mapped);
         setLoading(false);
       } catch (err) {
         console.error(err);

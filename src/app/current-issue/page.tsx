@@ -8,24 +8,46 @@ import { FileText, Users, BookOpen, ScrollText, Download } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+interface Issue {
+  id: number;
+  year: number;
+  volume: number;
+  issue_number: number;
+  title: string;
+  description: string | null;
+  cover_image_path: string | null;
+  published_at: string | null;
+}
+
 interface Article {
   title: string;
   author: string;
+  monthYear: string;
   pdfUrl: string;
   thumbnail: string;
 }
 
 export default function CurrentIssue() {
   const [activeTab, setActiveTab] = useState('volume');
+  const [issue, setIssue] = useState<Issue | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadArticles() {
       try {
-        const res = await fetch('/api/list-pdfs?folder=2024');
+        const res = await fetch('/api/pagb-public/current-issue');
         const data = await res.json();
-        setArticles(data.files || []);
+        const currentIssue = data.issue as Issue | null;
+        setIssue(currentIssue);
+        const mapped: Article[] = (data.articles || []).map((a: any) => ({
+          title: a.title,
+          author: a.authors || a.primary_author_name || 'Various Contributors',
+          monthYear: a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '',
+          pdfUrl: a.pdf_path || '#',
+          thumbnail: currentIssue?.cover_image_path || '/images/icon.png',
+        }));
+        setArticles(mapped);
       } catch (err) {
         console.error(err);
       } finally {
@@ -87,8 +109,8 @@ export default function CurrentIssue() {
             {/* Volume Tab */}
             {activeTab === 'volume' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-green-700 mb-4">Volume 26</h2>
-                <p className="text-2xl text-gray-700">2024</p>
+                <h2 className="text-6xl font-black text-green-700 mb-4">Volume {issue?.volume ?? '--'}</h2>
+                <p className="text-2xl text-gray-700">{issue?.year ?? '--'}</p>
                 <div className="mt-8 text-gray-600">
                   <p className="text-lg">Pakistan Army Green Book</p>
                   <p className="text-sm mt-2">Annual Publication • ISSN:  2303-9973</p>
@@ -99,16 +121,16 @@ export default function CurrentIssue() {
             {/* Issue Tab */}
             {activeTab === 'issue' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-[#002300] mb-4">Issue 01</h2>
-                <p className="text-2xl text-gray-700">September 2024</p>
+                <h2 className="text-6xl font-black text-[#002300] mb-4">Issue {issue?.issue_number ?? '--'}</h2>
+                <p className="text-2xl text-gray-700">{issue?.year ?? '--'}</p>
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-gray-600">
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Published</p>
-                    <p className="text-xl font-bold">Sep 204</p>
+                    <p className="text-xl font-bold">{issue?.year ? String(issue.year) : (issue?.published_at ? String(new Date(issue.published_at).getFullYear()) : '--')}</p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Articles</p>
-                    <p className="text-xl font-bold">18</p>
+                    <p className="text-xl font-bold">{articles.length}</p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Pages</p>
@@ -127,7 +149,7 @@ export default function CurrentIssue() {
               <div className="space-y-6">
                 <div className="text-center mb-10">
                   <h2 className="text-4xl font-bold text-gray-800">Featured Articles</h2>
-                  <p className="text-gray-600 mt-3">Volume 26 • Issue 01 • September 2024</p>
+                  <p className="text-gray-600 mt-3">Volume {issue?.volume ?? '--'} • Issue {issue?.issue_number ?? '--'} • {issue?.year ?? '--'}</p>
                   <p className="text-2xl font-bold text-green-700 mt-2">{articles.length} Articles</p>
                 </div>
 
@@ -143,7 +165,9 @@ export default function CurrentIssue() {
                           <span className="text-sm font-semibold text-orange-600">Article {i + 1}</span>
                           <h3 className="text-xl font-bold text-gray-800 mt-2">{article.title}</h3>
                           <p className="text-gray-600 mt-2">{article.author}</p>
+                          {article.monthYear && <p className="text-gray-600 mt-1">{article.monthYear}</p>}
                         </div>
+
                         <Link 
                           href={article.pdfUrl} 
                           target="_blank"

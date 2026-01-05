@@ -256,7 +256,9 @@ export async function middleware(request: NextRequest) {
   const isStateChangingMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
   const isCSRFExempt = CSRF_EXEMPT_ROUTES.some(route => pathname.startsWith(route));
 
-  if (isStateChangingMethod && !isCSRFExempt && user) {
+  const enforceCSRF = process.env.NODE_ENV === 'production';
+
+  if (enforceCSRF && isStateChangingMethod && !isCSRFExempt && user) {
     const csrfToken = request.headers.get('x-csrf-token');
     
     if (!csrfToken || !validateCSRFToken(user.sessionId, csrfToken)) {

@@ -1,0 +1,806 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Layout from '@/components/Layout';
+import { Upload, FileText, Save, Send, AlertCircle, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+
+interface User {
+  id: number;
+  username: string;
+  role: 'author' | 'reviewer' | 'editor' | 'administrator';
+  full_name?: string;
+  email?: string;
+}
+
+interface AuthorEntry {
+  name: string;
+  email: string;
+  role: string;
+  contact?: string; // Added contact number
+}
+
+interface ArticleForm {
+  title: string;
+  abstract: string;
+  keywords: string;
+  content: string;
+  authors: AuthorEntry[];
+  affiliation: string;
+  articleType: string;
+  coverLetter: string;
+  conflicts: string;
+  funding: string;
+  ethics: boolean;
+  licenseAgreement: boolean;
+  manuscriptFile: File | null;
+}
+
+type ArticleStatus = 'submitted' | 'under_review' | 'reviewed' | 'editor_review' | 'accepted' | 'published' | 'rejected';
+
+interface StoredArticle {
+  id: number;
+  title: string;
+  abstract: string;
+  status: ArticleStatus | 'draft';
+  submission_date: string;
+  last_updated: string;
+  // Store additional form data for editing
+  keywords?: string;
+  content?: string;
+  authors?: AuthorEntry[];
+  affiliation?: string;
+  articleType?: string;
+}
+
+interface EditorSubmission {
+  id: number;
+  title: string;
+  author_name: string;
+  author_id: number;
+  submitted_at: string;
+  status: 'new' | 'revision' | 'external_review' | 'author_reply';
+  abstract: string;
+  keywords?: string;
+  authors?: AuthorEntry[];
+  last_reply?: string;
+}
+
+const storageKeyForUser = (userId: number) => `articles:${userId}`;
+
+const readArticlesFromStorage = (userId: number): StoredArticle[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(storageKeyForUser(userId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredArticle[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeArticlesToStorage = (userId: number, articles: StoredArticle[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(storageKeyForUser(userId), JSON.stringify(articles));
+  if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('articles');
+    channel.postMessage({ type: 'updated', userId });
+    channel.close();
+  }
+};
+
+// Editor submissions storage
+const editorSubmissionsKey = 'editor_submissions';
+
+const readEditorSubmissions = (): EditorSubmission[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(editorSubmissionsKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as EditorSubmission[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeEditorSubmissions = (submissions: EditorSubmission[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(editorSubmissionsKey, JSON.stringify(submissions));
+  if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('editor_submissions');
+    channel.postMessage({ type: 'updated' });
+    channel.close();
+  }
+};
+
+const SubmitArticlePage = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState<ArticleForm>({
+    title: '',
+    abstract: '',
+    keywords: '',
+    content: '',
+    authors: [{ name: '', email: '', role: 'Main Author', contact: '' }],
+    affiliation: '',
+    articleType: '',
+    coverLetter: '',
+    conflicts: '',
+    funding: '',
+    ethics: false,
+    licenseAgreement: false,
+    manuscriptFile: null,
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof ArticleForm | 'authorsContact', string>>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    authors: true,
+    manuscript: false,
+    declarations: false,
+  });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      // Check if editing existing article
+      const urlParams = new URLSearchParams(window.location.search);
+      const editId = urlParams.get('edit');
+      if (editId) {
+        setIsEditMode(true);
+        setEditingArticleId(parseInt(editId));
+        loadArticleForEdit(parseInt(editId));
+      }
+    }
+  }, [user]);
+
+  const loadArticleForEdit = (articleId: number) => {
+    // Load from all articles (including drafts) for editing
+    const allArticles = JSON.parse(localStorage.getItem(`articles:${user!.id}`) || '[]');
+    const articleToEdit = allArticles.find((a: StoredArticle) => a.id === articleId);
+
+    if (articleToEdit) {
+      // If it's a draft, allow editing anytime
+      if (articleToEdit.status === 'draft') {
+        setIsEditingDraft(true);
+        setFormData(prev => ({
+          ...prev,
+          title: articleToEdit.title,
+          abstract: articleToEdit.abstract,
+          keywords: articleToEdit.keywords || prev.keywords,
+          content: articleToEdit.content || prev.content,
+          authors: articleToEdit.authors || prev.authors,
+          affiliation: articleToEdit.affiliation || prev.affiliation,
+          articleType: articleToEdit.articleType || prev.articleType,
+        }));
+        console.log('Loaded draft for edit:', articleToEdit);
+      } else {
+        // For submitted articles, check time window
+        const submissionTime = new Date(articleToEdit.submission_date);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - submissionTime.getTime()) / (1000 * 60 * 60);
+
+        if (hoursDiff <= 3) {
+          setFormData(prev => ({
+            ...prev,
+            title: articleToEdit.title,
+            abstract: articleToEdit.abstract,
+            keywords: articleToEdit.keywords || prev.keywords,
+            content: articleToEdit.content || prev.content,
+            authors: articleToEdit.authors || prev.authors,
+            affiliation: articleToEdit.affiliation || prev.affiliation,
+            articleType: articleToEdit.articleType || prev.articleType,
+          }));
+          console.log('Loaded article for edit:', articleToEdit);
+        } else {
+          alert('Edit window has expired (3 hours after submission)');
+          router.push('/dashboard/author');
+        }
+      }
+    } else {
+      alert('Article not found');
+      router.push('/dashboard/author');
+    }
+  };
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user.role !== 'author') {
+          router.push('/');
+          return;
+        }
+        setUser(data.user);
+        setFormData((prev) => ({
+          ...prev,
+          authors: [
+            {
+              name: data.user.full_name || data.user.username,
+              email: data.user.email || '',
+              role: 'Main Author',
+              contact: '',
+            },
+          ],
+        }));
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      router.push('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasValidMainAuthor = (authors: AuthorEntry[] = formData.authors) =>
+    authors.some((a) => a.role === 'Main Author' && a.name.trim() && a.email.trim());
+
+  const hasMainAuthorWithContact = (authors: AuthorEntry[] = formData.authors) =>
+    authors.some((a) => a.role === 'Main Author' && a.name.trim() && a.email.trim() && a.contact?.trim());
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    if (errors[name as keyof ArticleForm]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleAuthorChange = (index: number, field: keyof AuthorEntry, value: string) => {
+    const updated = [...formData.authors];
+    
+    // If changing role to Main Author, ensure only one main author exists
+    if (field === 'role' && value === 'Main Author') {
+      // Set all others to Co-Author first
+      updated.forEach((author, i) => {
+        if (i !== index) {
+          author.role = 'Co-Author';
+        }
+      });
+    }
+    
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, authors: updated });
+
+    if (!hasValidMainAuthor(updated)) {
+      setErrors((prev) => ({
+        ...prev,
+        authors: 'Please select at least one Main Author with name and email.',
+      }));
+    } else if (!hasMainAuthorWithContact(updated)) {
+      setErrors((prev) => ({
+        ...prev,
+        authorsContact: 'Main Author must have a contact number.',
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, authors: '', authorsContact: '' }));
+    }
+  };
+
+  const addAuthor = () => {
+    setFormData({
+      ...formData,
+      authors: [...formData.authors, { name: '', email: '', role: 'Co-Author', contact: '' }],
+    });
+  };
+
+  const removeAuthor = (index: number) => {
+    const updated = formData.authors.filter((_, i) => i !== index);
+    setFormData({ ...formData, authors: updated });
+
+    if (!hasValidMainAuthor(updated)) {
+      setErrors((prev) => ({
+        ...prev,
+        authors: 'Please select at least one Main Author with name and email.',
+      }));
+    } else if (!hasMainAuthorWithContact(updated)) {
+      setErrors((prev) => ({
+        ...prev,
+        authorsContact: 'Main Author must have a contact number.',
+      }));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, manuscriptFile: e.target.files[0] });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof ArticleForm | 'authorsContact', string>> = {};
+
+    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    if (!formData.abstract.trim()) newErrors.abstract = 'Abstract is required';
+    if (!formData.keywords.trim()) newErrors.keywords = 'Keywords are required';
+    if (!formData.content.trim()) newErrors.content = 'Article content is required';
+    if (!formData.articleType.trim()) newErrors.articleType = 'Article type is required';
+    if (!hasValidMainAuthor()) newErrors.authors = 'Please select a valid Main Author';
+    if (!hasMainAuthorWithContact()) newErrors.authorsContact = 'Main Author must have a contact number.';
+    if (!formData.manuscriptFile) newErrors.manuscriptFile = 'Main manuscript file is required';
+    if (!formData.licenseAgreement) newErrors.licenseAgreement = 'You must accept the license agreement';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+    try {
+      // Simulate processing delay
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      if (!user) throw new Error('Not authenticated');
+      
+      // Get all articles (including drafts) for editing
+      const allArticles = JSON.parse(localStorage.getItem(`articles:${user.id}`) || '[]') as StoredArticle[];
+      const existing = readArticlesFromStorage(user.id); // Only non-drafts for regular operations
+
+      if (isEditMode && editingArticleId) {
+        // Check if we're editing a draft or a submitted article
+        const articleToEdit = allArticles.find(a => a.id === editingArticleId);
+        
+        if (articleToEdit && articleToEdit.status === 'draft') {
+          // Converting draft to submitted article
+          console.log('Converting draft to submission:', articleToEdit);
+          const now = new Date();
+          const updatedArticles = allArticles.map(article => 
+            article.id === editingArticleId 
+              ? {
+                  ...article,
+                  title: formData.title,
+                  abstract: formData.abstract,
+                  keywords: formData.keywords,
+                  content: formData.content,
+                  authors: formData.authors,
+                  affiliation: formData.affiliation,
+                  articleType: formData.articleType,
+                  status: 'submitted' as const,
+                  last_updated: now.toISOString(),
+                }
+              : article
+          );
+          writeArticlesToStorage(user.id, updatedArticles);
+          console.log('Draft converted and saved to storage');
+          
+          // Send to editor dashboard
+          const mainAuthor = formData.authors.find(a => a.role === 'Main Author') || formData.authors[0];
+          const editorSubmission: EditorSubmission = {
+            id: editingArticleId,
+            title: formData.title,
+            author_name: mainAuthor.name || user.full_name || user.username,
+            author_id: user.id,
+            submitted_at: now.toISOString(),
+            status: 'new',
+            abstract: formData.abstract,
+            keywords: formData.keywords,
+            authors: formData.authors,
+          };
+          
+          const editorSubmissions = readEditorSubmissions();
+          writeEditorSubmissions([editorSubmission, ...editorSubmissions]);
+          console.log('Draft converted to submission and sent to editor dashboard:', editorSubmission);
+        } else {
+          // Update existing submitted article
+          const updatedArticles = allArticles.map(article => 
+            article.id === editingArticleId 
+              ? {
+                  ...article,
+                  title: formData.title,
+                  abstract: formData.abstract,
+                  keywords: formData.keywords,
+                  content: formData.content,
+                  authors: formData.authors,
+                  affiliation: formData.affiliation,
+                  articleType: formData.articleType,
+                  last_updated: new Date().toISOString(),
+                }
+              : article
+          );
+          writeArticlesToStorage(user.id, updatedArticles);
+          console.log('Article updated, navigating to dashboard...');
+        }
+        
+        // Use window.location for more reliable navigation
+        window.location.href = '/dashboard/author';
+      } else {
+        // Create new article and send to editor
+        const now = new Date();
+        const articleId = now.getTime();
+        
+        const newArticle: StoredArticle = {
+          id: articleId,
+          title: formData.title,
+          abstract: formData.abstract,
+          keywords: formData.keywords,
+          content: formData.content,
+          authors: formData.authors,
+          affiliation: formData.affiliation,
+          articleType: formData.articleType,
+          status: 'submitted',
+          submission_date: now.toISOString(),
+          last_updated: now.toISOString(),
+        };
+        
+        // Save to author's articles
+        writeArticlesToStorage(user.id, [newArticle, ...existing]);
+        
+        // Send to editor dashboard
+        const mainAuthor = formData.authors.find(a => a.role === 'Main Author') || formData.authors[0];
+        const editorSubmission: EditorSubmission = {
+          id: articleId,
+          title: formData.title,
+          author_name: mainAuthor.name || user.full_name || user.username,
+          author_id: user.id,
+          submitted_at: now.toISOString(),
+          status: 'new',
+          abstract: formData.abstract,
+          keywords: formData.keywords,
+          authors: formData.authors,
+        };
+        
+        const editorSubmissions = readEditorSubmissions();
+        writeEditorSubmissions([editorSubmission, ...editorSubmissions]);
+        console.log('Article sent to editor dashboard:', editorSubmission);
+        
+        alert('Article submitted successfully!');
+        // Use window.location for more reliable navigation
+        window.location.href = '/dashboard/author';
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('Failed to submit article.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!user) return;
+    
+    // Allow saving even with minimal data - no validation required for drafts
+    try {
+      const now = new Date();
+      const allArticles = JSON.parse(localStorage.getItem(`articles:${user.id}`) || '[]') as StoredArticle[];
+      
+      if (isEditMode && editingArticleId) {
+        // Update existing draft
+        const updatedArticles = allArticles.map(article => 
+          article.id === editingArticleId 
+            ? {
+                ...article,
+                title: formData.title || 'Untitled Draft',
+                abstract: formData.abstract,
+                keywords: formData.keywords,
+                content: formData.content,
+                authors: formData.authors,
+                affiliation: formData.affiliation,
+                articleType: formData.articleType,
+                last_updated: now.toISOString(),
+              }
+            : article
+        );
+        writeArticlesToStorage(user.id, updatedArticles);
+        alert('Draft updated successfully!');
+      } else {
+        // Create new draft - save whatever data is available
+        const draftArticle: StoredArticle = {
+          id: now.getTime(),
+          title: formData.title || 'Untitled Draft',
+          abstract: formData.abstract,
+          keywords: formData.keywords,
+          content: formData.content,
+          authors: formData.authors,
+          affiliation: formData.affiliation,
+          articleType: formData.articleType,
+          status: 'draft',
+          submission_date: now.toISOString(),
+          last_updated: now.toISOString(),
+        };
+        writeArticlesToStorage(user.id, [draftArticle, ...allArticles]);
+        alert('Draft saved successfully! You can continue editing it later from the "View Drafts" page.');
+      }
+      
+      console.log('Draft saved:', { title: formData.title || 'Untitled Draft', status: 'draft' });
+    } catch (error) {
+      console.error('Save draft error:', error);
+      alert('Failed to save draft.');
+    }
+  };
+
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+
+  return (
+    <Layout user={user}>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">
+          {isEditMode ? 'Edit Article' : 'Submit Article'}
+        </h1>
+
+        {/* Submission Guidelines */}
+        <div className="mb-6 p-4 border rounded bg-blue-50">
+          <h2 className="text-lg font-semibold mb-2">Submission Guidelines</h2>
+          <ul className="list-disc pl-6 space-y-1 text-sm text-gray-700">
+            <li>Ensure the title clearly reflects the content of your article.</li>
+            <li>Abstract should summarize the main findings in under 300 words.</li>
+            <li>Keywords should be relevant and separated by commas.</li>
+            <li>Upload only PDF or DOCX manuscript files (max 10MB).</li>
+            <li>One author must be marked as the Main Author with valid email and contact number.</li>
+            <li>Accept the license agreement before submitting.</li>
+          </ul>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+          {/* Title */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Article Title *</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              className={`form-input ${errors.title ? 'border-red-500' : ''}`}
+            />
+            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+          </div>
+
+          {/* Accordion: Authors */}
+          <div className="border rounded mb-6">
+            <button
+              type="button"
+              onClick={() => toggleSection('authors')}
+              className="w-full flex justify-between p-4 bg-gray-50"
+            >
+              <span className="font-medium">Authors & Affiliation</span>
+              {openSections.authors ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {openSections.authors && (
+              <div className="p-4">
+                {formData.authors.map((author, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={author.name}
+                      onChange={(e) => handleAuthorChange(index, 'name', e.target.value)}
+                      className="form-input"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={author.email}
+                      onChange={(e) => handleAuthorChange(index, 'email', e.target.value)}
+                      className="form-input"
+                    />
+                    <select
+                      value={author.role}
+                      onChange={(e) => handleAuthorChange(index, 'role', e.target.value)}
+                      className="form-select"
+                    >
+                      <option>Main Author</option>
+                      <option>Co-Author</option>
+                    </select>
+                    {author.role === 'Main Author' && (
+                      <input
+                        type="text"
+                        placeholder="Contact Number"
+                        value={author.contact || ''}
+                        onChange={(e) => handleAuthorChange(index, 'contact', e.target.value)}
+                        className="form-input"
+                      />
+                    )}
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => removeAuthor(index)}
+                        className="text-red-500"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={addAuthor} className="btn-secondary">
+                  + Add Author
+                </button>
+                {errors.authors && <p className="text-red-500 text-sm">{errors.authors}</p>}
+                {errors.authorsContact && <p className="text-red-500 text-sm">{errors.authorsContact}</p>}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-2">Institutional Affiliation</label>
+                  <input
+                    type="text"
+                    name="affiliation"
+                    value={formData.affiliation}
+                    onChange={handleInputChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Accordion: Manuscript */}
+          <div className="border rounded mb-6">
+            <button
+              type="button"
+              onClick={() => toggleSection('manuscript')}
+              className="w-full flex justify-between p-4 bg-gray-50"
+            >
+              <span className="font-medium">Manuscript</span>
+              {openSections.manuscript ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {openSections.manuscript && (
+              <div className="p-4 space-y-4">
+                <select
+                  name="articleType"
+                  value={formData.articleType}
+                  onChange={handleInputChange}
+                  className={`form-select ${errors.articleType ? 'border-red-500' : ''}`}
+                >
+                  <option value="">Select Article Type</option>
+                  <option>Research Article</option>
+                  <option>Review</option>
+                  <option>Case Study</option>
+                  <option>Technical Report</option>
+                </select>
+                {errors.articleType && <p className="text-red-500 text-sm">{errors.articleType}</p>}
+
+                <textarea
+                  name="abstract"
+                  value={formData.abstract}
+                  onChange={handleInputChange}
+                  placeholder="Abstract"
+                  className={`form-textarea ${errors.abstract ? 'border-red-500' : ''}`}
+                />
+                {errors.abstract && <p className="text-red-500 text-sm">{errors.abstract}</p>}
+
+                <input
+                  type="text"
+                  name="keywords"
+                  value={formData.keywords}
+                  onChange={handleInputChange}
+                  placeholder="Keywords"
+                  className={`form-input ${errors.keywords ? 'border-red-500' : ''}`}
+                />
+                {errors.keywords && <p className="text-red-500 text-sm">{errors.keywords}</p>}
+
+                <textarea
+                  name="content"
+                  value={formData.content}
+                  onChange={handleInputChange}
+                  placeholder="Article Content"
+                  className={`form-textarea ${errors.content ? 'border-red-500' : ''}`}
+                />
+                {errors.content && <p className="text-red-500 text-sm">{errors.content}</p>}
+
+                <input type="file" onChange={handleFileChange} />
+                {errors.manuscriptFile && <p className="text-red-500 text-sm">{errors.manuscriptFile}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Accordion: Declarations */}
+          <div className="border rounded mb-6">
+            <button
+              type="button"
+              onClick={() => toggleSection('declarations')}
+              className="w-full flex justify-between p-4 bg-gray-50"
+            >
+              <span className="font-medium">Declarations</span>
+              {openSections.declarations ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {openSections.declarations && (
+              <div className="p-4 space-y-4">
+                <div>
+                  <div className="text-sm font-medium mb-1">Cover Letter</div>
+                <textarea
+                  name="coverLetter"
+                  value={formData.coverLetter}
+                  onChange={handleInputChange}
+                  placeholder="If none then write none"
+                  className="form-textarea"
+                />
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-1">Conflict of Interest</div>
+                <textarea
+                  name="conflicts"
+                  value={formData.conflicts}
+                  onChange={handleInputChange}
+                  placeholder="If none then write none"
+                  className="form-textarea"
+                />
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-1">Funding Statement</div>
+                <textarea
+                  name="funding"
+                  value={formData.funding}
+                  onChange={handleInputChange}
+                  placeholder="If none then write none"
+                  className="form-textarea"
+                />
+                </div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="ethics"
+                    checked={formData.ethics}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                  />
+                  I confirm that this work complies with ethical guidelines.
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="licenseAgreement"
+                    checked={formData.licenseAgreement}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                  />
+                  I agree to the copyright and license terms.
+                </label>
+                {errors.licenseAgreement && <p className="text-red-500 text-sm">{errors.licenseAgreement}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary flex items-center"
+            >
+              {submitting 
+                ? (isEditMode && !isEditingDraft ? 'Updating...' : 'Submitting...') 
+                : (isEditMode && !isEditingDraft ? 'Update Article' : 'Submit Article')
+              }
+            </button>
+            <button 
+              type="button" 
+              onClick={handleSaveDraft}
+              className="btn-secondary"
+            >
+              <Save className="w-4 h-4 mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard/author')}
+              className="btn-secondary flex items-center text-red-600"
+            >
+              <XCircle className="w-4 h-4 mr-2" /> Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </Layout>
+  );
+};
+
+export default SubmitArticlePage;
+

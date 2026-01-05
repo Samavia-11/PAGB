@@ -53,7 +53,7 @@ export default function Header() {
               <span className="hidden md:inline">+92 (051) 5202339</span>
             </div>
             <div className="flex items-center space-x-3">
-              <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="hover:text-gray-300">Login</Link>
+              <Link href="/login" className="hover:text-gray-300">Login</Link>
               <span>|</span>
               <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/user/register?source=" className="hover:text-gray-300">Sign Up</Link>
             </div>

@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Merriweather, Open_Sans } from 'next/font/google';
 import { ToastContainer } from '@/components/Toast';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 // Load the fonts with the new recommended approach
 const merriweather = Merriweather({
@@ -59,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${merriweather.variable} ${openSans.variable}`}>
       <body className="antialiased font-sans">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
         <ToastContainer />
       </body>
     </html>

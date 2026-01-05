@@ -16,6 +16,7 @@ interface Article {
   pdfUrl: string;
   fileName: string;
   year: string;
+  monthYear: string;
 }
 
 export default async function AuthorPage({ params }: Props) {
@@ -27,8 +28,8 @@ export default async function AuthorPage({ params }: Props) {
   const protocol = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
 
-  // Fetch all articles from the archives API
-  const res = await fetch(`${baseUrl}/api/archives-all`, {
+  // Fetch author + their articles from the new DB-backed API
+  const res = await fetch(`${baseUrl}/api/pagb-public/authors/${encodeURIComponent(slug)}`, {
     cache: 'no-store',
   });
 
@@ -37,15 +38,21 @@ export default async function AuthorPage({ params }: Props) {
   }
 
   const data = await res.json();
-  const allArticles: Article[] = data.articles || [];
-
-  const authorArticles = allArticles.filter((a) => a.authorSlug === slug);
+  const authorArticles: Article[] = (data.articles || []).map((a: any) => ({
+    title: a.title,
+    author: a.authors || data.author?.name || 'Various Contributors',
+    authorSlug: data.author?.slug || slug,
+    pdfUrl: a.pdf_path || '#',
+    fileName: String(a.id),
+    year: String(a.year || ''),
+    monthYear: a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '',
+  }));
 
   if (authorArticles.length === 0) {
     notFound();
   }
 
-  const authorName = authorArticles[0].author;
+  const authorName = data.author?.name || authorArticles[0].author;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -88,6 +95,7 @@ export default async function AuthorPage({ params }: Props) {
                   <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 line-clamp-2">
                     {article.title}
                   </h3>
+                  {article.monthYear && <p className="text-sm text-gray-500 text-xs mt-1">{article.monthYear}</p>}
                   <p className="text-sm text-gray-500 text-xs mt-1">Open PDF →</p>
                 </div>
               </div>

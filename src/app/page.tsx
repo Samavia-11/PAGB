@@ -340,7 +340,7 @@ export default function Home() {
                 <span className="hidden md:inline">+92 (051) 5202339</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="hover:text-gray-300">Login</Link>
+                <Link href="/login" className="hover:text-gray-300">Login</Link>
                 <span>|</span>
                 <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/user/register?source=" className="hover:text-gray-300">Sign Up</Link>
               </div>
@@ -659,7 +659,7 @@ export default function Home() {
                   Submit your research on <strong>&#34;Hardcore Military Subjects and National Security Issues&#34;</strong>
                 </p>
                 <p className="text-xs text-gray-600 mb-3">Deadline: December 31, 2026</p>
-                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
+                <Link href="/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
               </div>
               <div className="mb-12">
                 <h3 className="text-2xl font-bold mb-2" style={{color: '#5A6B4A', fontFamily: 'Arial, sans-serif', fontWeight: '700', letterSpacing: '0.02em'}}>

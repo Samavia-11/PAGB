@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const rateLimit = checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { message: 'Too many login attempts. Please try again later.' },
+        { success: false, error: 'Too many login attempts. Please try again later.' },
         { status: 429 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!username || !password) {
       return NextResponse.json(
-        { message: 'Username and password are required' },
+        { success: false, error: 'Username and password are required' },
         { status: 400 }
       );
     }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Sanitize username input
     if (typeof username !== 'string' || username.length > 100) {
       return NextResponse.json(
-        { message: 'Invalid username format' },
+        { success: false, error: 'Invalid username format' },
         { status: 400 }
       );
     }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!userResult || userResult.length === 0) {
       // Use same error message to prevent user enumeration
       return NextResponse.json(
-        { message: 'Invalid username or password' },
+        { success: false, error: 'Invalid username or password' },
         { status: 401 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         // Reject plaintext passwords - this is a security risk
         console.error(`SECURITY WARNING: User ${user.id} has unhashed password. Run password migration.`);
         return NextResponse.json(
-          { message: 'Account requires password reset. Please contact administrator.' },
+          { success: false, error: 'Account requires password reset. Please contact administrator.' },
           { status: 401 }
         );
       }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidPassword) {
       return NextResponse.json(
-        { message: 'Invalid username or password' },
+        { success: false, error: 'Invalid username or password' },
         { status: 401 }
       );
     }
@@ -125,6 +125,7 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json(
       {
+        success: true,
         message: 'Login successful',
         user: userData,
         token: token,
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
