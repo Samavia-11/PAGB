@@ -263,7 +263,7 @@ export default function EditorDashboard() {
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Reply from Author</p>
+                <p className="text-sm font-medium text-gray-600">Reply</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {articles.filter(a => a.status === 'author_revision' || a.status === 'resubmitted').length}
                 </p>

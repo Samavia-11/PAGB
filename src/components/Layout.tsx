@@ -68,6 +68,7 @@ const Layout = ({ children, user }: LayoutProps) => {
         { name: 'Submit Article', href: '/submit-article', icon: PlusCircle },
         { name: 'Dashboard', href: '/dashboard/author', icon: LayoutDashboard },
         { name: 'View Drafts', href: '/drafts', icon: FileText },
+        { name: 'Reviewed', href: '/reviewed', icon: FileText },
       ],
       reviewer: [
         ...baseItems,
@@ -75,6 +76,7 @@ const Layout = ({ children, user }: LayoutProps) => {
       ],
       editor: [
         ...baseItems,
+        { name: 'Dashboard', href: '/dashboard/editor', icon: LayoutDashboard },
         { name: 'Article Management', href: '/dashboard/editor/article-management', icon: FileText },
       ],
       administrator: [

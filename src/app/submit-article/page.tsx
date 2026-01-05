@@ -51,6 +51,14 @@ interface StoredArticle {
   authors?: AuthorEntry[];
   affiliation?: string;
   articleType?: string;
+  author_id?: number;
+  editorComments?: string;
+  reviewerComments?: string;
+  reviewedBy?: string;
+  reviewedDate?: string;
+  manuscriptFileName?: string;
+  editorAttachment?: string;
+  editorAttachmentName?: string;
 }
 
 interface EditorSubmission {
@@ -117,7 +125,8 @@ const writeEditorSubmissions = (submissions: EditorSubmission[]) => {
 
 const SubmitArticlePage = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<ArticleForm>({
     title: '',
@@ -135,6 +144,7 @@ const SubmitArticlePage = () => {
     manuscriptFile: null,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ArticleForm | 'authorsContact', string>>>({});
+  const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     authors: true,
     manuscript: false,
@@ -151,6 +161,11 @@ const SubmitArticlePage = () => {
 
   useEffect(() => {
     if (user) {
+      // Initialize keywords from formData if it exists
+      if (formData.keywords) {
+        setKeywords(formData.keywords.split(',').map(k => k.trim()).filter(k => k));
+      }
+      
       // Check if editing existing article
       const urlParams = new URLSearchParams(window.location.search);
       const editId = urlParams.get('edit');
@@ -225,8 +240,8 @@ const SubmitArticlePage = () => {
           ...prev,
           authors: [
             {
-              name: data.user.full_name || data.user.username,
-              email: data.user.email || '',
+              name: '',
+              email: '',
               role: 'Main Author',
               contact: '',
             },
@@ -248,6 +263,28 @@ const SubmitArticlePage = () => {
 
   const hasMainAuthorWithContact = (authors: AuthorEntry[] = formData.authors) =>
     authors.some((a) => a.role === 'Main Author' && a.name.trim() && a.email.trim() && a.contact?.trim());
+
+  const handleKeywordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeywordInput(e.target.value);
+  };
+
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ',' || e.key === 'Enter') {
+      e.preventDefault();
+      const keyword = keywordInput.trim();
+      if (keyword && !keywords.includes(keyword)) {
+        setKeywords([...keywords, keyword]);
+        setFormData({ ...formData, keywords: [...keywords, keyword].join(', ') });
+      }
+      setKeywordInput('');
+    }
+  };
+
+  const removeKeyword = (indexToRemove: number) => {
+    const newKeywords = keywords.filter((_, index) => index !== indexToRemove);
+    setKeywords(newKeywords);
+    setFormData({ ...formData, keywords: newKeywords.join(', ') });
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -324,13 +361,14 @@ const SubmitArticlePage = () => {
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof ArticleForm | 'authorsContact', string>> = {};
+    const newErrors: Partial<Record<keyof ArticleForm | 'authorsContact' | 'affiliation', string>> = {};
 
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.abstract.trim()) newErrors.abstract = 'Abstract is required';
     if (!formData.keywords.trim()) newErrors.keywords = 'Keywords are required';
     if (!formData.content.trim()) newErrors.content = 'Article content is required';
     if (!formData.articleType.trim()) newErrors.articleType = 'Article type is required';
+    if (!formData.affiliation.trim()) newErrors.affiliation = 'Institutional affiliation is required';
     if (!hasValidMainAuthor()) newErrors.authors = 'Please select a valid Main Author';
     if (!hasMainAuthorWithContact()) newErrors.authorsContact = 'Main Author must have a contact number.';
     if (!formData.manuscriptFile) newErrors.manuscriptFile = 'Main manuscript file is required';
@@ -376,6 +414,7 @@ const SubmitArticlePage = () => {
                   articleType: formData.articleType,
                   status: 'submitted' as const,
                   last_updated: now.toISOString(),
+                  author_id: user.id,
                 }
               : article
           );
@@ -439,6 +478,8 @@ const SubmitArticlePage = () => {
           status: 'submitted',
           submission_date: now.toISOString(),
           last_updated: now.toISOString(),
+          author_id: user.id,
+          manuscriptFileName: formData.manuscriptFile?.name,
         };
         
         // Save to author's articles
@@ -547,234 +588,306 @@ const SubmitArticlePage = () => {
             <li>Ensure the title clearly reflects the content of your article.</li>
             <li>Abstract should summarize the main findings in under 300 words.</li>
             <li>Keywords should be relevant and separated by commas.</li>
-            <li>Upload only PDF or DOCX manuscript files (max 10MB).</li>
+            <li>Upload only Word document files (DOC, DOCX, max 10MB).</li>
             <li>One author must be marked as the Main Author with valid email and contact number.</li>
             <li>Accept the license agreement before submitting.</li>
           </ul>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
           {/* Title */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Article Title *</label>
+          <div className="mb-8">
+            <label className="block text-sm font-semibold mb-3 text-gray-700">Article Title *</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`form-input ${errors.title ? 'border-red-500' : ''}`}
+              className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
             />
-            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+            {errors.title && <p className="text-red-500 text-sm mt-2">{errors.title}</p>}
           </div>
 
           {/* Accordion: Authors */}
-          <div className="border rounded mb-6">
+          <div className="border-2 border-gray-200 rounded-xl mb-8 overflow-hidden">
             <button
               type="button"
               onClick={() => toggleSection('authors')}
-              className="w-full flex justify-between p-4 bg-gray-50"
+              className="w-full flex justify-between p-5 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-colors"
             >
-              <span className="font-medium">Authors & Affiliation</span>
+              <span className="font-semibold text-gray-800">Authors & Affiliation</span>
               {openSections.authors ? <ChevronUp /> : <ChevronDown />}
             </button>
             {openSections.authors && (
-              <div className="p-4">
+              <div className="p-6 bg-white">
                 {formData.authors.map((author, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                     <input
                       type="text"
-                      placeholder="Name"
+                      placeholder="Name *"
                       value={author.name}
                       onChange={(e) => handleAuthorChange(index, 'name', e.target.value)}
-                      className="form-input"
+                      className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      required
                     />
                     <input
                       type="email"
-                      placeholder="Email"
+                      placeholder="Email *"
                       value={author.email}
                       onChange={(e) => handleAuthorChange(index, 'email', e.target.value)}
-                      className="form-input"
+                      className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      required
                     />
-                    <select
-                      value={author.role}
-                      onChange={(e) => handleAuthorChange(index, 'role', e.target.value)}
-                      className="form-select"
-                    >
-                      <option>Main Author</option>
-                      <option>Co-Author</option>
-                    </select>
+                    {index > 0 && (
+                      <select
+                        value={author.role}
+                        onChange={(e) => handleAuthorChange(index, 'role', e.target.value)}
+                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      >
+                        <option>Main Author</option>
+                        <option>Co-Author</option>
+                      </select>
+                    )}
+                    {index === 0 && (
+                      <div className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium flex items-center">
+                        Main Author
+                      </div>
+                    )}
                     {author.role === 'Main Author' && (
                       <input
-                        type="text"
+                        type="tel"
+                        placeholder="Contact Number *"
+                        value={author.contact || ''}
+                        onChange={(e) => handleAuthorChange(index, 'contact', e.target.value)}
+                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                    )}
+                    {author.role === 'Co-Author' && (
+                      <input
+                        type="tel"
                         placeholder="Contact Number"
                         value={author.contact || ''}
                         onChange={(e) => handleAuthorChange(index, 'contact', e.target.value)}
-                        className="form-input"
+                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       />
                     )}
                     {index > 0 && (
                       <button
                         type="button"
                         onClick={() => removeAuthor(index)}
-                        className="text-red-500"
+                        className="px-4 py-4 h-14 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
                       >
                         Remove
                       </button>
                     )}
+                    {index === 0 && (
+                      <div className="px-4 py-4 h-14"></div>
+                    )}
                   </div>
                 ))}
-                <button type="button" onClick={addAuthor} className="btn-secondary">
+                <button type="button" onClick={addAuthor} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                   + Add Author
                 </button>
-                {errors.authors && <p className="text-red-500 text-sm">{errors.authors}</p>}
-                {errors.authorsContact && <p className="text-red-500 text-sm">{errors.authorsContact}</p>}
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2">Institutional Affiliation</label>
+                {errors.authors && <p className="text-red-500 text-sm mt-2">{errors.authors}</p>}
+                {errors.authorsContact && <p className="text-red-500 text-sm mt-2">{errors.authorsContact}</p>}
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Institutional Affiliation *</label>
                   <input
                     type="text"
                     name="affiliation"
                     value={formData.affiliation}
                     onChange={handleInputChange}
-                    className="form-input"
+                    className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.affiliation ? 'border-red-500' : 'border-gray-300'}`}
+                    required
                   />
+                  {errors.affiliation && <p className="text-red-500 text-sm mt-2">{errors.affiliation}</p>}
                 </div>
               </div>
             )}
           </div>
 
           {/* Accordion: Manuscript */}
-          <div className="border rounded mb-6">
+          <div className="border-2 border-gray-200 rounded-xl mb-8 overflow-hidden">
             <button
               type="button"
               onClick={() => toggleSection('manuscript')}
-              className="w-full flex justify-between p-4 bg-gray-50"
+              className="w-full flex justify-between p-5 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-colors"
             >
-              <span className="font-medium">Manuscript</span>
+              <span className="font-semibold text-gray-800">Manuscript</span>
               {openSections.manuscript ? <ChevronUp /> : <ChevronDown />}
             </button>
             {openSections.manuscript && (
-              <div className="p-4 space-y-4">
-                <select
-                  name="articleType"
-                  value={formData.articleType}
-                  onChange={handleInputChange}
-                  className={`form-select ${errors.articleType ? 'border-red-500' : ''}`}
-                >
-                  <option value="">Select Article Type</option>
-                  <option>Research Article</option>
-                  <option>Review</option>
-                  <option>Case Study</option>
-                  <option>Technical Report</option>
-                </select>
-                {errors.articleType && <p className="text-red-500 text-sm">{errors.articleType}</p>}
+              <div className="p-6 bg-white space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Article Type *</label>
+                  <select
+                    name="articleType"
+                    value={formData.articleType}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.articleType ? 'border-red-500' : 'border-gray-300'}`}
+                  >
+                    <option value="">Select Article Type</option>
+                    <option>Research Article</option>
+                    <option>Review</option>
+                    <option>Case Study</option>
+                    <option>Technical Report</option>
+                  </select>
+                  {errors.articleType && <p className="text-red-500 text-sm mt-2">{errors.articleType}</p>}
+                </div>
 
-                <textarea
-                  name="abstract"
-                  value={formData.abstract}
-                  onChange={handleInputChange}
-                  placeholder="Abstract"
-                  className={`form-textarea ${errors.abstract ? 'border-red-500' : ''}`}
-                />
-                {errors.abstract && <p className="text-red-500 text-sm">{errors.abstract}</p>}
+                <div>
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Abstract *</label>
+                  <textarea
+                    name="abstract"
+                    value={formData.abstract}
+                    onChange={handleInputChange}
+                    placeholder="Abstract"
+                    rows={4}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${errors.abstract ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {errors.abstract && <p className="text-red-500 text-sm mt-2">{errors.abstract}</p>}
+                </div>
 
-                <input
-                  type="text"
-                  name="keywords"
-                  value={formData.keywords}
-                  onChange={handleInputChange}
-                  placeholder="Keywords"
-                  className={`form-input ${errors.keywords ? 'border-red-500' : ''}`}
-                />
-                {errors.keywords && <p className="text-red-500 text-sm">{errors.keywords}</p>}
+                <div>
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Keywords *</label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {keywords.map((keyword, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {keyword}
+                          <button
+                            type="button"
+                            onClick={() => removeKeyword(index)}
+                            className="ml-2 text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={keywordInput}
+                      onChange={handleKeywordInputChange}
+                      onKeyDown={handleKeywordKeyDown}
+                      placeholder="Type keywords and press comma or Enter to add"
+                      className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.keywords ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    <p className="text-sm text-gray-500">Press comma or Enter to add keywords</p>
+                  </div>
+                  {errors.keywords && <p className="text-red-500 text-sm mt-2">{errors.keywords}</p>}
+                </div>
 
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  placeholder="Article Content"
-                  className={`form-textarea ${errors.content ? 'border-red-500' : ''}`}
-                />
-                {errors.content && <p className="text-red-500 text-sm">{errors.content}</p>}
+                <div>
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Article Content *</label>
+                  <textarea
+                    name="content"
+                    value={formData.content}
+                    onChange={handleInputChange}
+                    placeholder="Article Content"
+                    rows={8}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${errors.content ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  {errors.content && <p className="text-red-500 text-sm mt-2">{errors.content}</p>}
+                </div>
 
-                <input type="file" onChange={handleFileChange} />
-                {errors.manuscriptFile && <p className="text-red-500 text-sm">{errors.manuscriptFile}</p>}
+                <div>
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Manuscript File *</label>
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    accept=".doc,.docx"
+                    className={`w-full px-4 py-4 h-12 border-2 border-dashed rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.manuscriptFile ? 'border-red-500' : 'border-gray-300'}`}
+                  />
+                  <p className="text-sm text-gray-500 mt-2">Accepted formats: DOC, DOCX (max 10MB)</p>
+                  {errors.manuscriptFile && <p className="text-red-500 text-sm mt-2">{errors.manuscriptFile}</p>}
+                </div>
               </div>
             )}
           </div>
 
           {/* Accordion: Declarations */}
-          <div className="border rounded mb-6">
+          <div className="border-2 border-gray-200 rounded-xl mb-8 overflow-hidden">
             <button
               type="button"
               onClick={() => toggleSection('declarations')}
-              className="w-full flex justify-between p-4 bg-gray-50"
+              className="w-full flex justify-between p-5 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-colors"
             >
-              <span className="font-medium">Declarations</span>
+              <span className="font-semibold text-gray-800">Declarations</span>
               {openSections.declarations ? <ChevronUp /> : <ChevronDown />}
             </button>
             {openSections.declarations && (
-              <div className="p-4 space-y-4">
+              <div className="p-6 bg-white space-y-6">
                 <div>
-                  <div className="text-sm font-medium mb-1">Cover Letter</div>
-                <textarea
-                  name="coverLetter"
-                  value={formData.coverLetter}
-                  onChange={handleInputChange}
-                  placeholder="If none then write none"
-                  className="form-textarea"
-                />
-                </div>
-                <div>
-                  <div className="text-sm font-medium mb-1">Conflict of Interest</div>
-                <textarea
-                  name="conflicts"
-                  value={formData.conflicts}
-                  onChange={handleInputChange}
-                  placeholder="If none then write none"
-                  className="form-textarea"
-                />
-                </div>
-                <div>
-                  <div className="text-sm font-medium mb-1">Funding Statement</div>
-                <textarea
-                  name="funding"
-                  value={formData.funding}
-                  onChange={handleInputChange}
-                  placeholder="If none then write none"
-                  className="form-textarea"
-                />
-                </div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="ethics"
-                    checked={formData.ethics}
+                  <div className="text-sm font-semibold mb-3 text-gray-700">Cover Letter</div>
+                  <textarea
+                    name="coverLetter"
+                    value={formData.coverLetter}
                     onChange={handleInputChange}
-                    className="mr-2"
+                    placeholder="If none then write none"
+                    rows={3}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                   />
-                  I confirm that this work complies with ethical guidelines.
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="licenseAgreement"
-                    checked={formData.licenseAgreement}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold mb-3 text-gray-700">Conflict of Interest</div>
+                  <textarea
+                    name="conflicts"
+                    value={formData.conflicts}
                     onChange={handleInputChange}
-                    className="mr-2"
+                    placeholder="If none then write none"
+                    rows={3}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                   />
-                  I agree to the copyright and license terms.
-                </label>
-                {errors.licenseAgreement && <p className="text-red-500 text-sm">{errors.licenseAgreement}</p>}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold mb-3 text-gray-700">Funding Statement</div>
+                  <textarea
+                    name="funding"
+                    value={formData.funding}
+                    onChange={handleInputChange}
+                    placeholder="If none then write none"
+                    rows={3}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      name="ethics"
+                      checked={formData.ethics}
+                      onChange={handleInputChange}
+                      className="mr-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">I confirm that this work complies with ethical guidelines.</span>
+                  </label>
+                  <label className="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      name="licenseAgreement"
+                      checked={formData.licenseAgreement}
+                      onChange={handleInputChange}
+                      className="mr-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">I agree to the copyright and license terms.</span>
+                  </label>
+                  {errors.licenseAgreement && <p className="text-red-500 text-sm mt-2">{errors.licenseAgreement}</p>}
+                </div>
               </div>
             )}
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 pt-6 border-t border-gray-200">
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary flex items-center"
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center"
             >
               {submitting 
                 ? (isEditMode && !isEditingDraft ? 'Updating...' : 'Submitting...') 
@@ -784,14 +897,14 @@ const SubmitArticlePage = () => {
             <button 
               type="button" 
               onClick={handleSaveDraft}
-              className="btn-secondary"
+              className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium flex items-center"
             >
               <Save className="w-4 h-4 mr-2" /> Save Draft
             </button>
             <button
               type="button"
               onClick={() => router.push('/dashboard/author')}
-              className="btn-secondary flex items-center text-red-600"
+              className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center"
             >
               <XCircle className="w-4 h-4 mr-2" /> Cancel
             </button>

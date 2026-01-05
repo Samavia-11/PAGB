@@ -33,11 +33,26 @@ interface ArticleForReview {
   priority: 'high' | 'medium' | 'low';
 }
 
+interface ReviewerAssignment {
+  id: number;
+  articleId: number;
+  articleTitle: string;
+  articleAbstract: string;
+  articleContent?: string;
+  reviewerId: number;
+  reviewerName: string;
+  comment: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  assignedDate: string;
+}
+
 const ReviewerDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<ArticleForReview[]>([]);
+  const [assignments, setAssignments] = useState<ReviewerAssignment[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<ArticleForReview | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<ReviewerAssignment | null>(null);
   const [reviewContent, setReviewContent] = useState('');
   const [recommendation, setRecommendation] = useState<'accept' | 'minor_revision' | 'major_revision' | 'reject'>('minor_revision');
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -46,6 +61,7 @@ const ReviewerDashboard = () => {
   useEffect(() => {
     checkAuth();
     loadAssignedArticles();
+    loadAssignments();
   }, []);
 
   const checkAuth = async () => {
@@ -104,6 +120,13 @@ const ReviewerDashboard = () => {
       }
     ];
     setArticles(mockArticles);
+  };
+
+  const loadAssignments = () => {
+    const allAssignments = JSON.parse(localStorage.getItem('reviewerAssignments') || '[]') as ReviewerAssignment[];
+    // Filter assignments for current reviewer (in real app, would filter by reviewerId)
+    const reviewerAssignments = allAssignments.filter(a => a.reviewerId === 1); // Mock reviewer ID
+    setAssignments(reviewerAssignments);
   };
 
   const getStatusIcon = (status: string) => {

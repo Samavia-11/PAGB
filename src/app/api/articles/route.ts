@@ -1,89 +1,189 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { isValidId, isValidRole, escapeHtml } from '@/lib/security';
+import { getDatabase } from '@/lib/database';
+import mysql from 'mysql2/promise';
 
 // Valid article statuses
-const VALID_STATUSES = ['draft', 'submitted', 'under_review', 'with_editor', 'accepted', 'rejected', 'published'];
+const VALID_STATUSES = ['draft', 'submitted', 'under_review', 'reviewed', 'editor_review', 'accepted', 'published', 'rejected'];
 
 export async function GET(request: NextRequest) {
-  const status = request.nextUrl.searchParams.get('status');
-  const role = request.headers.get('x-user-role');
-  const userId = request.headers.get('x-user-id');
-
+  let connection: mysql.Connection | null = null;
+  
   try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const authorId = searchParams.get('authorId');
+    const role = request.headers.get('x-user-role');
+    const userId = request.headers.get('x-user-id');
+
     // Validate status parameter if provided
     if (status && !VALID_STATUSES.includes(status)) {
       return NextResponse.json({ error: 'Invalid status parameter' }, { status: 400 });
     }
 
-    let sql = `SELECT a.*, u.full_name as author_name 
-               FROM articles a 
-               JOIN users u ON a.author_id = u.id`;
-    const params: any[] = [];
+    connection = await getDatabase();
 
-    if (status) {
-      sql += ' WHERE a.status = ?';
-      params.push(status);
-    } else if (role === 'author' && userId) {
-      sql += ' WHERE a.author_id = ?';
-      params.push(userId);
-    } else if (role === 'reviewer' && userId) {
-      // Reviewers only see articles specifically assigned to them
-      sql = `SELECT a.*, u.full_name as author_name 
-             FROM articles a 
-             JOIN users u ON a.author_id = u.id
-             JOIN article_assignments aa ON a.id = aa.article_id
-             WHERE aa.reviewer_id = ? AND aa.status = 'assigned'`;
+    let query = `
+      SELECT aa.*, u.full_name as author_name, u.email as author_email
+      FROM authors_articles aa
+      JOIN users u ON aa.author_id = u.id
+    `;
+    const params: any[] = [];
+    const conditions: string[] = [];
+
+    // Filter based on user role
+    if (role === 'author' && userId) {
+      conditions.push('aa.author_id = ?');
       params.push(userId);
     }
 
-    sql += ' ORDER BY a.created_at DESC LIMIT 100'; // Add limit to prevent large responses
-    
-    const articles = await query(sql, params);
-    return NextResponse.json({ articles });
+    if (status) {
+      conditions.push('aa.status = ?');
+      params.push(status);
+    }
+
+    if (authorId) {
+      conditions.push('aa.author_id = ?');
+      params.push(authorId);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY aa.submission_date DESC';
+
+    const [articles] = await connection.execute(query, params) as [any[], any];
+
+    // Parse authors JSON if present
+    const parsedArticles = articles.map(article => ({
+      ...article,
+      authors: article.authors ? JSON.parse(article.authors) : null
+    }));
+
+    return NextResponse.json({
+      articles: parsedArticles
+    });
+
   } catch (error) {
-    console.error('Error fetching articles:', error);
-    return NextResponse.json({ error: 'Failed to fetch articles' }, { status: 500 });
+    console.error('Get articles error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
+  let connection: mysql.Connection | null = null;
+  
   try {
-    // Get authenticated user from middleware
-    const userId = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
-
-    if (!userId || !userRole) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Only authors can create articles
-    if (userRole !== 'author' && userRole !== 'editor' && userRole !== 'administrator') {
-      return NextResponse.json({ error: 'Only authors can create articles' }, { status: 403 });
-    }
-
     const body = await request.json();
-    const { title, content } = body;
+    const { 
+      authorId, 
+      title, 
+      abstract, 
+      keywords, 
+      content, 
+      authors, 
+      affiliation, 
+      articleType, 
+      manuscriptFileName,
+      status = 'submitted'
+    } = body;
 
     // Validate required fields
-    if (!title || typeof title !== 'string') {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    if (!authorId || !title || !abstract) {
+      return NextResponse.json(
+        { error: 'Missing required fields: authorId, title, abstract' },
+        { status: 400 }
+      );
     }
 
-    // Validate title length
-    if (title.length < 5 || title.length > 500) {
-      return NextResponse.json({ error: 'Title must be between 5 and 500 characters' }, { status: 400 });
-    }
+    connection = await getDatabase();
 
-    // Use the authenticated user's ID as author
-    const authorId = parseInt(userId);
+    // Insert article into authors_articles table
+    const [result] = await connection.execute(
+      `INSERT INTO authors_articles 
+       (author_id, title, abstract, keywords, content, authors, affiliation, article_type, manuscript_file_name, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        authorId,
+        title,
+        abstract,
+        keywords || null,
+        content || null,
+        authors ? JSON.stringify(authors) : null,
+        affiliation || null,
+        articleType || null,
+        manuscriptFileName || null,
+        status
+      ]
+    ) as [any, any];
 
-    const sql = `INSERT INTO articles (title, content, author_id, status, created_at) VALUES (?, ?, ?, 'draft', NOW())`;
-    const result: any = await query(sql, [title, content || '', authorId]);
-    
-    return NextResponse.json({ success: true, id: result.insertId });
+    // Get the created article
+    const [newArticles] = await connection.execute(
+      `SELECT aa.*, u.full_name as author_name, u.email as author_email
+       FROM authors_articles aa
+       JOIN users u ON aa.author_id = u.id
+       WHERE aa.id = ?`,
+      [result.insertId]
+    ) as [any[], any];
+
+    const newArticle = newArticles[0];
+    newArticle.authors = newArticle.authors ? JSON.parse(newArticle.authors) : null;
+
+    return NextResponse.json({
+      message: 'Article submitted successfully',
+      article: newArticle
+    });
+
   } catch (error) {
-    console.error('Error creating article:', error);
-    return NextResponse.json({ error: 'Failed to create article' }, { status: 500 });
+    console.error('Article submission error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  let connection: mysql.Connection | null = null;
+  
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+
+    if (!id || !status) {
+      return NextResponse.json(
+        { error: 'Missing required fields: id, status' },
+        { status: 400 }
+      );
+    }
+
+    connection = await getDatabase();
+
+    // Update article status
+    const [result] = await connection.execute(
+      'UPDATE authors_articles SET status = ?, last_updated = NOW() WHERE id = ?',
+      [status, id]
+    ) as [any, any];
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { error: 'Article not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: 'Article status updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Article status update error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
