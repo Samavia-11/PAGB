@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
-import { ArrowLeft, Settings, Save } from 'lucide-react';
+import { ArrowLeft, Settings, Plus, Pencil, Trash2, X } from 'lucide-react';
 
 interface User {
   id: number;
@@ -12,81 +12,56 @@ interface User {
   full_name?: string;
 }
 
-interface JournalSettings {
-  // General Settings
-  journalName: string;
-  journalAbbreviation: string;
-  issn: string;
-  eissn: string;
-  publisher: string;
-  contactEmail: string;
-  websiteUrl: string;
-  
-  // Submission Settings
-  allowSubmissions: boolean;
-  requireAbstract: boolean;
-  minAbstractWords: number;
-  maxAbstractWords: number;
-  requireKeywords: boolean;
-  minKeywords: number;
-  maxKeywords: number;
-  allowedFileTypes: string;
-  maxFileSize: number;
-  
-  // Review Settings
-  reviewType: 'single-blind' | 'double-blind' | 'open';
-  reviewDeadlineDays: number;
-  minReviewersPerArticle: number;
-  maxReviewersPerArticle: number;
-  
-  // Publication Settings
-  articlesPerIssue: number;
-  issuesPerYear: number;
-  currentVolume: number;
-  currentIssue: number;
-  publicationFrequency: string;
+type EditorialBoardSection =
+  | 'executive_leadership'
+  | 'editorial_team_editor'
+  | 'editorial_team_sub_editor'
+  | 'advisory_board'
+  | 'peer_review_committee';
+
+interface EditorialBoardItem {
+  id: number;
+  section: EditorialBoardSection;
+  title: string | null;
+  name: string;
+  affiliation: string | null;
+  sort_order: number;
+}
+
+type ModalMode = 'add' | 'edit';
+
+interface ModalState {
+  open: boolean;
+  mode: ModalMode;
+  section: EditorialBoardSection;
+  item?: EditorialBoardItem;
 }
 
 const JournalSettingsPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<JournalSettings>({
-    journalName: 'Army Journal of Military Research',
-    journalAbbreviation: 'AJMR',
-    issn: '1234-5678',
-    eissn: '8765-4321',
-    publisher: 'Military Academic Press',
-    contactEmail: 'editor@armyjournal.com',
-    websiteUrl: 'https://armyjournal.com',
-    
-    allowSubmissions: true,
-    requireAbstract: true,
-    minAbstractWords: 150,
-    maxAbstractWords: 300,
-    requireKeywords: true,
-    minKeywords: 3,
-    maxKeywords: 6,
-    allowedFileTypes: '.pdf, .doc, .docx',
-    maxFileSize: 10,
-    
-    reviewType: 'double-blind',
-    reviewDeadlineDays: 21,
-    minReviewersPerArticle: 2,
-    maxReviewersPerArticle: 3,
-    
-    articlesPerIssue: 8,
-    issuesPerYear: 4,
-    currentVolume: 15,
-    currentIssue: 2,
-    publicationFrequency: 'Quarterly'
-  });
+  const [boardLoading, setBoardLoading] = useState(true);
+  const [boardError, setBoardError] = useState<string | null>(null);
+  const [executiveLeadership, setExecutiveLeadership] = useState<EditorialBoardItem[]>([]);
+  const [editors, setEditors] = useState<EditorialBoardItem[]>([]);
+  const [subEditors, setSubEditors] = useState<EditorialBoardItem[]>([]);
+  const [advisoryBoard, setAdvisoryBoard] = useState<EditorialBoardItem[]>([]);
+  const [peerReviewCommittee, setPeerReviewCommittee] = useState<EditorialBoardItem[]>([]);
+  const [modal, setModal] = useState<ModalState>({ open: false, mode: 'add', section: 'executive_leadership' });
+  const [form, setForm] = useState({ title: '', name: '', affiliation: '' });
+  const [submitting, setSubmitting] = useState(false);
   
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!loading && user?.role === 'administrator') {
+      loadEditorialBoard();
+    }
+  }, [loading, user]);
 
   const checkAuth = async () => {
     try {
@@ -109,18 +84,166 @@ const JournalSettingsPage = () => {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const loadEditorialBoard = async () => {
+    setBoardLoading(true);
+    setBoardError(null);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Settings saved successfully!');
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      const response = await fetch('/api/editorial-board');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to load Editorial Board');
+      }
+
+      const data = await response.json();
+      const items = (data?.items || []) as EditorialBoardItem[];
+
+      setExecutiveLeadership(items.filter((i) => i.section === 'executive_leadership'));
+      setEditors(items.filter((i) => i.section === 'editorial_team_editor'));
+      setSubEditors(items.filter((i) => i.section === 'editorial_team_sub_editor'));
+      setAdvisoryBoard(items.filter((i) => i.section === 'advisory_board'));
+      setPeerReviewCommittee(items.filter((i) => i.section === 'peer_review_committee'));
+    } catch (error: any) {
+      console.error('Failed to load editorial board:', error);
+      setBoardError(error?.message || 'Failed to load Editorial Board');
     } finally {
-      setSaving(false);
+      setBoardLoading(false);
     }
+  };
+
+  const openAddModal = (section: EditorialBoardSection) => {
+    setModal({ open: true, mode: 'add', section });
+    setForm({ title: '', name: '', affiliation: '' });
+  };
+
+  const openEditModal = (item: EditorialBoardItem) => {
+    setModal({ open: true, mode: 'edit', section: item.section, item });
+    setForm({
+      title: item.title || '',
+      name: item.name || '',
+      affiliation: item.affiliation || '',
+    });
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+    setModal({ open: false, mode: 'add', section: 'executive_leadership' });
+    setForm({ title: '', name: '', affiliation: '' });
+  };
+
+  const submitModal = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const section = modal.section;
+      const payload: any = { section };
+
+      if (section === 'executive_leadership') {
+        if (!form.title.trim() || !form.name.trim()) {
+          alert('Please fill all required fields.');
+          return;
+        }
+        payload.title = form.title.trim();
+        payload.name = form.name.trim();
+        payload.affiliation = form.affiliation.trim() || null;
+      } else if (section === 'editorial_team_editor') {
+        if (!form.title.trim() || !form.name.trim()) {
+          alert('Please fill all required fields.');
+          return;
+        }
+        payload.title = form.title.trim();
+        payload.name = form.name.trim();
+      } else if (section === 'editorial_team_sub_editor') {
+        if (!form.name.trim()) {
+          alert('Please fill all required fields.');
+          return;
+        }
+        payload.name = form.name.trim();
+        payload.title = null;
+      } else {
+        if (!form.name.trim()) {
+          alert('Please fill all required fields.');
+          return;
+        }
+        payload.name = form.name.trim();
+        payload.title = form.title.trim() || null;
+      }
+
+      if (modal.mode === 'add') {
+        const res = await fetch('/api/editorial-board', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error || 'Failed to create entry');
+        }
+      } else {
+        const res = await fetch(`/api/editorial-board/${modal.item?.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error || 'Failed to update entry');
+        }
+      }
+
+      closeModal();
+      await loadEditorialBoard();
+    } catch (error: any) {
+      console.error('Failed to submit editorial board item:', error);
+      alert(error?.message || 'Operation failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteItem = async (id: number) => {
+    const ok = confirm('Delete this entry?');
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/editorial-board/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Failed to delete entry');
+      }
+      await loadEditorialBoard();
+    } catch (error: any) {
+      console.error('Failed to delete item:', error);
+      alert(error?.message || 'Delete failed');
+    }
+  };
+
+  const renderList = (items: EditorialBoardItem[], showAffiliation: boolean) => {
+    if (items.length === 0) {
+      return <p className="text-sm text-academic-600">No entries yet.</p>;
+    }
+
+    return (
+      <div className="space-y-3">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-start justify-between gap-3 bg-academic-50 rounded-lg border border-academic-200 p-4">
+            <div>
+              {item.title ? <div className="text-sm font-semibold text-academic-800">{item.title}</div> : null}
+              <div className="text-base font-semibold text-academic-900">{item.name}</div>
+              {showAffiliation && item.affiliation ? (
+                <div className="text-sm text-academic-600">{item.affiliation}</div>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => openEditModal(item)} className="btn-secondary px-3 py-2" type="button">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => deleteItem(item.id)} className="btn-secondary px-3 py-2" type="button">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -152,339 +275,213 @@ const JournalSettingsPage = () => {
               <p className="text-academic-600 mt-1">Configure journal information and policies</p>
             </div>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary flex items-center"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
         </div>
       </div>
 
       <div className="space-y-6">
-        {/* General Information */}
         <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4">General Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Journal Name
-              </label>
-              <input
-                type="text"
-                value={settings.journalName}
-                onChange={(e) => setSettings({ ...settings, journalName: e.target.value })}
-                className="form-input"
-              />
+              <h2 className="text-xl font-semibold text-academic-900 mb-2">Editorial Board</h2>
+              <p className="text-sm text-academic-600">Manage the Editorial Board sections shown on the public website.</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Abbreviation
-              </label>
-              <input
-                type="text"
-                value={settings.journalAbbreviation}
-                onChange={(e) => setSettings({ ...settings, journalAbbreviation: e.target.value })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                ISSN (Print)
-              </label>
-              <input
-                type="text"
-                value={settings.issn}
-                onChange={(e) => setSettings({ ...settings, issn: e.target.value })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                eISSN (Online)
-              </label>
-              <input
-                type="text"
-                value={settings.eissn}
-                onChange={(e) => setSettings({ ...settings, eissn: e.target.value })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Publisher
-              </label>
-              <input
-                type="text"
-                value={settings.publisher}
-                onChange={(e) => setSettings({ ...settings, publisher: e.target.value })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Contact Email
-              </label>
-              <input
-                type="email"
-                value={settings.contactEmail}
-                onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                className="form-input"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Website URL
-              </label>
-              <input
-                type="url"
-                value={settings.websiteUrl}
-                onChange={(e) => setSettings({ ...settings, websiteUrl: e.target.value })}
-                className="form-input"
-              />
-            </div>
+            <button onClick={loadEditorialBoard} className="btn-secondary" type="button" disabled={boardLoading}>
+              Refresh
+            </button>
           </div>
-        </div>
 
-        {/* Submission Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4">Submission Settings</h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="allowSubmissions"
-                checked={settings.allowSubmissions}
-                onChange={(e) => setSettings({ ...settings, allowSubmissions: e.target.checked })}
-                className="w-4 h-4 text-primary-600 border-academic-300 rounded focus:ring-primary-500"
-              />
-              <label htmlFor="allowSubmissions" className="ml-2 text-sm text-academic-700">
-                Allow new submissions
-              </label>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="requireAbstract"
-                  checked={settings.requireAbstract}
-                  onChange={(e) => setSettings({ ...settings, requireAbstract: e.target.checked })}
-                  className="w-4 h-4 text-primary-600 border-academic-300 rounded focus:ring-primary-500"
-                />
-                <label htmlFor="requireAbstract" className="ml-2 text-sm text-academic-700">
-                  Require abstract
-                </label>
+          {boardError ? <div className="mt-4 text-sm text-red-600">{boardError}</div> : null}
+          {boardLoading ? <div className="mt-4 text-sm text-academic-600">Loading Editorial Board...</div> : null}
+
+          <div className="mt-6 space-y-10">
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-semibold text-academic-900">Executive Leadership</h3>
+                <button onClick={() => openAddModal('executive_leadership')} className="btn-primary flex items-center" type="button">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </button>
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="requireKeywords"
-                  checked={settings.requireKeywords}
-                  onChange={(e) => setSettings({ ...settings, requireKeywords: e.target.checked })}
-                  className="w-4 h-4 text-primary-600 border-academic-300 rounded focus:ring-primary-500"
-                />
-                <label htmlFor="requireKeywords" className="ml-2 text-sm text-academic-700">
-                  Require keywords
-                </label>
+              {renderList(executiveLeadership, true)}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-semibold text-academic-900">Editorial Team</h3>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => openAddModal('editorial_team_editor')} className="btn-primary flex items-center" type="button">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Editor
+                  </button>
+                  <button onClick={() => openAddModal('editorial_team_sub_editor')} className="btn-secondary flex items-center" type="button">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Sub Editor
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-academic-50 rounded-lg border border-academic-200 p-4">
+                  <h4 className="font-semibold text-academic-900 mb-3">Editors</h4>
+                  {renderList(editors, false)}
+                </div>
+                <div className="bg-academic-50 rounded-lg border border-academic-200 p-4">
+                  <h4 className="font-semibold text-academic-900 mb-3">Sub Editors</h4>
+                  {renderList(subEditors, false)}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Min Abstract Words
-                </label>
-                <input
-                  type="number"
-                  value={settings.minAbstractWords}
-                  onChange={(e) => setSettings({ ...settings, minAbstractWords: parseInt(e.target.value) })}
-                  className="form-input"
-                />
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-semibold text-academic-900">Advisory Board</h3>
+                <button onClick={() => openAddModal('advisory_board')} className="btn-primary flex items-center" type="button">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Max Abstract Words
-                </label>
-                <input
-                  type="number"
-                  value={settings.maxAbstractWords}
-                  onChange={(e) => setSettings({ ...settings, maxAbstractWords: parseInt(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Min Keywords
-                </label>
-                <input
-                  type="number"
-                  value={settings.minKeywords}
-                  onChange={(e) => setSettings({ ...settings, minKeywords: parseInt(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Max Keywords
-                </label>
-                <input
-                  type="number"
-                  value={settings.maxKeywords}
-                  onChange={(e) => setSettings({ ...settings, maxKeywords: parseInt(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Allowed File Types
-                </label>
-                <input
-                  type="text"
-                  value={settings.allowedFileTypes}
-                  onChange={(e) => setSettings({ ...settings, allowedFileTypes: e.target.value })}
-                  className="form-input"
-                  placeholder=".pdf, .doc, .docx"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-academic-700 mb-2">
-                  Max File Size (MB)
-                </label>
-                <input
-                  type="number"
-                  value={settings.maxFileSize}
-                  onChange={(e) => setSettings({ ...settings, maxFileSize: parseInt(e.target.value) })}
-                  className="form-input"
-                />
-              </div>
+              {renderList(advisoryBoard, false)}
             </div>
-          </div>
-        </div>
 
-        {/* Review Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4">Review Settings</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Review Type
-              </label>
-              <select
-                value={settings.reviewType}
-                onChange={(e) => setSettings({ ...settings, reviewType: e.target.value as any })}
-                className="form-input"
-              >
-                <option value="single-blind">Single-Blind</option>
-                <option value="double-blind">Double-Blind</option>
-                <option value="open">Open Review</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Review Deadline (Days)
-              </label>
-              <input
-                type="number"
-                value={settings.reviewDeadlineDays}
-                onChange={(e) => setSettings({ ...settings, reviewDeadlineDays: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Min Reviewers per Article
-              </label>
-              <input
-                type="number"
-                value={settings.minReviewersPerArticle}
-                onChange={(e) => setSettings({ ...settings, minReviewersPerArticle: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Max Reviewers per Article
-              </label>
-              <input
-                type="number"
-                value={settings.maxReviewersPerArticle}
-                onChange={(e) => setSettings({ ...settings, maxReviewersPerArticle: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Publication Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4">Publication Settings</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Articles per Issue
-              </label>
-              <input
-                type="number"
-                value={settings.articlesPerIssue}
-                onChange={(e) => setSettings({ ...settings, articlesPerIssue: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Issues per Year
-              </label>
-              <input
-                type="number"
-                value={settings.issuesPerYear}
-                onChange={(e) => setSettings({ ...settings, issuesPerYear: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Current Volume
-              </label>
-              <input
-                type="number"
-                value={settings.currentVolume}
-                onChange={(e) => setSettings({ ...settings, currentVolume: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Current Issue
-              </label>
-              <input
-                type="number"
-                value={settings.currentIssue}
-                onChange={(e) => setSettings({ ...settings, currentIssue: parseInt(e.target.value) })}
-                className="form-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-academic-700 mb-2">
-                Publication Frequency
-              </label>
-              <select
-                value={settings.publicationFrequency}
-                onChange={(e) => setSettings({ ...settings, publicationFrequency: e.target.value })}
-                className="form-input"
-              >
-                <option value="Monthly">Monthly</option>
-                <option value="Bi-Monthly">Bi-Monthly</option>
-                <option value="Quarterly">Quarterly</option>
-                <option value="Semi-Annual">Semi-Annual</option>
-                <option value="Annual">Annual</option>
-              </select>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-semibold text-academic-900">Peer Review Committee</h3>
+                <button onClick={() => openAddModal('peer_review_committee')} className="btn-primary flex items-center" type="button">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </button>
+              </div>
+              {renderList(peerReviewCommittee, false)}
             </div>
           </div>
         </div>
       </div>
+
+      {modal.open ? (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg border border-academic-200 w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-academic-200">
+              <div>
+                <h3 className="text-lg font-semibold text-academic-900">{modal.mode === 'add' ? 'Add Entry' : 'Edit Entry'}</h3>
+              </div>
+              <button onClick={closeModal} className="btn-secondary px-3 py-2" type="button" disabled={submitting}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {modal.section === 'executive_leadership' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Designation / Title</label>
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      className="form-input"
+                      placeholder="Patron-in-Chief"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="form-input"
+                      placeholder="Field Marshal Syed Asim Munir, NI(M), SJ"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Affiliation / Organization</label>
+                    <input
+                      type="text"
+                      value={form.affiliation}
+                      onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
+                      className="form-input"
+                      placeholder="IGT&E"
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {modal.section === 'editorial_team_editor' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Role / Designation</label>
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      className="form-input"
+                      placeholder="Editor"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="form-input"
+                      placeholder="Name"
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {modal.section === 'editorial_team_sub_editor' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="form-input"
+                      placeholder="Name"
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {modal.section === 'advisory_board' || modal.section === 'peer_review_committee' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="form-input"
+                      placeholder="Name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-academic-700 mb-2">Designation / Professional Title</label>
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      className="form-input"
+                      placeholder="Dean, Faculty of Contemporary Studies (FCS), NDU"
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <div className="p-4 border-t border-academic-200 flex items-center justify-end gap-2">
+              <button onClick={closeModal} className="btn-secondary" type="button" disabled={submitting}>
+                Cancel
+              </button>
+              <button onClick={submitModal} className="btn-primary" type="button" disabled={submitting}>
+                {submitting ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </Layout>
   );
 };

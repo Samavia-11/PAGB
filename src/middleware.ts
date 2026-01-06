@@ -32,6 +32,7 @@ const PUBLIC_ROUTES = [
   '/api/archives-all',
   '/api/policies',
   '/api/policies-content',
+  '/api/editorial-board',
   '/api/site-stats',
 ];
 

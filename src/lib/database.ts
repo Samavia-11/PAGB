@@ -146,6 +146,20 @@ async function createTables() {
       )
     `);
 
+    // Create editorial_board_items table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS editorial_board_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        section ENUM('executive_leadership','editorial_team_editor','editorial_team_sub_editor','advisory_board','peer_review_committee') NOT NULL,
+        title VARCHAR(255) NULL,
+        name VARCHAR(255) NOT NULL,
+        affiliation VARCHAR(255) NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create indexes
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_authors_articles_author_id ON authors_articles(author_id)');
@@ -154,6 +168,7 @@ async function createTables() {
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_articles_reviewer_id ON editor_articles(reviewer_id)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_articles_reviewer_id ON reviewer_articles(reviewer_id)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_comments_article_id ON article_comments(article_id)');
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editorial_board_section_sort ON editorial_board_items(section, sort_order)');
 
     console.log('Database tables created successfully');
   } catch (error) {

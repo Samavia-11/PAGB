@@ -132,6 +132,22 @@ interface PolicyLink {
   title: string;
 }
 
+type EditorialBoardSection =
+  | 'executive_leadership'
+  | 'editorial_team_editor'
+  | 'editorial_team_sub_editor'
+  | 'advisory_board'
+  | 'peer_review_committee';
+
+interface EditorialBoardItem {
+  id: number;
+  section: EditorialBoardSection;
+  title: string | null;
+  name: string;
+  affiliation: string | null;
+  sort_order: number;
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -276,6 +292,36 @@ export default function Home() {
       }
     })();
     return () => { cancelled = true; };
+  }, []);
+
+  const [editorialBoardItems, setEditorialBoardItems] = useState<EditorialBoardItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadEditorialBoard = async () => {
+      try {
+        const res = await fetch('/api/editorial-board');
+        if (!res.ok) {
+          throw new Error('Failed to load Editorial Board');
+        }
+        const data = await res.json();
+        const items = (data?.items || []) as EditorialBoardItem[];
+        if (!cancelled) {
+          setEditorialBoardItems(items);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setEditorialBoardItems([]);
+        }
+      }
+    };
+
+    loadEditorialBoard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const scrollToSection = (sectionId: string) => {
@@ -707,31 +753,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick Links & Recent Issues */}
-      {/* <section className="bg-gray-50 border-t border-gray-200 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-4xl font-bold mb-8" style={{color: '#5A6B4A', fontFamily: 'Georgia, serif', letterSpacing: '0.02em', fontWeight: '700'}}>QUICK LINKS</h2>
-              <ul className="space-y-4">
-                <li><Link href="/archives" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Globe className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Browse Archives</span></Link></li>
-                <li><Link href="/about" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><img src="/images/pagblogo.png" alt="PAGB Logo" className="w-6 h-6 object-contain" /></div><span className="text-lg text-gray-800 group-hover:text-orange">About PAGB</span></Link></li>
-                <li><Link href="#footer" className="flex items-center group"><div className="w-12 h-12 rounded-full bg-orange flex items-center justify-center mr-4"><Users className="w-6 h-6 text-white" /></div><span className="text-lg text-gray-800 group-hover:text-orange">Contact Us</span></Link></li>
-              </ul>
-            </div>
-            <div>
-              <h2 className="text-4xl font-bold mb-8" style={{color: '#5A6B4A', fontFamily: 'Georgia, serif', letterSpacing: '0.02em', fontWeight: '700'}}>RECENT ISSUES</h2>
-              <ul className="space-y-4">
-                <li className="border-b border-gray-300 pb-4"><Link href="/issue/2025-01" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">January 2025</div><div className="text-lg font-semibold text-green">Vol. 15, Issue 1</div></Link></li>
-                <li className="border-b border-gray-300 pb-4"><Link href="/issue/2024-12" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">December 2024</div><div className="text-lg font-semibold text-green">Vol. 14, Issue 12</div></Link></li>
-                <li className="border-b border-gray-300 pb-4"><Link href="/issue/2024-11" className="block hover:text-orange"><div className="text-sm text-gray-600 mb-1">November 2024</div><div className="text-lg font-semibold text-green">Vol. 14, Issue 11</div></Link></li>
-                <li className="pt-2"><Link href="http://localhost:3000/current-issue" className="text-orange font-bold text-lg hover:underline">View All Issues</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section> */}
-
       {/* Authors Section - FULLY UPDATED & DYNAMIC */}
       <section id="authors" className="bg-white border-t border-gray-200 py-12">
         <div className="container mx-auto px-4">
@@ -791,66 +812,61 @@ export default function Home() {
             <div id="leadership">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Executive Leadership</h3>
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">PATRON-IN-CHIEF</div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-1">Field Marshal Syed Asim Munir, NI(M), SJ</h4>
-                  {/* <p className="text-gray-600">Chief of Army Staff</p> */}
-                </div>
-                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">PATRON</div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-1">Lieutenant General Muhammad Aamer Najam, HI (M)</h4>
-                  <p className="text-gray-600">IGT&E</p>
-                </div>
-                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                  <div className="text-sm font-semibold text-orange mb-2">Editor-in-Chief</div>
-                  <h4 className="text-xl font-bold text-gray-t-gray-900 mb-1">Major General Muhammad Shahid Abro, HI (M)</h4>
-                  <p className="text-gray-600">DG HRD Dte</p>
-                </div>
+                {editorialBoardItems
+                  .filter((i) => i.section === 'executive_leadership')
+                  .map((item) => (
+                    <div key={item.id} className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                      <div className="text-sm font-semibold text-orange mb-2">{item.title || ''}</div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-1">{item.name}</h4>
+                      {item.affiliation ? <p className="text-gray-600">{item.affiliation}</p> : null}
+                    </div>
+                  ))}
               </div>
             </div>
 
             <div id="editorial-team">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Editorial Team</h3>
-              <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-4">
-                <div className="text-sm font-semibold text-orange mb-2">EDITOR</div>
-                <h4 className="text-xl font-bold text-gray-900">Brigadier Zahid Mehmood Awan</h4>
-              </div>
-              <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                <div className="text-sm font-semibold text-orange mb-4">Sub-EDITORS</div>
-                <div className="space-y-3">
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Brigadier Dr Shahid Yaqub Abbasi</h5><p className="text-sm text-gray-600"></p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Colonel Dr Sayyam Bin Saeed</h5><p className="text-sm text-gray-600"></p></div>
-                  <div className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">Lieutenant Colonel Dr Zillay Hussain Dar</h5><p className="text-sm text-gray-600"></p></div>
+              {editorialBoardItems
+                .filter((i) => i.section === 'editorial_team_editor')
+                .map((item) => (
+                  <div key={item.id} className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm mb-4">
+                    <div className="text-sm font-semibold text-orange mb-2">{item.title || ''}</div>
+                    <h4 className="text-xl font-bold text-gray-900">{item.name}</h4>
+                  </div>
+                ))}
+              {editorialBoardItems.some((i) => i.section === 'editorial_team_sub_editor') ? (
+                <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+                  <div className="text-sm font-semibold text-orange mb-4">Sub-EDITORS</div>
+                  <div className="space-y-3">
+                    {editorialBoardItems
+                      .filter((i) => i.section === 'editorial_team_sub_editor')
+                      .map((item) => (
+                        <div key={item.id} className="border-l-4 border-green pl-4"><h5 className="font-bold text-gray-900">{item.name}</h5><p className="text-sm text-gray-600">{item.title || ''}</p></div>
+                      ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
             <div id="advisory-board">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Advisory Board</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Major General Dr Muhammad Samrez Salik, HI (M), (Retd)</h5></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Zulfiqar Khan</h5><p className="text-sm text-gray-600">Professor/Dean Faculty of Contemporary Studies, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Zafar Iqbal Cheema</h5><p className="text-sm text-gray-600">President, Strategic Vision Institute</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Rizwana Karim Abbasi</h5><p className="text-sm text-gray-600">Professor International Relations, NUML</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Syed Waqas Ali Kausar</h5><p className="text-sm text-gray-600">Professor/HOD Government & Public Policy, NUML</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Shaheen Akhtar</h5><p className="text-sm text-gray-600">Professor International Relations, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Sheharyar Khan</h5><p className="text-sm text-gray-600">Associate Professor International Relations, Iqra University</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Sumeera Imran</h5><p className="text-sm text-gray-600">Assistant Professor International Relations, NDU</p></div>
+                {editorialBoardItems
+                  .filter((i) => i.section === 'advisory_board')
+                  .map((item) => (
+                    <div key={item.id} className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">{item.name}</h5>{item.title ? <p className="text-sm text-gray-600">{item.title}</p> : null}</div>
+                  ))}
               </div>
             </div>
 
             <div id="peer-review">
               <h3 className="text-2xl font-bold mb-6 text-green border-b-2 border-green pb-2">Peer Review Committee</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Lubna Abid Ali</h5><p className="text-sm text-gray-600">Dean Faculty of Contemporary Studies (FCS), NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Maria Saifuddin Effendi</h5><p className="text-sm text-gray-600">Assistant Professor Peace & Conflict Studies, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Saif Ur Rehman</h5><p className="text-sm text-gray-600">Regional Director NUML, Peshawar</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Bashir Khan</h5><p className="text-sm text-gray-600">Professor Govt & Public Policy, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Riaz Shad</h5><p className="text-sm text-gray-600">Professor/Head of Department International Relations, NUML</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Asma Shakir Khawaja</h5><p className="text-sm text-gray-600">Executive Director, CISS AJ&K</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Rubina Waseem</h5><p className="text-sm text-gray-600">Department of Strategic Studies, NDU</p></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Abdul Rauf</h5></div>
-                <div className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">Dr Muhammad Farooq</h5></div>
+                {editorialBoardItems
+                  .filter((i) => i.section === 'peer_review_committee')
+                  .map((item) => (
+                    <div key={item.id} className="bg-white border border-gray-200 rounded p-4"><h5 className="font-bold text-gray-900">{item.name}</h5>{item.title ? <p className="text-sm text-gray-600">{item.title}</p> : null}</div>
+                  ))}
               </div>
             </div>
           </div>

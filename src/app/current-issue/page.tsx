@@ -59,7 +59,6 @@ export default function CurrentIssue() {
     { id: 'volume', label: 'Volume', icon: BookOpen },
     { id: 'issue', label: 'Issue', icon: ScrollText },
     { id: 'articles', label: 'Articles', icon: FileText },
-    { id: 'editorial', label: 'Editorial Board', icon: Users },
   ];
 
   return (
@@ -184,35 +183,6 @@ export default function CurrentIssue() {
                     </div>
                   ))
                 )}
-              </div>
-            )}
-
-            {/* Editorial Board Tab */}
-            {activeTab === 'editorial' && (
-              <div className="bg-white rounded-2xl shadow-lg p-10">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-10">Editorial Board</h2>
-                <p className="text-center text-gray-600 mb-10">Volume {issue?.volume_number ?? '--'} • Issue {issue?.issue_number ?? '--'}</p>
-
-                <div className="grid md:grid-cols-2 gap-12 mb-12">
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-orange-600 uppercase">Editor-in-Chief</p>
-                    <h3 className="text-2xl font-bold mt-2">Maj Gen Malik Amir Muhammad khan</h3>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-orange-600 uppercase">Managing Editor</p>
-                    <h3 className="text-2xl font-bold mt-2">Brigadier Kamran Ahmed</h3>
-                  </div>
-                </div>
-                <div className="mt-12">
-                  <p className="text-sm font-semibold text-orange-600 uppercase text-center mb-6">Sub-Editors</p>
-                  <div className="grid grid-cols-2 md:grid-cols-2 gap-6 text-center">
-                    {["Col M.Waqas Razaq", "Lt Col Zillay Hussain Dar",].map((name) => (
-                      <div key={name} className="bg-gray-50 rounded-lg p-4">
-                        <p className="font-medium">{name}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
 
