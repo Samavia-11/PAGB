@@ -10,10 +10,15 @@ export async function GET(request: NextRequest) {
   
   try {
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const status = searchParams.get('status');
     const authorId = searchParams.get('authorId');
     const role = request.headers.get('x-user-role');
     const userId = request.headers.get('x-user-id');
+
+    if (id && (Number.isNaN(parseInt(id)) || parseInt(id) <= 0)) {
+      return NextResponse.json({ error: 'Invalid id parameter' }, { status: 400 });
+    }
 
     // Validate status parameter if provided
     if (status && !VALID_STATUSES.includes(status)) {
@@ -44,6 +49,11 @@ export async function GET(request: NextRequest) {
     if (authorId) {
       conditions.push('aa.author_id = ?');
       params.push(authorId);
+    }
+
+    if (id) {
+      conditions.push('aa.id = ?');
+      params.push(parseInt(id));
     }
 
     if (conditions.length > 0) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Users, Send, FileText, UserCheck, Mail, Phone, Award } from 'lucide-react';
 
@@ -42,6 +42,7 @@ const ForwardPage = () => {
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     checkAuth();
@@ -69,43 +70,79 @@ const ForwardPage = () => {
     }
   };
 
-  const loadSubmission = () => {
-    const stored = sessionStorage.getItem('selectedSubmission');
-    if (stored) {
-      const parsedSubmission = JSON.parse(stored);
-      setSubmission(parsedSubmission);
-    } else {
+  const loadSubmission = async () => {
+    const articleParam = searchParams.get('article');
+    const articleId = articleParam ? parseInt(articleParam) : NaN;
+
+    if (!articleParam || Number.isNaN(articleId) || articleId <= 0) {
+      // Fallback to legacy sessionStorage navigation
+      const stored = sessionStorage.getItem('selectedSubmission');
+      if (stored) {
+        const parsedSubmission = JSON.parse(stored);
+        setSubmission(parsedSubmission);
+        return;
+      }
       router.push('/dashboard/editor/article-management');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/articles?id=${articleId}`, {
+        headers: {
+          'x-user-id': (user?.id || '').toString(),
+          'x-user-role': 'editor',
+        },
+      });
+
+      if (!res.ok) {
+        setSubmission(null);
+        return;
+      }
+
+      const data = await res.json();
+      const article = (data.articles || [])[0];
+      if (!article) {
+        setSubmission(null);
+        return;
+      }
+
+      setSubmission({
+        id: article.id,
+        title: article.title,
+        author_name: article.author_name,
+        abstract: article.abstract,
+        keywords: article.keywords,
+        content: article.content,
+      });
+    } catch (error) {
+      console.error('Error loading article:', error);
+      setSubmission(null);
     }
   };
 
   const loadReviewers = async () => {
     try {
-      // Load real reviewers from localStorage (registered users with reviewer role)
-      const allUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
-      const reviewerUsers = allUsers.filter(user => user.role === 'reviewer');
-      
-      // Transform to Reviewer interface
-      const realReviewers: Reviewer[] = reviewerUsers.map(user => ({
-        id: user.id,
-        name: user.full_name || user.username,
-        email: user.email || `${user.username}@example.com`,
-        phone: '+1-555-0' + String(user.id).padStart(3, '0'),
+      const res = await fetch('/api/users?role=reviewer');
+      if (!res.ok) {
+        setReviewers([]);
+        return;
+      }
+
+      const data = await res.json();
+      const reviewerUsers = (data.users || []) as any[];
+
+      const realReviewers: Reviewer[] = reviewerUsers.map((u) => ({
+        id: u.id,
+        name: u.full_name || u.username,
+        email: u.email || `${u.username}@example.com`,
+        phone: '+1-555-0' + String(u.id).padStart(3, '0'),
         qualification: 'Registered Reviewer',
         specialization: 'Academic Review',
-        assignedArticles: 0, // Will be calculated from assignments
-        status: 'available' as const
+        assignedArticles: 0,
+        status: 'available' as const,
       }));
 
-      // Load assigned articles count for each reviewer
-      const assignments = JSON.parse(localStorage.getItem('reviewerAssignments') || '[]') as any[];
-      const reviewersWithCount = realReviewers.map(reviewer => ({
-        ...reviewer,
-        assignedArticles: assignments.filter(a => a.reviewerId === reviewer.id && a.status !== 'rejected').length,
-        status: assignments.filter(a => a.reviewerId === reviewer.id && a.status === 'pending').length > 0 ? 'busy' as const : 'available' as const
-      }));
-
-      setReviewers(reviewersWithCount);
+      setReviewers(realReviewers);
     } catch (error) {
       console.error('Error loading reviewers:', error);
       // Fallback to empty array if no reviewers found
@@ -123,10 +160,11 @@ const ForwardPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': (user?.id || '').toString(),
+          'x-user-role': 'editor',
         },
         body: JSON.stringify({
           articleId: submission.id,
-          editorId: user?.id,
           reviewerId: selectedReviewer.id,
           title: submission.title,
           abstract: submission.abstract,
@@ -140,13 +178,16 @@ const ForwardPage = () => {
         const data = await response.json();
         
         // Update the original article status to external_review
-        await fetch(`/api/articles/${submission.id}`, {
+        await fetch('/api/articles', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'x-user-id': (user?.id || '').toString(),
+            'x-user-role': 'editor',
           },
           body: JSON.stringify({
-            status: 'external_review'
+            id: submission.id,
+            status: 'under_review'
           })
         });
 
@@ -226,6 +267,10 @@ const ForwardPage = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Article Summary</h2>
           <div className="space-y-3">
+            <div>
+              <h3 className="font-medium text-gray-700">Author</h3>
+              <p className="text-gray-600">{submission.author_name}</p>
+            </div>
             <div>
               <h3 className="font-medium text-gray-700">Title</h3>
               <p className="text-gray-600">{submission.title}</p>

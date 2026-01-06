@@ -4,13 +4,43 @@ let connection: mysql.Connection | null = null;
 
 export async function getDatabase() {
   if (!connection) {
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'journalflow',
-      port: parseInt(process.env.DB_PORT || '3306')
-    });
+    const host = process.env.DB_HOST || 'localhost';
+    const user = process.env.DB_USER || 'root';
+    const password = process.env.DB_PASSWORD || '';
+    const database = process.env.DB_NAME || 'armyjournal';
+    const port = parseInt(process.env.DB_PORT || '3306');
+
+    try {
+      connection = await mysql.createConnection({
+        host,
+        user,
+        password,
+        database,
+        port,
+      });
+    } catch (error: any) {
+      // Auto-create database if missing
+      if (error?.code === 'ER_BAD_DB_ERROR') {
+        const bootstrap = await mysql.createConnection({
+          host,
+          user,
+          password,
+          port,
+        });
+        await bootstrap.execute(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
+        await bootstrap.end();
+
+        connection = await mysql.createConnection({
+          host,
+          user,
+          password,
+          database,
+          port,
+        });
+      } else {
+        throw error;
+      }
+    }
 
     // Create tables if they don't exist
     await createTables();

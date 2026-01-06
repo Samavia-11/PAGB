@@ -31,6 +31,9 @@ interface Submission {
   keywords?: string;
   authors?: any[];
   last_reply?: string;
+  reviewerName?: string;
+  reviewerDecision?: string;
+  responseDate?: string;
 }
 
 const ArticleManagementPage = () => {
@@ -39,6 +42,13 @@ const ArticleManagementPage = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'revision' | 'external_review' | 'author_reply'>('new');
   const router = useRouter();
+
+  const mapDbStatusToTabStatus = (status: string): Submission['status'] => {
+    if (status === 'submitted') return 'new';
+    if (status === 'under_review') return 'external_review';
+    if (status === 'reviewed' || status === 'editor_review') return 'revision';
+    return 'revision';
+  };
 
   useEffect(() => {
     checkAuth();
@@ -94,7 +104,7 @@ const ArticleManagementPage = () => {
           title: article.title,
           author_name: article.author_name,
           submitted_at: article.submission_date,
-          status: article.status === 'submitted' ? 'new' : article.status, // Map submitted to new
+          status: mapDbStatusToTabStatus(article.status),
           abstract: article.abstract,
           content: article.content,
           keywords: article.keywords,
@@ -105,22 +115,33 @@ const ArticleManagementPage = () => {
           author_id: article.author_id
         }));
         
-        // Load editor assignments (forwarded to reviewers)
-        const editorAssignments = JSON.parse(localStorage.getItem('reviewerAssignments') || '[]');
-        
-        // Add forwarded articles to the list
-        const forwardedArticles = editorAssignments.map(assignment => ({
-          id: assignment.id,
-          title: assignment.articleTitle,
-          author_name: 'Author', // Will be updated when we join with authors table
-          submitted_at: assignment.assignedDate,
-          status: 'external_review',
-          abstract: assignment.articleAbstract,
-          content: assignment.articleContent,
-          assignmentId: assignment.id,
-          reviewerId: assignment.reviewerId,
-          reviewerName: assignment.reviewerName
-        }));
+        // Load editor forwards (editor_articles)
+        let forwardedArticles: any[] = [];
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+          const forwardedResp = await fetch('/api/editor-articles', {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          if (forwardedResp.ok) {
+            const forwardedData = await forwardedResp.json();
+            forwardedArticles = (forwardedData.editorArticles || []).map((ea: any) => ({
+              id: ea.id,
+              title: ea.title,
+              author_name: ea.author_name || ea.author_username || 'Author',
+              submitted_at: ea.assigned_date,
+              status: 'external_review',
+              abstract: ea.abstract,
+              content: ea.content,
+              assignmentId: ea.id,
+              reviewerId: ea.reviewer_id,
+              reviewerName: ea.reviewer_name,
+              reviewerDecision: ea.status,
+              responseDate: ea.response_date
+            }));
+          }
+        } catch (e) {
+          console.error('Failed to load forwarded articles:', e);
+        }
         
         // Combine all articles
         allSubmissions = [...transformedSubmissions, ...forwardedArticles];
@@ -132,34 +153,6 @@ const ArticleManagementPage = () => {
       
       // Load saved replies
       const savedReplies = JSON.parse(localStorage.getItem('authorReplies') || '[]') as {id:number,reply:string}[];
-      
-      // Add mock submissions for demo purposes if no real data
-      if (allSubmissions.length === 0) {
-        const mock: Submission[] = [
-          {
-            id: 1,
-            title: 'Innovative Battlefield Medicine',
-            author_name: 'Samavia Khan',
-            submitted_at: '2025-09-25',
-            status: 'new',
-          },
-          {
-            id: 2,
-            title: 'Drone Swarm Coordination Algorithms',
-            author_name: 'Alex Lee',
-            submitted_at: '2025-09-20',
-            status: 'revision',
-          },
-          {
-            id: 3,
-            title: 'Satellite Imaging for Reconnaissance',
-            author_name: 'Maria Anders',
-            submitted_at: '2025-09-18',
-            status: 'external_review',
-          },
-        ];
-        allSubmissions = [...allSubmissions, ...mock];
-      }
       
       console.log('All submissions after merge:', allSubmissions);
       
@@ -242,6 +235,11 @@ const ArticleManagementPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Submitted
                 </th>
+                {activeTab === 'external_review' && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Reviewer Status
+                  </th>
+                )}
                 <th className="px-6 py-3"></th>
               </tr>
             </thead>
@@ -257,6 +255,23 @@ const ArticleManagementPage = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(s.submitted_at).toLocaleDateString()}
                   </td>
+                  {activeTab === 'external_review' && (
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900">{s.reviewerName || '—'}</span>
+                        <span
+                          className={`mt-1 inline-flex w-fit px-2 py-1 rounded-full text-xs font-medium ${{
+                            accepted: 'bg-green-100 text-green-800',
+                            rejected: 'bg-red-100 text-red-800',
+                            pending: 'bg-yellow-100 text-yellow-800',
+                            completed: 'bg-blue-100 text-blue-800'
+                          }[(s.reviewerDecision || 'pending') as any] || 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {(s.reviewerDecision || 'pending').toUpperCase()}
+                        </span>
+                      </div>
+                    </td>
+                  )}
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
@@ -274,7 +289,7 @@ const ArticleManagementPage = () => {
                         onClick={() => {
                           console.log('Forward clicked for submission:', s);
                           sessionStorage.setItem('selectedSubmission', JSON.stringify(s));
-                          router.push('/dashboard/editor/article-management/forward');
+                          router.push(`/dashboard/editor/article-management/forward?article=${s.id}`);
                         }}
                         className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium"
                       >

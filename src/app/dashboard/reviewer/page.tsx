@@ -46,11 +46,34 @@ interface ReviewerAssignment {
   assignedDate: string;
 }
 
+interface EditorForwardedArticle {
+  id: number;
+  article_id: number;
+  editor_id: number;
+  reviewer_id: number;
+  title: string;
+  abstract: string;
+  content?: string;
+  editor_instructions?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  assigned_date: string;
+  response_date?: string;
+  editor_name?: string;
+  reviewer_name?: string;
+  author_name?: string;
+  author_username?: string;
+}
+
 const ReviewerDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<ArticleForReview[]>([]);
   const [assignments, setAssignments] = useState<ReviewerAssignment[]>([]);
+  const [forwardedArticles, setForwardedArticles] = useState<EditorForwardedArticle[]>([]);
+  const [processingForwardedId, setProcessingForwardedId] = useState<number | null>(null);
+  const [selectedForwarded, setSelectedForwarded] = useState<EditorForwardedArticle | null>(null);
+  const [selectedForwardedDetails, setSelectedForwardedDetails] = useState<EditorForwardedArticle | null>(null);
+  const [forwardedModalOpen, setForwardedModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<ArticleForReview | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<ReviewerAssignment | null>(null);
   const [reviewContent, setReviewContent] = useState('');
@@ -63,6 +86,13 @@ const ReviewerDashboard = () => {
     loadAssignedArticles();
     loadAssignments();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchForwardedArticles(user.id);
+    const interval = setInterval(() => fetchForwardedArticles(user.id), 5000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const checkAuth = async () => {
     try {
@@ -82,6 +112,69 @@ const ReviewerDashboard = () => {
       router.push('/login');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchForwardedArticles = async (userId: number) => {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+      const response = await fetch(`/api/editor-articles?reviewerId=${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setForwardedArticles(data.editorArticles || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch forwarded articles:', error);
+    }
+  };
+
+  const handleForwardedAction = async (editorArticleId: number, action: 'accept' | 'reject') => {
+    try {
+      setProcessingForwardedId(editorArticleId);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+      const response = await fetch(`/api/editor-articles/${editorArticleId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        alert(err.error || 'Failed to update status');
+        return;
+      }
+
+      if (user) {
+        await fetchForwardedArticles(user.id);
+      }
+    } catch (error) {
+      console.error('Failed to update forwarded article:', error);
+      alert('Failed to update status');
+    } finally {
+      setProcessingForwardedId(null);
+    }
+  };
+
+  const openForwarded = async (item: EditorForwardedArticle) => {
+    try {
+      setSelectedForwarded(item);
+      setSelectedForwardedDetails(null);
+      setForwardedModalOpen(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null;
+      const response = await fetch(`/api/editor-articles/${item.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedForwardedDetails(data.editorArticle);
+      }
+    } catch (error) {
+      console.error('Failed to open forwarded article:', error);
     }
   };
 
@@ -229,6 +322,68 @@ const ReviewerDashboard = () => {
         <p className="text-academic-600 mt-2">
           Review assigned articles and provide feedback to help maintain publication quality.
         </p>
+      </div>
+
+      {/* Forwarded From Editor */}
+      <div className="bg-white rounded-lg shadow-sm border border-academic-200 mb-8">
+        <div className="p-6 border-b border-academic-200">
+          <h2 className="text-xl font-semibold text-academic-900">Forwarded From Editor</h2>
+        </div>
+
+        {forwardedArticles.length === 0 ? (
+          <div className="p-6 text-academic-600">No forwarded articles.</div>
+        ) : (
+          <div className="divide-y divide-academic-200">
+            {forwardedArticles.map((item) => (
+              <div key={item.id} className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-academic-900 truncate">{item.title}</div>
+                    <div className="text-sm text-academic-600 mt-1 line-clamp-2">{item.abstract}</div>
+                    <div className="text-xs text-academic-500 mt-2">
+                      From: {item.editor_name || 'Editor'}
+                      {item.assigned_date ? ` • ${new Date(item.assigned_date).toLocaleString()}` : ''}
+                    </div>
+                    {item.editor_instructions && (
+                      <div className="text-xs text-academic-600 mt-2">
+                        Instructions: {item.editor_instructions}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 items-end">
+                    <span className={`badge ${item.status === 'pending' ? 'badge-under-review' : item.status === 'accepted' ? 'badge-accepted' : 'badge-rejected'}`}>
+                      {item.status.toUpperCase()}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openForwarded(item)}
+                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Open
+                      </button>
+                      <button
+                        onClick={() => handleForwardedAction(item.id, 'accept')}
+                        disabled={item.status !== 'pending' || processingForwardedId === item.id}
+                        className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {processingForwardedId === item.id ? '...' : 'Accept'}
+                      </button>
+                      <button
+                        onClick={() => handleForwardedAction(item.id, 'reject')}
+                        disabled={item.status !== 'pending' || processingForwardedId === item.id}
+                        className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {processingForwardedId === item.id ? '...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -444,6 +599,46 @@ const ReviewerDashboard = () => {
                 <Send className="w-4 h-4 mr-2" />
                 Submit Review
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forwarded Article Modal */}
+      {forwardedModalOpen && selectedForwarded && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-academic-200 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-xl font-semibold text-academic-900 truncate">{selectedForwarded.title}</h3>
+                <p className="text-academic-600 mt-1">{selectedForwarded.editor_name || 'Editor'}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setForwardedModalOpen(false);
+                  setSelectedForwarded(null);
+                  setSelectedForwardedDetails(null);
+                }}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="font-medium text-academic-900 mb-2">Abstract</h4>
+                <div className="bg-academic-50 rounded-lg p-4 text-academic-700 whitespace-pre-wrap">
+                  {selectedForwardedDetails?.abstract || selectedForwarded.abstract}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-academic-900 mb-2">Document</h4>
+                <div className="bg-academic-50 rounded-lg p-4 text-academic-700 whitespace-pre-wrap">
+                  {selectedForwardedDetails?.content || selectedForwarded.content || 'No content provided.'}
+                </div>
+              </div>
             </div>
           </div>
         </div>

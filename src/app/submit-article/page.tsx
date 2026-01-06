@@ -401,30 +401,58 @@ const SubmitArticlePage = () => {
           // Converting draft to submitted article
           console.log('Converting draft to submission:', articleToEdit);
           const now = new Date();
-          const updatedArticles = allArticles.map(article => 
-            article.id === editingArticleId 
-              ? {
-                  ...article,
-                  title: formData.title,
-                  abstract: formData.abstract,
-                  keywords: formData.keywords,
-                  content: formData.content,
-                  authors: formData.authors,
-                  affiliation: formData.affiliation,
-                  articleType: formData.articleType,
-                  status: 'submitted' as const,
-                  last_updated: now.toISOString(),
-                  author_id: user.id,
-                }
-              : article
-          );
-          writeArticlesToStorage(user.id, updatedArticles);
-          console.log('Draft converted and saved to storage');
+          const createResponse = await fetch('/api/articles', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': String(user.id),
+              'x-user-role': 'author',
+            },
+            body: JSON.stringify({
+              authorId: user.id,
+              title: formData.title,
+              abstract: formData.abstract,
+              keywords: formData.keywords,
+              content: formData.content,
+              authors: formData.authors,
+              affiliation: formData.affiliation,
+              articleType: formData.articleType,
+              manuscriptFileName: formData.manuscriptFile?.name,
+              status: 'submitted',
+            }),
+          });
+
+          if (!createResponse.ok) {
+            throw new Error('Failed to submit article');
+          }
+
+          const createdData = await createResponse.json();
+          const created = createdData.article as any;
+
+          const storedSubmittedArticle: StoredArticle = {
+            id: created.id,
+            title: created.title,
+            abstract: created.abstract,
+            status: created.status,
+            submission_date: created.submission_date,
+            last_updated: created.last_updated,
+            keywords: created.keywords,
+            content: created.content,
+            authors: created.authors || formData.authors,
+            affiliation: created.affiliation,
+            articleType: created.article_type,
+            author_id: created.author_id,
+            manuscriptFileName: created.manuscript_file_name || formData.manuscriptFile?.name,
+          };
+
+          const updatedArticles = allArticles.filter(article => article.id !== editingArticleId);
+          writeArticlesToStorage(user.id, [storedSubmittedArticle, ...updatedArticles]);
+          console.log('Draft submitted and saved to DB + storage');
           
           // Send to editor dashboard
           const mainAuthor = formData.authors.find(a => a.role === 'Main Author') || formData.authors[0];
           const editorSubmission: EditorSubmission = {
-            id: editingArticleId,
+            id: created.id,
             title: formData.title,
             author_name: mainAuthor.name || user.full_name || user.username,
             author_id: user.id,
@@ -464,31 +492,56 @@ const SubmitArticlePage = () => {
       } else {
         // Create new article and send to editor
         const now = new Date();
-        const articleId = now.getTime();
-        
+        const createResponse = await fetch('/api/articles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': String(user.id),
+            'x-user-role': 'author',
+          },
+          body: JSON.stringify({
+            authorId: user.id,
+            title: formData.title,
+            abstract: formData.abstract,
+            keywords: formData.keywords,
+            content: formData.content,
+            authors: formData.authors,
+            affiliation: formData.affiliation,
+            articleType: formData.articleType,
+            manuscriptFileName: formData.manuscriptFile?.name,
+            status: 'submitted',
+          }),
+        });
+
+        if (!createResponse.ok) {
+          throw new Error('Failed to submit article');
+        }
+
+        const createdData = await createResponse.json();
+        const created = createdData.article as any;
+
         const newArticle: StoredArticle = {
-          id: articleId,
-          title: formData.title,
-          abstract: formData.abstract,
-          keywords: formData.keywords,
-          content: formData.content,
-          authors: formData.authors,
-          affiliation: formData.affiliation,
-          articleType: formData.articleType,
-          status: 'submitted',
-          submission_date: now.toISOString(),
-          last_updated: now.toISOString(),
-          author_id: user.id,
-          manuscriptFileName: formData.manuscriptFile?.name,
+          id: created.id,
+          title: created.title,
+          abstract: created.abstract,
+          status: created.status,
+          submission_date: created.submission_date,
+          last_updated: created.last_updated,
+          keywords: created.keywords,
+          content: created.content,
+          authors: created.authors || formData.authors,
+          affiliation: created.affiliation,
+          articleType: created.article_type,
+          author_id: created.author_id,
+          manuscriptFileName: created.manuscript_file_name || formData.manuscriptFile?.name,
         };
-        
-        // Save to author's articles
+
         writeArticlesToStorage(user.id, [newArticle, ...existing]);
         
         // Send to editor dashboard
         const mainAuthor = formData.authors.find(a => a.role === 'Main Author') || formData.authors[0];
         const editorSubmission: EditorSubmission = {
-          id: articleId,
+          id: created.id,
           title: formData.title,
           author_name: mainAuthor.name || user.full_name || user.username,
           author_id: user.id,
