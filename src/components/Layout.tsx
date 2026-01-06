@@ -82,6 +82,7 @@ const Layout = ({ children, user }: LayoutProps) => {
       administrator: [
         ...baseItems,
         { name: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
+        { name: 'Issues', href: '/dashboard/admin/issues', icon: FileText },
         { name: 'User Requests', href: '/dashboard/admin/user-requests', icon: Users },
         { name: 'Authors', href: '/authors', icon: Users },
       ],
