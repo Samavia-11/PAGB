@@ -24,15 +24,14 @@ export default function CreateIssuePage() {
   const [publishing, setPublishing] = useState(false);
   const [form, setForm] = useState({
     volume: "",
+    issueNumber: "",
     issueDate: "",
-    abstract: "",
-    issue: "",
   });
 
   const update = (k: keyof typeof form, v: string) => setForm((s) => ({ ...s, [k]: v }));
 
   const publishIssue = async () => {
-    if (!form.volume || !form.issueDate || !form.abstract || !form.issue) {
+    if (!form.volume || !form.issueNumber || !form.issueDate) {
       alert("Please fill all fields.");
       return;
     }
@@ -42,17 +41,14 @@ export default function CreateIssuePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          volume: Number(form.volume),
-          date: form.issueDate,
-          abstract: form.abstract,
-          content: form.issue,
-          visibility: ["author", "reviewer", "editor"],
-          status: "published",
+          volume_number: Number(form.volume),
+          issue_number: Number(form.issueNumber),
+          issue_date: form.issueDate,
         }),
       });
       if (!res.ok) throw new Error("Failed to publish issue");
-      alert("Issue published and visible to Authors, Reviewers, and Editors.");
-      router.push("/dashboard/admin");
+      alert("Issue published successfully.");
+      router.push("/dashboard/admin/issues");
     } catch (e) {
       console.error(e);
       alert("Failed to publish. Try again.");
@@ -68,48 +64,37 @@ export default function CreateIssuePage() {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-academic-700 mb-2">Volume</label>
             <input
               type="number"
               value={form.volume}
               onChange={(e) => update("volume", e.target.value)}
-              className="form-input"
+              className="w-full rounded-lg border border-academic-300 bg-white px-4 py-3 text-academic-900 shadow-sm focus:border-academic-500 focus:outline-none focus:ring-2 focus:ring-academic-200"
               placeholder="e.g., 16"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-academic-700 mb-2">Issue Number</label>
+            <input
+              type="number"
+              value={form.issueNumber}
+              onChange={(e) => update("issueNumber", e.target.value)}
+              className="w-full rounded-lg border border-academic-300 bg-white px-4 py-3 text-academic-900 shadow-sm focus:border-academic-500 focus:outline-none focus:ring-2 focus:ring-academic-200"
+              placeholder="e.g., 1"
             />
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-6">
           <label className="block text-sm font-medium text-academic-700 mb-2">Issue Date</label>
           <input
             type="date"
             value={form.issueDate}
             onChange={(e) => update("issueDate", e.target.value)}
-            className="form-input"
-          />
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-academic-700 mb-2">Issue</label>
-          <input
-            type="text"
-            value={form.issue}
-            onChange={(e) => update("issue", e.target.value)}
-            className="form-input"
-            placeholder="Write the issue title here..."
-          />
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-academic-700 mb-2">Abstract</label>
-          <textarea
-            value={form.abstract}
-            onChange={(e) => update("abstract", e.target.value)}
-            className="form-textarea"
-            rows={6}
-            placeholder="Write a brief abstract for this issue..."
+            className="w-full rounded-lg border border-academic-300 bg-white px-4 py-3 text-academic-900 shadow-sm focus:border-academic-500 focus:outline-none focus:ring-2 focus:ring-academic-200"
           />
         </div>
 

@@ -10,13 +10,10 @@ import Footer from '@/components/Footer';
 
 interface Issue {
   id: number;
-  year: number;
-  volume: number;
+  volume_number: number;
   issue_number: number;
-  title: string;
-  description: string | null;
-  cover_image_path: string | null;
-  published_at: string | null;
+  issue_year: number;
+  issue_date: string;
 }
 
 interface Article {
@@ -37,15 +34,16 @@ export default function CurrentIssue() {
     async function loadArticles() {
       try {
         const res = await fetch('/api/pagb-public/current-issue');
+        if (!res.ok) throw new Error(`Failed to load current issue: ${res.status} ${res.statusText}`);
         const data = await res.json();
-        const currentIssue = data.issue as Issue | null;
+        const currentIssue = (data?.issue || null) as Issue | null;
         setIssue(currentIssue);
         const mapped: Article[] = (data.articles || []).map((a: any) => ({
           title: a.title,
           author: a.authors || a.primary_author_name || 'Various Contributors',
           monthYear: a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '',
           pdfUrl: a.pdf_path || '#',
-          thumbnail: currentIssue?.cover_image_path || '/images/icon.png',
+          thumbnail: '/images/icon.png',
         }));
         setArticles(mapped);
       } catch (err) {
@@ -105,12 +103,18 @@ export default function CurrentIssue() {
         {/* Tab Content */}
         <section className="py-12">
           <div className="container mx-auto px-4 max-w-6xl">
+            {!loading && !issue && (
+              <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
+                <h2 className="text-2xl font-bold text-gray-800">No current issue published</h2>
+                <p className="text-gray-600 mt-2">Please check back later.</p>
+              </div>
+            )}
 
             {/* Volume Tab */}
             {activeTab === 'volume' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
-                <h2 className="text-6xl font-black text-green-700 mb-4">Volume {issue?.volume ?? '--'}</h2>
-                <p className="text-2xl text-gray-700">{issue?.year ?? '--'}</p>
+                <h2 className="text-6xl font-black text-green-700 mb-4">Volume {issue?.volume_number ?? '--'}</h2>
+                <p className="text-2xl text-gray-700">{issue?.issue_year ?? '--'}</p>
                 <div className="mt-8 text-gray-600">
                   <p className="text-lg">Pakistan Army Green Book</p>
                   <p className="text-sm mt-2">Annual Publication • ISSN:  2303-9973</p>
@@ -122,11 +126,11 @@ export default function CurrentIssue() {
             {activeTab === 'issue' && (
               <div className="bg-white rounded-2xl shadow-lg p-10 text-center">
                 <h2 className="text-6xl font-black text-[#002300] mb-4">Issue {issue?.issue_number ?? '--'}</h2>
-                <p className="text-2xl text-gray-700">{issue?.year ?? '--'}</p>
+                <p className="text-2xl text-gray-700">{issue?.issue_year ?? '--'}</p>
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-gray-600">
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Published</p>
-                    <p className="text-xl font-bold">{issue?.year ? String(issue.year) : (issue?.published_at ? String(new Date(issue.published_at).getFullYear()) : '--')}</p>
+                    <p className="text-xl font-bold">{issue?.issue_year ? String(issue.issue_year) : '--'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold uppercase text-gray-500">Articles</p>
@@ -149,7 +153,7 @@ export default function CurrentIssue() {
               <div className="space-y-6">
                 <div className="text-center mb-10">
                   <h2 className="text-4xl font-bold text-gray-800">Featured Articles</h2>
-                  <p className="text-gray-600 mt-3">Volume {issue?.volume ?? '--'} • Issue {issue?.issue_number ?? '--'} • {issue?.year ?? '--'}</p>
+                  <p className="text-gray-600 mt-3">Volume {issue?.volume_number ?? '--'} • Issue {issue?.issue_number ?? '--'} • {issue?.issue_year ?? '--'}</p>
                   <p className="text-2xl font-bold text-green-700 mt-2">{articles.length} Articles</p>
                 </div>
 
@@ -187,17 +191,16 @@ export default function CurrentIssue() {
             {activeTab === 'editorial' && (
               <div className="bg-white rounded-2xl shadow-lg p-10">
                 <h2 className="text-3xl font-bold text-center text-gray-800 mb-10">Editorial Board</h2>
+                <p className="text-center text-gray-600 mb-10">Volume {issue?.volume_number ?? '--'} • Issue {issue?.issue_number ?? '--'}</p>
 
                 <div className="grid md:grid-cols-2 gap-12 mb-12">
                   <div className="text-center">
                     <p className="text-sm font-semibold text-orange-600 uppercase">Editor-in-Chief</p>
                     <h3 className="text-2xl font-bold mt-2">Maj Gen Malik Amir Muhammad khan</h3>
-                    {/* <p className="text-gray-600">Director HRD, GHQ</p> */}
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-semibold text-orange-600 uppercase">Managing Editor</p>
                     <h3 className="text-2xl font-bold mt-2">Brigadier Kamran Ahmed</h3>
-                    {/* <p className="text-gray-600">HRD Directorate</p> */}
                   </div>
                 </div>
                 <div className="mt-12">
