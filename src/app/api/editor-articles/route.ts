@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import mysql from 'mysql2/promise';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function POST(request: NextRequest) {
   let connection: mysql.Connection | null = null;
@@ -17,16 +19,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only editors can forward articles' }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { 
-      articleId, 
-      reviewerId, 
-      title, 
-      abstract, 
-      content, 
-      editorInstructions,
-      status = 'pending'
-    } = body;
+    const formData = await request.formData();
+
+    const articleId = formData.get('articleId') as string;
+    const reviewerId = formData.get('reviewerId') as string;
+    const title = formData.get('title') as string;
+    const abstract = formData.get('abstract') as string;
+    const content = formData.get('content') as string;
+    const editorInstructions = formData.get('editorInstructions') as string;
+    const status = (formData.get('status') as string) || 'pending';
+
+    const attachment = formData.get('attachment');
+    const attachmentFile = attachment instanceof File ? attachment : null;
 
     // Validate required fields
     if (!articleId || !reviewerId || !title || !abstract) {
@@ -36,6 +40,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let attachmentName: string | null = null;
+    let attachmentPath: string | null = null;
+    let attachmentType: string | null = null;
+    let attachmentSize: number | null = null;
+
+    if (attachmentFile && attachmentFile.size > 0) {
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'editor-articles');
+      await fs.mkdir(uploadsDir, { recursive: true });
+
+      const originalName = attachmentFile.name || 'attachment';
+      const ext = path.extname(originalName);
+      const safeBase = path
+        .basename(originalName, ext)
+        .replace(/[^a-z0-9-_]/gi, '_')
+        .slice(0, 60);
+      const uniqueName = `${Date.now()}_${Math.random().toString(16).slice(2)}_${safeBase}${ext}`;
+      const fullPath = path.join(uploadsDir, uniqueName);
+
+      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+      await fs.writeFile(fullPath, buffer);
+
+      attachmentName = originalName;
+      attachmentPath = `/uploads/editor-articles/${uniqueName}`;
+      attachmentType = attachmentFile.type || null;
+      attachmentSize = attachmentFile.size;
+    }
+
     const editorId = parseInt(authUserId);
 
     connection = await getDatabase();
@@ -43,16 +74,21 @@ export async function POST(request: NextRequest) {
     // Insert into editor_articles table
     const [result] = await connection.execute(
       `INSERT INTO editor_articles 
-       (article_id, editor_id, reviewer_id, title, abstract, content, editor_instructions, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (article_id, editor_id, reviewer_id, title, abstract, content, editor_instructions,
+        attachment_name, attachment_path, attachment_type, attachment_size, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        articleId,
+        Number(articleId),
         editorId,
-        reviewerId || null,
-        title,
-        abstract,
+        Number(reviewerId) || null,
+        (title || '').trim(),
+        (abstract || '').trim(),
         content || null,
         editorInstructions || null,
+        attachmentName,
+        attachmentPath,
+        attachmentType,
+        attachmentSize,
         status
       ]
     ) as [any, any];

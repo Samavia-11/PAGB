@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
-import { ArrowLeft, Users, Send, FileText, UserCheck, Mail, Phone, Award } from 'lucide-react';
+import { ArrowLeft, Users, Send, FileText, UserCheck, Mail, Phone, Award, Upload } from 'lucide-react';
 
 interface User {
   id: number;
@@ -40,6 +40,7 @@ const ForwardPage = () => {
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState<Reviewer | null>(null);
   const [comment, setComment] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -155,23 +156,26 @@ const ForwardPage = () => {
 
     setSending(true);
     try {
+      const formData = new FormData();
+      formData.append('articleId', String(submission.id));
+      formData.append('reviewerId', String(selectedReviewer.id));
+      formData.append('title', submission.title);
+      formData.append('abstract', submission.abstract);
+      formData.append('content', submission.content || '');
+      formData.append('editorInstructions', comment);
+      formData.append('status', 'pending');
+      if (attachmentFile) {
+        formData.append('attachment', attachmentFile);
+      }
+
       // Save to database via API
       const response = await fetch('/api/editor-articles', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'x-user-id': (user?.id || '').toString(),
           'x-user-role': 'editor',
         },
-        body: JSON.stringify({
-          articleId: submission.id,
-          reviewerId: selectedReviewer.id,
-          title: submission.title,
-          abstract: submission.abstract,
-          content: submission.content,
-          editorInstructions: comment,
-          status: 'pending'
-        })
+        body: formData,
       });
 
       if (response.ok) {
@@ -384,6 +388,36 @@ const ForwardPage = () => {
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Attach document (optional)</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-sm">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose File
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {attachmentFile ? (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm text-gray-700 truncate">{attachmentFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAttachmentFile(null)}
+                        className="text-sm text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">No file selected</span>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3">

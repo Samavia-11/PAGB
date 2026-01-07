@@ -56,6 +56,10 @@ export default function ReviewedPage() {
   const [reviewedArticles, setReviewedArticles] = useState<ReviewedArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState<ReviewedArticle | null>(null);
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardArticle, setForwardArticle] = useState<ReviewedArticle | null>(null);
+  const [forwardComment, setForwardComment] = useState('');
+  const [sendingForward, setSendingForward] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -107,7 +111,7 @@ export default function ReviewedPage() {
       
       // Check for articles that have been reviewed by editors or have any review activity
       let reviewed = articles.filter(article => {
-        const hasReviewStatus = ['reviewed', 'editor_review', 'accepted', 'rejected', 'under_review'].includes(article.status);
+        const hasReviewStatus = ['reviewed', 'editor_review', 'accepted', 'rejected'].includes(article.status);
         const hasEditorComments = article.editorComments && article.editorComments.trim() !== '';
         const hasReviewerComments = article.reviewerComments && article.reviewerComments.trim() !== '';
         const hasReviewedDate = article.reviewedDate;
@@ -280,6 +284,19 @@ export default function ReviewedPage() {
                   </span>
                 </div>
 
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setForwardArticle(article);
+                      setForwardComment('');
+                      setForwardModalOpen(true);
+                    }}
+                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    Forward
+                  </button>
+                </div>
+
                 {/* Files Section */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center mb-2">
@@ -377,6 +394,132 @@ export default function ReviewedPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {forwardModalOpen && forwardArticle && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full overflow-hidden">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-bold">Forward to Editor</h2>
+                  <button
+                    onClick={() => {
+                      if (sendingForward) return;
+                      setForwardModalOpen(false);
+                      setForwardArticle(null);
+                      setForwardComment('');
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-sm text-gray-600">Article</div>
+                  <div className="text-sm font-semibold text-gray-900">{forwardArticle.title}</div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                  <textarea
+                    rows={6}
+                    value={forwardComment}
+                    onChange={(e) => setForwardComment(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    placeholder="Write comment and send to editor"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    disabled={sendingForward}
+                    onClick={() => {
+                      setForwardModalOpen(false);
+                      setForwardArticle(null);
+                      setForwardComment('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    disabled={sendingForward || !forwardComment.trim()}
+                    onClick={async () => {
+                      if (!user) return;
+
+                      const numericId = typeof forwardArticle.id === 'number' ? forwardArticle.id : forwardArticle.originalId;
+                      if (!numericId) {
+                        alert('Invalid article.');
+                        return;
+                      }
+
+                      setSendingForward(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append('message', forwardComment.trim());
+                        formData.append('sender_id', String(user.id));
+                        formData.append('sender_role', 'author');
+
+                        const msgRes = await fetch(`/api/articles/${numericId}/comments`, {
+                          method: 'POST',
+                          body: formData,
+                        });
+
+                        if (!msgRes.ok) {
+                          const err = await msgRes.json().catch(() => ({}));
+                          throw new Error(err?.error || 'Failed to send message');
+                        }
+
+                        const statusRes = await fetch('/api/articles', {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ id: numericId, status: 'editor_review' }),
+                        });
+
+                        if (!statusRes.ok) {
+                          const err = await statusRes.json().catch(() => ({}));
+                          throw new Error(err?.error || 'Failed to update status');
+                        }
+
+                        // Update local storage copy so UI stays consistent
+                        const storageKey = storageKeyForUser(user.id);
+                        const all = readArticlesFromStorage(user.id);
+                        const updated = all.map((a) =>
+                          a.id === numericId
+                            ? {
+                                ...a,
+                                status: 'editor_review',
+                                last_updated: new Date().toISOString(),
+                              }
+                            : a
+                        );
+                        localStorage.setItem(storageKey, JSON.stringify(updated));
+
+                        loadReviewedArticles(user.id);
+                        alert('Sent to editor successfully.');
+                        setForwardModalOpen(false);
+                        setForwardArticle(null);
+                        setForwardComment('');
+                      } catch (e: any) {
+                        console.error('Forward to editor error:', e);
+                        alert(e?.message || 'Failed to send');
+                      } finally {
+                        setSendingForward(false);
+                      }
+                    }}
+                  >
+                    {sendingForward ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

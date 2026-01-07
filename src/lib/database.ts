@@ -102,6 +102,10 @@ async function createTables() {
         abstract TEXT NOT NULL,
         content TEXT,
         editor_instructions TEXT,
+        attachment_name VARCHAR(255) NULL,
+        attachment_path VARCHAR(255) NULL,
+        attachment_type VARCHAR(100) NULL,
+        attachment_size INT NULL,
         status ENUM('pending', 'accepted', 'rejected', 'completed') DEFAULT 'pending',
         assigned_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         response_date DATETIME NULL,
@@ -110,6 +114,28 @@ async function createTables() {
         FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add attachment columns if editor_articles already existed
+    try {
+      await connection.execute('ALTER TABLE editor_articles ADD COLUMN attachment_name VARCHAR(255) NULL');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE editor_articles ADD COLUMN attachment_path VARCHAR(255) NULL');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE editor_articles ADD COLUMN attachment_type VARCHAR(100) NULL');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE editor_articles ADD COLUMN attachment_size INT NULL');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
 
     // Create reviewer_articles table
     await connection.execute(`
@@ -133,16 +159,29 @@ async function createTables() {
       CREATE TABLE IF NOT EXISTS article_comments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         article_id INT NOT NULL,
-        sender_id INT NOT NULL,
-        receiver_id INT NOT NULL,
+        commenter_id INT NOT NULL,
+        commenter_role ENUM('author','editor','reviewer','administrator') NOT NULL,
         comment TEXT NOT NULL,
-        comment_type ENUM('editor_to_author', 'reviewer_to_editor', 'author_to_editor') NOT NULL,
-        attachment_name VARCHAR(255),
-        attachment_path VARCHAR(255),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
-        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (commenter_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create article_messages table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS article_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        article_id INT NOT NULL,
+        sender_id INT NOT NULL,
+        sender_role ENUM('author','editor','reviewer','administrator') NOT NULL,
+        message TEXT,
+        file_url VARCHAR(500),
+        file_name VARCHAR(255),
+        file_type VARCHAR(100),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
 
@@ -160,6 +199,48 @@ async function createTables() {
       )
     `);
 
+    // Create reviewer_forwarded_documents table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS reviewer_forwarded_documents (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        editor_article_id INT NOT NULL,
+        article_id INT NOT NULL,
+        reviewer_id INT NOT NULL,
+        editor_id INT NOT NULL,
+        comment TEXT,
+        attachment_name VARCHAR(255),
+        attachment_path VARCHAR(255),
+        attachment_type VARCHAR(100),
+        attachment_size INT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (editor_article_id) REFERENCES editor_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create editor_author_documents table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS editor_author_documents (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reviewer_forward_id INT NOT NULL,
+        article_id INT NOT NULL,
+        editor_id INT NOT NULL,
+        author_id INT NOT NULL,
+        comment TEXT,
+        attachment_name VARCHAR(255),
+        attachment_path VARCHAR(255),
+        attachment_type VARCHAR(100),
+        attachment_size INT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (reviewer_forward_id) REFERENCES reviewer_forwarded_documents(id) ON DELETE CASCADE,
+        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // Create indexes
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_authors_articles_author_id ON authors_articles(author_id)');
@@ -169,6 +250,14 @@ async function createTables() {
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_articles_reviewer_id ON reviewer_articles(reviewer_id)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_comments_article_id ON article_comments(article_id)');
     await connection.execute('CREATE INDEX IF NOT EXISTS idx_editorial_board_section_sort ON editorial_board_items(section, sort_order)');
+
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_messages_article_id ON article_messages(article_id)');
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_messages_sender_id ON article_messages(sender_id)');
+
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_forwarded_editor_id ON reviewer_forwarded_documents(editor_id)');
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_forwarded_reviewer_id ON reviewer_forwarded_documents(reviewer_id)');
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_author_documents_editor_id ON editor_author_documents(editor_id)');
+    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_author_documents_author_id ON editor_author_documents(author_id)');
 
     console.log('Database tables created successfully');
   } catch (error) {

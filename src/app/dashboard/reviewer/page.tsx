@@ -55,6 +55,10 @@ interface EditorForwardedArticle {
   abstract: string;
   content?: string;
   editor_instructions?: string;
+  attachment_name?: string | null;
+  attachment_path?: string | null;
+  attachment_type?: string | null;
+  attachment_size?: number | null;
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   assigned_date: string;
   response_date?: string;
@@ -67,6 +71,7 @@ interface EditorForwardedArticle {
 const ReviewerDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'forwarded' | 'reviewed'>('forwarded');
   const [articles, setArticles] = useState<ArticleForReview[]>([]);
   const [assignments, setAssignments] = useState<ReviewerAssignment[]>([]);
   const [forwardedArticles, setForwardedArticles] = useState<EditorForwardedArticle[]>([]);
@@ -324,67 +329,149 @@ const ReviewerDashboard = () => {
         </p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab('forwarded')}
+          style={{ color: activeTab === 'forwarded' ? '#ffffff' : '#111827' }}
+          className={`px-5 py-2.5 rounded-full text-sm font-semibold border shadow-sm transition-colors ${
+            activeTab === 'forwarded'
+              ? 'bg-primary-600 !text-white border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40'
+              : 'bg-white !text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/30'
+          }`}
+        >
+          Forwarded From Editor
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('reviewed')}
+          style={{ color: activeTab === 'reviewed' ? '#ffffff' : '#111827' }}
+          className={`px-5 py-2.5 rounded-full text-sm font-semibold border shadow-sm transition-colors ${
+            activeTab === 'reviewed'
+              ? 'bg-primary-600 !text-white border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40'
+              : 'bg-white !text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/30'
+          }`}
+        >
+          Reviewed Articles
+        </button>
+      </div>
+
       {/* Forwarded From Editor */}
-      <div className="bg-white rounded-lg shadow-sm border border-academic-200 mb-8">
-        <div className="p-6 border-b border-academic-200">
-          <h2 className="text-xl font-semibold text-academic-900">Forwarded From Editor</h2>
-        </div>
+      {activeTab === 'forwarded' ? (
+        <div className="bg-white rounded-lg shadow-sm border border-academic-200 mb-8">
+          <div className="p-6 border-b border-academic-200">
+            <h2 className="text-xl font-semibold text-academic-900">Forwarded From Editor</h2>
+          </div>
 
-        {forwardedArticles.length === 0 ? (
-          <div className="p-6 text-academic-600">No forwarded articles.</div>
-        ) : (
-          <div className="divide-y divide-academic-200">
-            {forwardedArticles.map((item) => (
-              <div key={item.id} className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-academic-900 truncate">{item.title}</div>
-                    <div className="text-sm text-academic-600 mt-1 line-clamp-2">{item.abstract}</div>
-                    <div className="text-xs text-academic-500 mt-2">
-                      From: {item.editor_name || 'Editor'}
-                      {item.assigned_date ? ` • ${new Date(item.assigned_date).toLocaleString()}` : ''}
-                    </div>
-                    {item.editor_instructions && (
-                      <div className="text-xs text-academic-600 mt-2">
-                        Instructions: {item.editor_instructions}
+          {forwardedArticles.length === 0 ? (
+            <div className="p-6 text-academic-600">No forwarded articles.</div>
+          ) : (
+            <div className="divide-y divide-academic-200">
+              {forwardedArticles.map((item) => (
+                <div key={item.id} className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-academic-900 truncate">{item.title}</div>
+                      <div className="text-sm text-academic-600 mt-1 line-clamp-2">{item.abstract}</div>
+                      <div className="text-xs text-academic-500 mt-2">
+                        From: {item.editor_name || 'Editor'}
+                        {item.assigned_date ? ` • ${new Date(item.assigned_date).toLocaleString()}` : ''}
                       </div>
-                    )}
-                  </div>
+                      {item.editor_instructions && (
+                        <div className="text-xs text-academic-600 mt-2">Instructions: {item.editor_instructions}</div>
+                      )}
+                    </div>
 
-                  <div className="flex flex-col gap-2 items-end">
-                    <span className={`badge ${item.status === 'pending' ? 'badge-under-review' : item.status === 'accepted' ? 'badge-accepted' : 'badge-rejected'}`}>
-                      {item.status.toUpperCase()}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openForwarded(item)}
-                        className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                    <div className="flex flex-col gap-2 items-end">
+                      <span
+                        className={`badge ${
+                          item.status === 'pending'
+                            ? 'badge-under-review'
+                            : item.status === 'accepted'
+                              ? 'badge-accepted'
+                              : 'badge-rejected'
+                        }`}
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Open
-                      </button>
-                      <button
-                        onClick={() => handleForwardedAction(item.id, 'accept')}
-                        disabled={item.status !== 'pending' || processingForwardedId === item.id}
-                        className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {processingForwardedId === item.id ? '...' : 'Accept'}
-                      </button>
-                      <button
-                        onClick={() => handleForwardedAction(item.id, 'reject')}
-                        disabled={item.status !== 'pending' || processingForwardedId === item.id}
-                        className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {processingForwardedId === item.id ? '...' : 'Delete'}
-                      </button>
+                        {item.status.toUpperCase()}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openForwarded(item)}
+                          className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Open
+                        </button>
+                        <button
+                          onClick={() => handleForwardedAction(item.id, 'accept')}
+                          disabled={item.status !== 'pending' || processingForwardedId === item.id}
+                          className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {processingForwardedId === item.id ? '...' : 'Accept'}
+                        </button>
+                        <button
+                          onClick={() => handleForwardedAction(item.id, 'reject')}
+                          disabled={item.status !== 'pending' || processingForwardedId === item.id}
+                          className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {processingForwardedId === item.id ? '...' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Reviewed Articles */}
+      {activeTab === 'reviewed' ? (
+        <div className="bg-white rounded-lg shadow-sm border border-academic-200 mb-8">
+          <div className="p-6 border-b border-academic-200">
+            <h2 className="text-xl font-semibold text-academic-900">Reviewed Articles</h2>
+            <p className="text-sm text-academic-600 mt-1">Articles you accepted from editor can be forwarded back with your document and comments.</p>
           </div>
-        )}
-      </div>
+
+          {forwardedArticles.filter((a) => a.status === 'accepted').length === 0 ? (
+            <div className="p-6 text-academic-600">No accepted articles yet.</div>
+          ) : (
+            <div className="divide-y divide-academic-200">
+              {forwardedArticles
+                .filter((a) => a.status === 'accepted')
+                .map((item) => (
+                  <div key={item.id} className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-academic-900 truncate">{item.title}</div>
+                        <div className="text-sm text-academic-600 mt-1 line-clamp-2">{item.abstract}</div>
+                        <div className="text-xs text-academic-500 mt-2">
+                          From: {item.editor_name || 'Editor'}
+                          {item.assigned_date ? ` • ${new Date(item.assigned_date).toLocaleString()}` : ''}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 items-end">
+                        <span className="badge badge-accepted">ACCEPTED</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => router.push(`/dashboard/reviewer/forward-to-editor?editorArticleId=${item.id}`)}
+                            className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Forward
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -632,6 +719,43 @@ const ReviewerDashboard = () => {
                   {selectedForwardedDetails?.abstract || selectedForwarded.abstract}
                 </div>
               </div>
+
+              {(selectedForwardedDetails?.attachment_path || selectedForwarded.attachment_path) ? (
+                <div>
+                  <h4 className="font-medium text-academic-900 mb-2">Attachment</h4>
+                  <div className="bg-academic-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-academic-900 truncate">
+                          {selectedForwardedDetails?.attachment_name || selectedForwarded.attachment_name || 'Attachment'}
+                        </div>
+                        {typeof (selectedForwardedDetails?.attachment_size ?? selectedForwarded.attachment_size) === 'number' ? (
+                          <div className="text-xs text-academic-600">
+                            {Math.round(((selectedForwardedDetails?.attachment_size ?? selectedForwarded.attachment_size) as number) / 1024)} KB
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={(selectedForwardedDetails?.attachment_path || selectedForwarded.attachment_path) as string}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary"
+                        >
+                          Open
+                        </a>
+                        <a
+                          href={(selectedForwardedDetails?.attachment_path || selectedForwarded.attachment_path) as string}
+                          download
+                          className="btn-primary"
+                        >
+                          Download
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               <div>
                 <h4 className="font-medium text-academic-900 mb-2">Document</h4>
