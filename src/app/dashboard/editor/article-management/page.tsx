@@ -34,10 +34,16 @@ interface Submission {
   abstract?: string;
   keywords?: string;
   authors?: any[];
+  manuscriptFileName?: string;
+  manuscriptFilePath?: string;
+  affiliation?: string;
+  articleType?: string;
   last_reply?: string;
   reviewerName?: string;
   reviewerDecision?: string;
   responseDate?: string;
+  forwardSource?: 'article' | 'reviewer_doc';
+  reviewerForwardId?: number;
 }
 
 interface ReviewerForwardedDoc {
@@ -65,12 +71,29 @@ interface AuthorUser {
   email?: string;
 }
 
+interface AuthorReplyItem {
+  message_id: number;
+  article_id: number;
+  sender_id: number;
+  message: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: string | null;
+  created_at: string;
+  article_title: string | null;
+  article_abstract: string | null;
+  author_id: number | null;
+  author_name: string | null;
+  author_username: string | null;
+}
+
 const ArticleManagementPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'revision' | 'external_review' | 'author_reply' | 'reviewer_article' | 'author_article'>('new');
   const [reviewerDocs, setReviewerDocs] = useState<ReviewerForwardedDoc[]>([]);
+  const [authorReplies, setAuthorReplies] = useState<AuthorReplyItem[]>([]);
   const [authors, setAuthors] = useState<AuthorUser[]>([]);
   const [selectedAuthorByDoc, setSelectedAuthorByDoc] = useState<Record<number, number | ''>>({});
   const [sendCommentByDoc, setSendCommentByDoc] = useState<Record<number, string>>({});
@@ -109,6 +132,12 @@ const ArticleManagementPage = () => {
     loadReviewerForwardedDocs(user.id);
     loadAuthors();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (activeTab !== 'author_article') return;
+    loadAuthorReplies(user.id);
+  }, [user, activeTab]);
 
   const checkAuth = async () => {
     try {
@@ -162,6 +191,28 @@ const ArticleManagementPage = () => {
     } catch (e) {
       console.error('Failed to load authors:', e);
       setAuthors([]);
+    }
+  };
+
+  const loadAuthorReplies = async (editorId: number) => {
+    try {
+      const res = await fetch('/api/author-replies', {
+        headers: {
+          'x-user-id': String(editorId),
+          'x-user-role': 'editor',
+        },
+      });
+
+      if (!res.ok) {
+        setAuthorReplies([]);
+        return;
+      }
+
+      const data = await res.json();
+      setAuthorReplies((data.items || []) as AuthorReplyItem[]);
+    } catch (e) {
+      console.error('Failed to load author replies:', e);
+      setAuthorReplies([]);
     }
   };
 
@@ -230,6 +281,7 @@ const ArticleManagementPage = () => {
           affiliation: article.affiliation,
           articleType: article.article_type,
           manuscriptFileName: article.manuscript_file_name,
+          manuscriptFilePath: article.manuscript_file_path,
           author_id: article.author_id
         }));
         
@@ -281,14 +333,40 @@ const ArticleManagementPage = () => {
         const reply = savedReplies.find(r => r.id === sub.id);
         return reply ? { ...sub, last_reply: reply.reply } : sub;
       });
+
+      // Normalize row keys to guarantee uniqueness across merged sources
+      const usedKeys = new Set<string>();
+      const normalizedSubmissions = updatedSubmissions.map((sub, index) => {
+        const baseKey = (sub.rowKey && String(sub.rowKey).trim())
+          ? String(sub.rowKey)
+          : `submission-${sub.articleId ?? sub.id}-${index}`;
+        let key = baseKey;
+        if (usedKeys.has(key)) {
+          key = `${baseKey}-${index}`;
+        }
+        usedKeys.add(key);
+        return { ...sub, rowKey: key };
+      });
       
-      console.log('Final submissions:', updatedSubmissions);
-      setSubmissions(updatedSubmissions);
+      console.log('Final submissions:', normalizedSubmissions);
+      setSubmissions(normalizedSubmissions);
     } catch (error) {
       console.error('Error loading submissions:', error);
       // Fallback to localStorage
       const realSubmissions = JSON.parse(localStorage.getItem('editor_submissions') || '[]') as Submission[];
-      setSubmissions(realSubmissions);
+      const usedKeys = new Set<string>();
+      const normalized = (realSubmissions || []).map((sub, index) => {
+        const baseKey = (sub as any)?.rowKey && String((sub as any).rowKey).trim()
+          ? String((sub as any).rowKey)
+          : `editor-submission-${(sub as any)?.articleId ?? (sub as any)?.id ?? index}-${index}`;
+        let key = baseKey;
+        if (usedKeys.has(key)) {
+          key = `${baseKey}-${index}`;
+        }
+        usedKeys.add(key);
+        return { ...sub, rowKey: key } as Submission;
+      });
+      setSubmissions(normalized);
     }
   };
 
@@ -399,6 +477,29 @@ const ArticleManagementPage = () => {
                           ) : (
                             <span className="text-sm text-gray-500">No file</span>
                           )}
+                          <button
+                            type="button"
+                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            onClick={() => {
+                              const selected: Submission = {
+                                rowKey: `reviewer-doc-${doc.article_id}-${doc.id}`,
+                                id: doc.article_id,
+                                articleId: doc.article_id,
+                                title: doc.article_title || `Article #${doc.article_id}`,
+                                author_name: 'Author',
+                                submitted_at: doc.created_at,
+                                status: 'reviewer_article',
+                                abstract: doc.article_abstract || undefined,
+                                forwardSource: 'reviewer_doc',
+                                reviewerForwardId: doc.id,
+                              };
+                              sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
+                              setForwardChoiceSubmission(selected);
+                              setForwardChoiceOpen(true);
+                            }}
+                          >
+                            Forward
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -414,6 +515,98 @@ const ArticleManagementPage = () => {
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <div className="p-4 border-b border-gray-200">
             <div className="text-lg font-semibold text-gray-900">Author Article</div>
+            <div className="text-sm text-gray-600 mt-1">Author revisions received and documents to send to authors.</div>
+          </div>
+
+          <div className="p-4 border-b border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Author Replies</div>
+            <div className="text-sm text-gray-600 mt-1">Latest revision uploads from authors.</div>
+          </div>
+
+          {authorReplies.length === 0 ? (
+            <div className="p-6 text-gray-600">No author replies yet.</div>
+          ) : (
+            <div className="overflow-x-auto border-b border-gray-200">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Article</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {authorReplies.map((r) => (
+                    <tr key={`${r.article_id}-${r.message_id}`} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{r.article_title || `Article #${r.article_id}`}</div>
+                        {r.file_name ? (
+                          <div className="text-xs text-gray-500 mt-1 truncate">File: {r.file_name}</div>
+                        ) : null}
+                        {r.message ? (
+                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">Comment: {r.message}</div>
+                        ) : null}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{r.author_name || r.author_username || (r.author_id ? `#${r.author_id}` : '—')}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-3 justify-end">
+                          {r.file_url ? (
+                            <>
+                              <a
+                                href={r.file_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                              >
+                                Open
+                              </a>
+                              <a
+                                href={r.file_url}
+                                download
+                                className="text-green-600 hover:text-green-700 text-sm font-medium"
+                              >
+                                Download
+                              </a>
+                            </>
+                          ) : (
+                            <span className="text-sm text-gray-500">No file</span>
+                          )}
+
+                          <button
+                            type="button"
+                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            onClick={() => {
+                              const selected: Submission = {
+                                rowKey: `author-reply-${r.article_id}-${r.message_id}`,
+                                id: r.article_id,
+                                articleId: r.article_id,
+                                title: r.article_title || `Article #${r.article_id}`,
+                                author_name: r.author_name || r.author_username || 'Author',
+                                author_id: r.author_id ?? undefined,
+                                submitted_at: r.created_at,
+                                status: 'revision',
+                                abstract: r.article_abstract || undefined,
+                              };
+                              sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
+                              setForwardChoiceSubmission(selected);
+                              setForwardChoiceOpen(true);
+                            }}
+                          >
+                            Forward
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="p-4 border-b border-gray-200">
+            <div className="text-base font-semibold text-gray-900">Send Reviewer Document to Author</div>
             <div className="text-sm text-gray-600 mt-1">Select an author and send the reviewer document.</div>
           </div>
 
@@ -506,6 +699,9 @@ const ArticleManagementPage = () => {
                   Article
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Abstract
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Author
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -516,6 +712,9 @@ const ArticleManagementPage = () => {
                     Reviewer Status
                   </th>
                 )}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Files
+                </th>
                 <th className="px-6 py-3"></th>
               </tr>
             </thead>
@@ -524,6 +723,18 @@ const ArticleManagementPage = () => {
                 <tr key={s.rowKey} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {s.title}
+                    {s.keywords ? (
+                      <div className="text-xs text-gray-500 mt-1 line-clamp-1">Keywords: {s.keywords}</div>
+                    ) : null}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    <div className="line-clamp-2">{s.abstract || '—'}</div>
+                    {s.articleType ? (
+                      <div className="text-xs text-gray-500 mt-1">Type: {s.articleType}</div>
+                    ) : null}
+                    {s.affiliation ? (
+                      <div className="text-xs text-gray-500 mt-1 line-clamp-1">Affiliation: {s.affiliation}</div>
+                    ) : null}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {s.author_name}
@@ -548,6 +759,29 @@ const ArticleManagementPage = () => {
                       </div>
                     </td>
                   )}
+                  <td className="px-6 py-4">
+                    {s.manuscriptFilePath ? (
+                      <div className="flex gap-3">
+                        <a
+                          href={s.manuscriptFilePath}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          Open
+                        </a>
+                        <a
+                          href={s.manuscriptFilePath}
+                          download
+                          className="text-green-600 hover:text-green-700 text-sm font-medium"
+                        >
+                          Download
+                        </a>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">No file</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
@@ -580,7 +814,7 @@ const ArticleManagementPage = () => {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     No submissions found.
                   </td>
                 </tr>
@@ -616,12 +850,17 @@ const ArticleManagementPage = () => {
                 type="button"
                 onClick={() => {
                   setForwardChoiceOpen(false);
+                  if (forwardChoiceSubmission.forwardSource === 'reviewer_doc') {
+                    const rid = forwardChoiceSubmission.reviewerForwardId;
+                    router.push(`/dashboard/editor/article-management/forward-admin?reviewerForwardId=${rid}`);
+                    return;
+                  }
                   const articleId = forwardChoiceSubmission.articleId;
                   router.push(`/dashboard/editor/article-management/forward?article=${articleId}`);
                 }}
                 className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
-                Forward to Reviewer
+                {forwardChoiceSubmission.forwardSource === 'reviewer_doc' ? 'Forward to Admin' : 'Forward to Reviewer'}
               </button>
 
               <button
@@ -629,6 +868,63 @@ const ArticleManagementPage = () => {
                 onClick={() => {
                   setForwardChoiceOpen(false);
                   const articleId = forwardChoiceSubmission.articleId;
+                  // If this is a reviewer-forwarded document, send it to the original author (no selection)
+                  if (forwardChoiceSubmission.forwardSource === 'reviewer_doc') {
+                    const reviewerForwardId = forwardChoiceSubmission.reviewerForwardId;
+                    if (!user || !reviewerForwardId) {
+                      alert('Missing data. Please try again.');
+                      return;
+                    }
+
+                    (async () => {
+                      try {
+                        const articleRes = await fetch(`/api/articles?id=${articleId}`, {
+                          headers: {
+                            'x-user-id': String(user.id),
+                            'x-user-role': 'editor',
+                          },
+                        });
+
+                        if (!articleRes.ok) {
+                          throw new Error('Failed to load article details');
+                        }
+
+                        const articleData = await articleRes.json();
+                        const article = (articleData.articles || [])[0];
+                        const authorId = article?.author_id;
+                        if (!authorId) {
+                          throw new Error('Author not found for this article');
+                        }
+
+                        const sendRes = await fetch('/api/editor-author-documents', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-id': String(user.id),
+                            'x-user-role': 'editor',
+                          },
+                          body: JSON.stringify({
+                            reviewerForwardId,
+                            authorId,
+                            comment: '',
+                          }),
+                        });
+
+                        if (!sendRes.ok) {
+                          const err = await sendRes.json().catch(() => ({}));
+                          throw new Error(err?.error || 'Failed to send to author');
+                        }
+
+                        alert('Sent to author successfully.');
+                      } catch (e: any) {
+                        console.error('Forward reviewer doc to author failed:', e);
+                        alert(e?.message || 'Failed to send to author');
+                      }
+                    })();
+
+                    return;
+                  }
+
                   // Reuse existing Reply-to-Author page so author receives it on /reviewed
                   router.push(`/dashboard/editor/article-management/${articleId}`);
                 }}

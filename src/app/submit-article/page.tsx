@@ -265,6 +265,7 @@ const SubmitArticlePage = () => {
     authors.some((a) => a.role === 'Main Author' && a.name.trim() && a.email.trim() && a.contact?.trim());
 
   const handleKeywordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleKeywordInputChange:', e.target.value);
     setKeywordInput(e.target.value);
   };
 
@@ -290,6 +291,7 @@ const SubmitArticlePage = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
+    console.log('handleInputChange:', { name, value, type, checked });
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -300,6 +302,7 @@ const SubmitArticlePage = () => {
   };
 
   const handleAuthorChange = (index: number, field: keyof AuthorEntry, value: string) => {
+    console.log('handleAuthorChange:', { index, field, value });
     const updated = [...formData.authors];
     
     // If changing role to Main Author, ensure only one main author exists
@@ -355,6 +358,7 @@ const SubmitArticlePage = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleFileChange:', e.target.files);
     if (e.target.files && e.target.files[0]) {
       setFormData({ ...formData, manuscriptFile: e.target.files[0] });
     }
@@ -401,29 +405,32 @@ const SubmitArticlePage = () => {
           // Converting draft to submitted article
           console.log('Converting draft to submission:', articleToEdit);
           const now = new Date();
+          const submitForm = new FormData();
+          submitForm.append('authorId', String(user.id));
+          submitForm.append('title', formData.title);
+          submitForm.append('abstract', formData.abstract);
+          submitForm.append('keywords', formData.keywords);
+          submitForm.append('content', formData.content);
+          submitForm.append('authors', JSON.stringify(formData.authors || []));
+          submitForm.append('affiliation', formData.affiliation);
+          submitForm.append('articleType', formData.articleType);
+          submitForm.append('status', 'submitted');
+          if (formData.manuscriptFile) {
+            submitForm.append('manuscript', formData.manuscriptFile);
+          }
+
           const createResponse = await fetch('/api/articles', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
               'x-user-id': String(user.id),
               'x-user-role': 'author',
             },
-            body: JSON.stringify({
-              authorId: user.id,
-              title: formData.title,
-              abstract: formData.abstract,
-              keywords: formData.keywords,
-              content: formData.content,
-              authors: formData.authors,
-              affiliation: formData.affiliation,
-              articleType: formData.articleType,
-              manuscriptFileName: formData.manuscriptFile?.name,
-              status: 'submitted',
-            }),
+            body: submitForm,
           });
 
           if (!createResponse.ok) {
-            throw new Error('Failed to submit article');
+            const err = await createResponse.json().catch(() => ({}));
+            throw new Error(err?.details?.message || err?.error || 'Failed to submit article');
           }
 
           const createdData = await createResponse.json();
@@ -492,29 +499,32 @@ const SubmitArticlePage = () => {
       } else {
         // Create new article and send to editor
         const now = new Date();
+        const submitForm = new FormData();
+        submitForm.append('authorId', String(user.id));
+        submitForm.append('title', formData.title);
+        submitForm.append('abstract', formData.abstract);
+        submitForm.append('keywords', formData.keywords);
+        submitForm.append('content', formData.content);
+        submitForm.append('authors', JSON.stringify(formData.authors || []));
+        submitForm.append('affiliation', formData.affiliation);
+        submitForm.append('articleType', formData.articleType);
+        submitForm.append('status', 'submitted');
+        if (formData.manuscriptFile) {
+          submitForm.append('manuscript', formData.manuscriptFile);
+        }
+
         const createResponse = await fetch('/api/articles', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'x-user-id': String(user.id),
             'x-user-role': 'author',
           },
-          body: JSON.stringify({
-            authorId: user.id,
-            title: formData.title,
-            abstract: formData.abstract,
-            keywords: formData.keywords,
-            content: formData.content,
-            authors: formData.authors,
-            affiliation: formData.affiliation,
-            articleType: formData.articleType,
-            manuscriptFileName: formData.manuscriptFile?.name,
-            status: 'submitted',
-          }),
+          body: submitForm,
         });
 
         if (!createResponse.ok) {
-          throw new Error('Failed to submit article');
+          const err = await createResponse.json().catch(() => ({}));
+          throw new Error(err?.details?.message || err?.error || 'Failed to submit article');
         }
 
         const createdData = await createResponse.json();
@@ -560,9 +570,9 @@ const SubmitArticlePage = () => {
         // Use window.location for more reliable navigation
         window.location.href = '/dashboard/author';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submission error:', error);
-      alert('Failed to submit article.');
+      alert(error?.message || 'Failed to submit article.');
     } finally {
       setSubmitting(false);
     }
@@ -622,6 +632,7 @@ const SubmitArticlePage = () => {
   };
 
   const toggleSection = (key: string) => {
+    console.log('toggleSection:', key);
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 

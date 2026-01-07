@@ -28,13 +28,16 @@ export async function POST(request: NextRequest) {
       || request.headers.get('x-real-ip') 
       || 'unknown';
 
+    const enforceRateLimit = process.env.NODE_ENV === 'production';
     // Stricter rate limit for login: 10 attempts per 15 minutes
-    const rateLimit = checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { success: false, error: 'Too many login attempts. Please try again later.' },
-        { status: 429 }
-      );
+    if (enforceRateLimit) {
+      const rateLimit = checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
+      if (!rateLimit.allowed) {
+        return NextResponse.json(
+          { success: false, error: 'Too many login attempts. Please try again later.' },
+          { status: 429 }
+        );
+      }
     }
 
     const body = await request.json();

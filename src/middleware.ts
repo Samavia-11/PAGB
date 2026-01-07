@@ -190,13 +190,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get client IP for rate limiting
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
-    || request.headers.get('x-real-ip') 
-    || 'unknown';
+  const enforceRateLimit = process.env.NODE_ENV === 'production';
+
+  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const realIp = request.headers.get('x-real-ip');
+  const reqIp = (request as any).ip as string | undefined;
+  const ip = forwardedFor || realIp || reqIp || '';
+  const userAgent = request.headers.get('user-agent') || '';
+  const rateLimitId = ip ? `ip:${ip}` : userAgent ? `ua:${userAgent}` : 'unknown';
 
   // ========== RATE LIMITING ==========
-  const rateLimit = checkRateLimit(ip);
+  const rateLimit = enforceRateLimit
+    ? checkRateLimit(rateLimitId)
+    : { allowed: true, remaining: RATE_LIMIT_MAX };
   
   if (!rateLimit.allowed) {
     return NextResponse.json(

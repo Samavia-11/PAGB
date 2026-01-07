@@ -70,6 +70,13 @@ async function createTables() {
       )
     `);
 
+    // Add phone column if users table already existed
+    try {
+      await connection.execute('ALTER TABLE users ADD COLUMN phone VARCHAR(20)');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+
     // Create authors_articles table
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS authors_articles (
@@ -90,6 +97,18 @@ async function createTables() {
         FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Add manuscript columns if authors_articles already existed
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN manuscript_file_name VARCHAR(255)');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN manuscript_file_path VARCHAR(255)');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
 
     // Create editor_articles table
     await connection.execute(`
@@ -238,6 +257,27 @@ async function createTables() {
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create editor_admin_documents table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS editor_admin_documents (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reviewer_forward_id INT NOT NULL,
+        article_id INT NOT NULL,
+        editor_id INT NOT NULL,
+        admin_id INT NOT NULL,
+        comment TEXT,
+        attachment_name VARCHAR(255),
+        attachment_path VARCHAR(255),
+        attachment_type VARCHAR(100),
+        attachment_size INT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (reviewer_forward_id) REFERENCES reviewer_forwarded_documents(id) ON DELETE CASCADE,
+        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
+        FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
 

@@ -36,6 +36,49 @@ interface ReviewedArticle {
   editorAttachmentName?: string;
 }
 
+interface EditorAuthorDocument {
+  id: number;
+  article_id: number;
+  editor_id: number;
+  author_id: number;
+  comment: string | null;
+  attachment_name: string | null;
+  attachment_path: string | null;
+  created_at: string;
+  editor_name?: string | null;
+  author_name?: string | null;
+  article_title?: string | null;
+  article_abstract?: string | null;
+}
+
+type ArticleMessage = {
+  id: number;
+  article_id: number;
+  sender_id: number;
+  sender_name: string;
+  sender_role: 'author' | 'reviewer' | 'editor' | 'administrator' | string;
+  message: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: string | null;
+  created_at: string;
+};
+
+type DbArticle = {
+  id: number;
+  title: string;
+  abstract: string;
+  status: ReviewedArticle['status'];
+  submission_date: string;
+  last_updated: string;
+  keywords?: string | null;
+  content?: string | null;
+  authors?: any[] | null;
+  affiliation?: string | null;
+  article_type?: string | null;
+  manuscript_file_name?: string | null;
+};
+
 const storageKeyForUser = (userId: number) => `articles:${userId}`;
 
 const readArticlesFromStorage = (userId: number): ReviewedArticle[] => {
@@ -59,6 +102,7 @@ export default function ReviewedPage() {
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardArticle, setForwardArticle] = useState<ReviewedArticle | null>(null);
   const [forwardComment, setForwardComment] = useState('');
+  const [forwardFile, setForwardFile] = useState<File | null>(null);
   const [sendingForward, setSendingForward] = useState(false);
 
   useEffect(() => {
@@ -104,9 +148,47 @@ export default function ReviewedPage() {
     checkAuth();
   }, [router]);
 
-  const loadReviewedArticles = (userId: number) => {
+  const loadReviewedArticles = async (userId: number) => {
     try {
-      const articles = readArticlesFromStorage(userId);
+      let articles: ReviewedArticle[] = [];
+
+      // Prefer DB as source of truth (localStorage can be empty/outdated)
+      try {
+        const res = await fetch('/api/articles', {
+          headers: {
+            'x-user-id': String(userId),
+            'x-user-role': 'author',
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const dbArticles = (data.articles || []) as DbArticle[];
+          articles = dbArticles.map((a) => ({
+            id: a.id,
+            title: a.title,
+            abstract: a.abstract,
+            status: a.status,
+            submission_date: a.submission_date,
+            last_updated: a.last_updated,
+            keywords: a.keywords || undefined,
+            content: a.content || undefined,
+            authors: a.authors || undefined,
+            affiliation: a.affiliation || undefined,
+            articleType: a.article_type || undefined,
+            manuscriptFileName: a.manuscript_file_name || undefined,
+          }));
+        } else {
+          console.warn('Failed to fetch /api/articles for author:', res.status);
+        }
+      } catch (e) {
+        console.error('Error fetching /api/articles for author:', e);
+      }
+
+      // Fallback: localStorage (demo/offline mode)
+      if (articles.length === 0) {
+        articles = readArticlesFromStorage(userId);
+      }
+
       console.log('All articles for user:', articles);
       
       // Check for articles that have been reviewed by editors or have any review activity
@@ -129,6 +211,65 @@ export default function ReviewedPage() {
         
         return isReviewed;
       });
+
+      // Load editor->author forwarded documents from DB (these are not stored in localStorage)
+      try {
+        const res = await fetch(`/api/editor-author-documents?authorId=${userId}`, {
+          headers: {
+            'x-user-id': String(userId),
+            'x-user-role': 'author',
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const docs = (data.items || []) as EditorAuthorDocument[];
+
+          const docArticles: ReviewedArticle[] = docs.map((d) => ({
+            id: `ead_${d.id}`,
+            originalId: d.article_id,
+            title: d.article_title || `Article ${d.article_id}`,
+            abstract: d.article_abstract || 'Article abstract not available',
+            status: 'editor_review',
+            submission_date: d.created_at,
+            last_updated: d.created_at,
+            editorComments: d.comment || undefined,
+            reviewedBy: d.editor_name || 'Editor',
+            reviewedDate: d.created_at,
+            editorAttachment: d.attachment_path || undefined,
+            editorAttachmentName: d.attachment_name || undefined,
+            manuscriptFileName: 'manuscript.docx',
+          }));
+
+          // Merge into reviewed list (prefer enriching an existing article with same originalId)
+          docArticles.forEach((docArticle) => {
+            const matchIndex = reviewed.findIndex((a) => {
+              const aOriginalId = typeof a.id === 'number' ? a.id : a.originalId;
+              return aOriginalId && docArticle.originalId && aOriginalId === docArticle.originalId;
+            });
+
+            if (matchIndex >= 0) {
+              const existing = reviewed[matchIndex];
+              reviewed[matchIndex] = {
+                ...existing,
+                status: existing.status === 'submitted' ? 'editor_review' : existing.status,
+                editorComments: existing.editorComments || docArticle.editorComments,
+                editorAttachment: existing.editorAttachment || docArticle.editorAttachment,
+                editorAttachmentName: existing.editorAttachmentName || docArticle.editorAttachmentName,
+                reviewedBy: existing.reviewedBy || docArticle.reviewedBy,
+                reviewedDate: existing.reviewedDate || docArticle.reviewedDate,
+                last_updated: existing.last_updated || docArticle.last_updated,
+              };
+            } else {
+              reviewed.push(docArticle);
+            }
+          });
+        } else {
+          console.warn('Failed to fetch editor_author_documents:', res.status);
+        }
+      } catch (e) {
+        console.error('Error fetching editor_author_documents:', e);
+      }
       
       // Fallback: Check if there are any author replies that aren't showing up
       const authorReplies = JSON.parse(localStorage.getItem('authorReplies') || '[]') as {id:number,reply:string,articleId:number}[];
@@ -155,7 +296,69 @@ export default function ReviewedPage() {
       }
       
       console.log('Final reviewed articles:', reviewed);
-      setReviewedArticles(reviewed);
+
+      const getNumericArticleId = (a: ReviewedArticle): number | null => {
+        if (typeof a.id === 'number') return a.id;
+        if (typeof a.originalId === 'number') return a.originalId;
+        return null;
+      };
+
+      const hydrateWithMessages = async (items: ReviewedArticle[]) => {
+        const enriched = await Promise.all(
+          items.map(async (a) => {
+            const numericId = getNumericArticleId(a);
+            if (!numericId) return a;
+
+            try {
+              const res = await fetch(`/api/articles/${numericId}/comments`);
+              if (!res.ok) return a;
+
+              const data = await res.json();
+              const messages = (data?.messages || []) as ArticleMessage[];
+              if (!Array.isArray(messages) || messages.length === 0) return a;
+
+              const lastEditor = [...messages].reverse().find((m) => m.sender_role === 'editor');
+              const lastReviewer = [...messages].reverse().find((m) => m.sender_role === 'reviewer');
+
+              const next: ReviewedArticle = { ...a };
+
+              if (!next.editorComments && lastEditor?.message) {
+                next.editorComments = lastEditor.message;
+              }
+
+              if (!next.reviewerComments && lastReviewer?.message) {
+                next.reviewerComments = lastReviewer.message;
+              }
+
+              if (!next.reviewedBy && lastEditor?.sender_name) {
+                next.reviewedBy = lastEditor.sender_name;
+              }
+
+              if (!next.reviewedDate && lastEditor?.created_at) {
+                next.reviewedDate = lastEditor.created_at;
+              }
+
+              if (!next.editorAttachment && lastEditor?.file_url) {
+                next.editorAttachment = lastEditor.file_url;
+              }
+
+              if (!next.editorAttachmentName && lastEditor?.file_name) {
+                next.editorAttachmentName = lastEditor.file_name;
+              }
+
+              return next;
+            } catch (e) {
+              console.error('Error fetching article messages:', e);
+              return a;
+            }
+          })
+        );
+
+        return enriched;
+      };
+
+      const enrichedReviewed = await hydrateWithMessages(reviewed);
+      setReviewedArticles(enrichedReviewed);
     } catch (error) {
       console.error('Error loading reviewed articles:', error);
     }
@@ -289,6 +492,7 @@ export default function ReviewedPage() {
                     onClick={() => {
                       setForwardArticle(article);
                       setForwardComment('');
+                      setForwardFile(null);
                       setForwardModalOpen(true);
                     }}
                     className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -337,23 +541,33 @@ export default function ReviewedPage() {
                           <p className="text-sm font-medium text-green-800">Editor's Attachment</p>
                           <p className="text-xs text-green-600">{article.editorAttachmentName}</p>
                         </div>
-                        <button
-                          onClick={() => {
-                            // Create a dummy download for demo
-                            const blob = new Blob(['Sample editor feedback document'], { type: 'text/plain' });
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = article.editorAttachmentName || 'editor-feedback.txt';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            window.URL.revokeObjectURL(url);
-                          }}
-                          className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                        >
-                          Download
-                        </button>
+                        {article.editorAttachment ? (
+                          <a
+                            href={article.editorAttachment}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                          >
+                            Download
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const blob = new Blob(['Sample editor feedback document'], { type: 'text/plain' });
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = article.editorAttachmentName || 'editor-feedback.txt';
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                              window.URL.revokeObjectURL(url);
+                            }}
+                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                          >
+                            Download
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -409,6 +623,7 @@ export default function ReviewedPage() {
                       setForwardModalOpen(false);
                       setForwardArticle(null);
                       setForwardComment('');
+                      setForwardFile(null);
                     }}
                     className="text-gray-500 hover:text-gray-700"
                   >
@@ -432,6 +647,17 @@ export default function ReviewedPage() {
                   />
                 </div>
 
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Attach Revised File (optional)</label>
+                  <input
+                    type="file"
+                    className="block w-full text-sm text-gray-700"
+                    onChange={(e) => setForwardFile(e.target.files?.[0] || null)}
+                    disabled={sendingForward}
+                  />
+                  {forwardFile ? <div className="text-xs text-gray-600 mt-1">Selected: {forwardFile.name}</div> : null}
+                </div>
+
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
@@ -441,6 +667,7 @@ export default function ReviewedPage() {
                       setForwardModalOpen(false);
                       setForwardArticle(null);
                       setForwardComment('');
+                      setForwardFile(null);
                     }}
                   >
                     Cancel
@@ -448,7 +675,7 @@ export default function ReviewedPage() {
                   <button
                     type="button"
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                    disabled={sendingForward || !forwardComment.trim()}
+                    disabled={sendingForward || (!forwardComment.trim() && !forwardFile)}
                     onClick={async () => {
                       if (!user) return;
 
@@ -464,6 +691,9 @@ export default function ReviewedPage() {
                         formData.append('message', forwardComment.trim());
                         formData.append('sender_id', String(user.id));
                         formData.append('sender_role', 'author');
+                        if (forwardFile) {
+                          formData.append('file', forwardFile);
+                        }
 
                         const msgRes = await fetch(`/api/articles/${numericId}/comments`, {
                           method: 'POST',
@@ -507,6 +737,7 @@ export default function ReviewedPage() {
                         setForwardModalOpen(false);
                         setForwardArticle(null);
                         setForwardComment('');
+                        setForwardFile(null);
                       } catch (e: any) {
                         console.error('Forward to editor error:', e);
                         alert(e?.message || 'Failed to send');

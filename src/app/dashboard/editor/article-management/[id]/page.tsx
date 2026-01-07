@@ -75,8 +75,8 @@ const SubmissionDetailPage = () => {
   };
 
   const handleSend = async () => {
-    if (!comment.trim()) {
-      alert('Please enter your comments before sending.');
+    if (!comment.trim() && !file) {
+      alert('Please enter your comments or attach a file before sending.');
       return;
     }
 
@@ -90,53 +90,50 @@ const SubmissionDetailPage = () => {
 
       const submissionData = JSON.parse(storedSubmission);
       console.log('Editor sending reply for:', submissionData);
-      
-      // Save reply for author to see in reviewed page
-      const authorReplies = JSON.parse(localStorage.getItem('authorReplies') || '[]') as {id:number,reply:string,articleId:number}[];
-      authorReplies.push({
-        id: submissionData.id,
-        reply: comment,
-        articleId: submissionData.id
-      });
-      localStorage.setItem('authorReplies', JSON.stringify(authorReplies));
-      console.log('Saved to authorReplies:', authorReplies);
 
-      // Update the author's article in their storage
-      if (submissionData.author_id) {
-        console.log('Updating author article for author_id:', submissionData.author_id);
-        const authorArticles = JSON.parse(localStorage.getItem(`articles:${submissionData.author_id}`) || '[]') as any[];
-        console.log('Author articles before update:', authorArticles);
-        
-        const updatedAuthorArticles = authorArticles.map(article => 
-          article.id === submissionData.id 
-            ? {
-                ...article,
-                status: 'editor_review',
-                editorComments: comment,
-                reviewedDate: new Date().toISOString(),
-                reviewedBy: user?.full_name || user?.username || 'Editor',
-                editorAttachment: file ? URL.createObjectURL(file) : undefined,
-                editorAttachmentName: file ? file.name : undefined,
-              }
-            : article
-        );
-        
-        console.log('Author articles after update:', updatedAuthorArticles);
-        localStorage.setItem(`articles:${submissionData.author_id}`, JSON.stringify(updatedAuthorArticles));
-      } else {
-        console.warn('No author_id found in submission data');
+      if (!user?.id) {
+        alert('Not authenticated. Please login again.');
+        router.push('/login');
+        return;
       }
 
-      // Update editor submissions status
-      const editorSubmissions = JSON.parse(localStorage.getItem('editor_submissions') || '[]') as any[];
-      const updatedEditorSubmissions = editorSubmissions.map(s => 
-        s.id === submissionData.id 
-          ? { ...s, status: 'author_reply', last_reply: comment }
-          : s
-      );
-      localStorage.setItem('editor_submissions', JSON.stringify(updatedEditorSubmissions));
+      const formData = new FormData();
+      formData.append('sender_id', String(user.id));
+      formData.append('sender_role', 'editor');
+      formData.append('message', comment);
+      if (file) {
+        formData.append('file', file);
+      }
 
-      alert('Reply sent successfully to author! The author can view your comments in their Reviewed section.');
+      const sendRes = await fetch(`/api/articles/${submissionData.id}/comments`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!sendRes.ok) {
+        const err = await sendRes.json().catch(() => ({}));
+        throw new Error(err?.error || 'Failed to send to author');
+      }
+
+      const patchRes = await fetch('/api/articles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': String(user.id),
+          'x-user-role': 'editor',
+        },
+        body: JSON.stringify({
+          id: submissionData.id,
+          status: 'editor_review',
+        }),
+      });
+
+      if (!patchRes.ok) {
+        const err = await patchRes.json().catch(() => ({}));
+        throw new Error(err?.error || 'Failed to update article status');
+      }
+
+      alert('Sent to author successfully.');
       router.push('/dashboard/editor/article-management');
     } catch (error) {
       console.error('Error sending reply:', error);

@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/database';
 import mysql from 'mysql2/promise';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
 
 // Valid article statuses
 const VALID_STATUSES = ['draft', 'submitted', 'under_review', 'reviewed', 'editor_review', 'accepted', 'published', 'rejected'];
+
+type FileLike = {
+  name: string;
+  size: number;
+  arrayBuffer: () => Promise<ArrayBuffer>;
+};
+
+const isFileLike = (value: unknown): value is FileLike => {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as any;
+  return typeof v.name === 'string' && typeof v.size === 'number' && typeof v.arrayBuffer === 'function';
+};
 
 export async function GET(request: NextRequest) {
   let connection: mysql.Connection | null = null;
@@ -28,7 +43,7 @@ export async function GET(request: NextRequest) {
     connection = await getDatabase();
 
     let query = `
-      SELECT aa.*, u.full_name as author_name, u.email as author_email
+      SELECT aa.*, u.full_name as author_name, u.email as author_email, u.phone as author_phone
       FROM authors_articles aa
       JOIN users u ON aa.author_id = u.id
     `;
@@ -76,8 +91,19 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Get articles error:', error);
+    const err = error as any;
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                message: err?.message ?? String(err),
+                code: err?.code,
+                stack: err?.stack,
+              }
+            : undefined,
+      },
       { status: 500 }
     );
   }
@@ -87,19 +113,60 @@ export async function POST(request: NextRequest) {
   let connection: mysql.Connection | null = null;
   
   try {
-    const body = await request.json();
-    const { 
-      authorId, 
-      title, 
-      abstract, 
-      keywords, 
-      content, 
-      authors, 
-      affiliation, 
-      articleType, 
-      manuscriptFileName,
-      status = 'submitted'
-    } = body;
+    const contentType = request.headers.get('content-type') || '';
+    console.log('POST /api/articles content-type:', contentType);
+
+    let authorId: number | null = null;
+    let title: string | null = null;
+    let abstract: string | null = null;
+    let keywords: string | null = null;
+    let content: string | null = null;
+    let authors: any[] | null = null;
+    let affiliation: string | null = null;
+    let articleType: string | null = null;
+    let status: string = 'submitted';
+    let manuscriptFile: File | null = null;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      console.log('FormData keys received:', Array.from(formData.keys()));
+      authorId = parseInt((formData.get('authorId') as string) || '');
+      title = (formData.get('title') as string) || null;
+      abstract = (formData.get('abstract') as string) || null;
+      keywords = (formData.get('keywords') as string) || null;
+      content = (formData.get('content') as string) || null;
+      affiliation = (formData.get('affiliation') as string) || null;
+      articleType = (formData.get('articleType') as string) || null;
+      status = ((formData.get('status') as string) || 'submitted').toString();
+
+      const authorsRaw = formData.get('authors');
+      console.log('authorsRaw from FormData:', authorsRaw);
+      if (typeof authorsRaw === 'string' && authorsRaw.trim()) {
+        try {
+          authors = JSON.parse(authorsRaw);
+          console.log('Parsed authors:', authors);
+        } catch (e) {
+          console.error('Failed to parse authors JSON:', e);
+          authors = null;
+        }
+      }
+
+      const fileValue = formData.get('manuscript');
+      manuscriptFile = isFileLike(fileValue) ? (fileValue as unknown as File) : null;
+      console.log('manuscriptFile:', manuscriptFile ? manuscriptFile.name : 'null');
+    } else {
+      const body = await request.json();
+      authorId = Number(body.authorId);
+      title = body.title;
+      abstract = body.abstract;
+      keywords = body.keywords || null;
+      content = body.content || null;
+      authors = body.authors || null;
+      affiliation = body.affiliation || null;
+      articleType = body.articleType || null;
+      status = body.status || 'submitted';
+      manuscriptFile = null;
+    }
 
     // Validate required fields
     if (!authorId || !title || !abstract) {
@@ -109,34 +176,75 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (manuscriptFile && manuscriptFile.size > 0) {
+      const typeCheck = isAllowedFileType(manuscriptFile);
+      if (!typeCheck.valid) {
+        return NextResponse.json({ error: typeCheck.error }, { status: 400 });
+      }
+
+      const sizeCheck = isFileSizeValid(manuscriptFile);
+      if (!sizeCheck.valid) {
+        return NextResponse.json({ error: sizeCheck.error }, { status: 400 });
+      }
+    }
+
     connection = await getDatabase();
 
     // Insert article into authors_articles table
+    const insertValues = [
+      authorId,
+      title,
+      abstract,
+      keywords || null,
+      content || null,
+      JSON.stringify(authors || []), // always a valid JSON string
+      affiliation || null,
+      articleType || null,
+      manuscriptFile ? manuscriptFile.name : null,
+      null,
+      status
+    ];
+    console.log('Insert values:', insertValues);
+
     const [result] = await connection.execute(
       `INSERT INTO authors_articles 
-       (author_id, title, abstract, keywords, content, authors, affiliation, article_type, manuscript_file_name, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        authorId,
-        title,
-        abstract,
-        keywords || null,
-        content || null,
-        authors ? JSON.stringify(authors) : null,
-        affiliation || null,
-        articleType || null,
-        manuscriptFileName || null,
-        status
-      ]
+       (author_id, title, abstract, keywords, content, authors, affiliation, article_type, manuscript_file_name, manuscript_file_path, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      insertValues
     ) as [any, any];
+
+    const insertedId = result.insertId as number;
+    console.log('Inserted article ID:', insertedId);
+
+    if (manuscriptFile && manuscriptFile.size > 0) {
+      const bytes = await manuscriptFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'articles', insertedId.toString());
+      await mkdir(uploadsDir, { recursive: true });
+
+      const ts = Date.now();
+      const sanitized = sanitizeFileName(manuscriptFile.name);
+      const uniqueFileName = `${ts}-manuscript-${sanitized}`;
+      const filePath = join(uploadsDir, uniqueFileName);
+      await writeFile(filePath, buffer);
+
+      const fileUrl = `/uploads/articles/${insertedId}/${uniqueFileName}`;
+
+      await connection.execute(
+        'UPDATE authors_articles SET manuscript_file_name = ?, manuscript_file_path = ? WHERE id = ?',
+        [manuscriptFile.name, fileUrl, insertedId]
+      );
+      console.log('Manuscript file saved to:', fileUrl);
+    }
 
     // Get the created article
     const [newArticles] = await connection.execute(
-      `SELECT aa.*, u.full_name as author_name, u.email as author_email
+      `SELECT aa.*, u.full_name as author_name, u.email as author_email, u.phone as author_phone
        FROM authors_articles aa
        JOIN users u ON aa.author_id = u.id
        WHERE aa.id = ?`,
-      [result.insertId]
+      [insertedId]
     ) as [any[], any];
 
     const newArticle = newArticles[0];
@@ -149,8 +257,19 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Article submission error:', error);
+    const err = error as any;
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                message: err?.message ?? String(err),
+                code: err?.code,
+                stack: err?.stack,
+              }
+            : undefined,
+      },
       { status: 500 }
     );
   }
