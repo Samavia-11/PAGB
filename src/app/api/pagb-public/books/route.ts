@@ -9,10 +9,9 @@ export async function GET() {
         `SELECT b.*, COALESCE(COUNT(ba.id), 0) AS article_count
          FROM books b
          LEFT JOIN book_articles ba ON ba.book_id = b.id
-         WHERE b.status = 'published'
+         WHERE b.status IN ('published', 'archived')
          GROUP BY b.id
-         ORDER BY b.edition_year DESC, b.id DESC
-         LIMIT 10`
+         ORDER BY b.edition_year DESC, b.created_at DESC, b.id DESC`
       );
       return NextResponse.json({ books: rows || [] });
     } catch {

@@ -57,7 +57,6 @@ const EditorDashboard = () => {
 
   useEffect(() => {
     checkAuth();
-    loadReviewedArticles();
   }, []);
 
   // Simulate real-time data updates
@@ -92,6 +91,8 @@ const EditorDashboard = () => {
           return;
         }
         setUser(data.user);
+        router.replace('/dashboard/editor/article-management');
+        return;
       } else {
         router.push('/login');
       }

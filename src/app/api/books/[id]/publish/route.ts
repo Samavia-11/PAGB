@@ -92,8 +92,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       `UPDATE books
        SET featured_rank = featured_rank + 1,
            is_current = 0,
-           status = CASE WHEN featured_rank + 1 >= 2 THEN 'archived' ELSE status END
-       WHERE status IN ('published','archived')
+           status = status
+       WHERE status IN ('published', 'archived')
          AND id <> ?`,
       [bookId]
     );
@@ -108,11 +108,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       [bookId]
     );
 
-    // Optional cleanup: cap at 2 featured books by forcing anything rank >= 2 to archived
+    // Ensure all included articles become publicly visible.
+    // Public endpoints filter on aa.status = 'published'.
     await connection.execute(
-      `UPDATE books
-       SET is_current = 0, status = 'archived'
-       WHERE featured_rank >= 2`
+      `UPDATE authors_articles aa
+       JOIN book_articles ba ON ba.article_id = aa.id
+       SET aa.status = 'published',
+           aa.last_updated = NOW()
+       WHERE ba.book_id = ?`,
+      [bookId]
     );
 
     await connection.commit();

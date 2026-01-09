@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, FileText, Users } from 'lucide-react';
+import { ArrowLeft, FileText, Users, Download } from 'lucide-react';
 
 type TabKey = 'articles' | 'authors';
 
@@ -197,9 +197,9 @@ export default function BookDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200">
-                  <div className="font-semibold text-gray-900">Articles</div>
-                  <div className="text-sm text-gray-600">{articles.length} total</div>
+                <div className="px-4 py-4 border-b border-gray-200">
+                  <div className="text-2xl font-black tracking-wide text-gray-900">ARTICLES</div>
+                  <div className="text-sm text-gray-600 mt-1">{articles.length} total</div>
                 </div>
                 <div className="divide-y divide-gray-200 max-h-[70vh] overflow-y-auto">
                   {articles.map((a) => {
@@ -209,10 +209,10 @@ export default function BookDetailPage() {
                         key={a.book_article_id}
                         type="button"
                         onClick={() => setSelectedArticleId(Number(a.article_id))}
-                        className={`w-full text-left p-4 hover:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
+                        className={`w-full text-left p-6 hover:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
                       >
-                        <div className="flex gap-3">
-                          <div className="w-12 h-16 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                        <div className="flex gap-6 items-start">
+                          <div className="w-28 h-36 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
                             <img
                               src={a.cover_page_path || book.cover_image_path || '/images/icon.png'}
                               alt={a.article_title || a.book_article_title || 'Article'}
@@ -220,17 +220,26 @@ export default function BookDetailPage() {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-900 line-clamp-2">
-                              {a.article_title || a.book_article_title || `Article #${a.article_id}`}
+                            <div className="text-xl font-bold text-gray-900 leading-snug tracking-wide line-clamp-3" style={{ fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' }}>
+                              {(a.article_title || a.book_article_title || `Article #${a.article_id}`)}
                             </div>
-                            <div className="text-xs text-gray-600 mt-1">
+                            <div className="text-sm text-gray-800 mt-2" style={{ fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' }}>
                               {a.author_name || 'Unknown Author'}
                             </div>
-                            <div className="mt-2">
-                              <span className="inline-flex items-center text-xs font-medium text-green-700">
-                                Read Article →
-                              </span>
-                            </div>
+                            {a.manuscript_file_path ? (
+                              <div className="mt-3">
+                                <a
+                                  href={a.manuscript_file_path}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center text-sm font-semibold text-orange-600 hover:text-orange-700"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <span className="mr-2">📄</span>
+                                  Read Full Article (PDF)
+                                </a>
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </button>
@@ -253,13 +262,39 @@ export default function BookDetailPage() {
                       <div className="text-sm text-gray-600 mt-1">
                         By{' '}
                         {selectedArticle.author_name ? (
-                          <Link href={`/authors/${String(selectedArticle.author_name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`} className="text-green-700 hover:text-green-900">
-                            {selectedArticle.author_name}
-                          </Link>
+                          selectedArticle.author_id ? (
+                            <Link
+                              href={`/authors/${String(selectedArticle.author_name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
+                              className="text-green-700 hover:text-green-900"
+                            >
+                              {selectedArticle.author_name}
+                            </Link>
+                          ) : (
+                            selectedArticle.author_name
+                          )
                         ) : (
                           'Unknown Author'
                         )}
                       </div>
+                      {selectedArticle.manuscript_file_path ? (
+                        <div className="mt-3 flex items-center gap-3">
+                          <a
+                            href={selectedArticle.manuscript_file_path}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm font-medium text-green-700 hover:text-green-900"
+                          >
+                            Open Manuscript
+                          </a>
+                          <a
+                            href={selectedArticle.manuscript_file_path}
+                            download
+                            className="inline-flex items-center text-sm font-medium text-green-700 hover:text-green-900"
+                          >
+                            <Download className="w-4 h-4 mr-1" /> Download
+                          </a>
+                        </div>
+                      ) : null}
                     </div>
 
                     {selectedArticle.article_abstract ? (

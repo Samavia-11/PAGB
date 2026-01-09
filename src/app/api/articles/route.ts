@@ -5,6 +5,8 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
 
+export const runtime = 'nodejs';
+
 // Valid article statuses
 const VALID_STATUSES = ['draft', 'submitted', 'under_review', 'reviewed', 'editor_review', 'accepted', 'published', 'rejected'];
 
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
     let articleType: string | null = null;
     let status: string = 'submitted';
     let manuscriptFile: File | null = null;
+    let coverLetterFile: File | null = null;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
@@ -154,6 +157,10 @@ export async function POST(request: NextRequest) {
       const fileValue = formData.get('manuscript');
       manuscriptFile = isFileLike(fileValue) ? (fileValue as unknown as File) : null;
       console.log('manuscriptFile:', manuscriptFile ? manuscriptFile.name : 'null');
+
+      const coverLetterValue = formData.get('coverLetterFile');
+      coverLetterFile = isFileLike(coverLetterValue) ? (coverLetterValue as unknown as File) : null;
+      console.log('coverLetterFile:', coverLetterFile ? coverLetterFile.name : 'null');
     } else {
       const body = await request.json();
       authorId = Number(body.authorId);
@@ -166,6 +173,7 @@ export async function POST(request: NextRequest) {
       articleType = body.articleType || null;
       status = body.status || 'submitted';
       manuscriptFile = null;
+      coverLetterFile = null;
     }
 
     // Validate required fields
@@ -183,6 +191,18 @@ export async function POST(request: NextRequest) {
       }
 
       const sizeCheck = isFileSizeValid(manuscriptFile);
+      if (!sizeCheck.valid) {
+        return NextResponse.json({ error: sizeCheck.error }, { status: 400 });
+      }
+    }
+
+    if (coverLetterFile && coverLetterFile.size > 0) {
+      const typeCheck = isAllowedFileType(coverLetterFile);
+      if (!typeCheck.valid) {
+        return NextResponse.json({ error: typeCheck.error }, { status: 400 });
+      }
+
+      const sizeCheck = isFileSizeValid(coverLetterFile);
       if (!sizeCheck.valid) {
         return NextResponse.json({ error: sizeCheck.error }, { status: 400 });
       }
@@ -236,6 +256,40 @@ export async function POST(request: NextRequest) {
         [manuscriptFile.name, fileUrl, insertedId]
       );
       console.log('Manuscript file saved to:', fileUrl);
+    }
+
+    if (coverLetterFile && coverLetterFile.size > 0) {
+      const bytes = await coverLetterFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const uploadsDir = join(process.cwd(), 'public', 'uploads', 'articles', insertedId.toString());
+      await mkdir(uploadsDir, { recursive: true });
+
+      const ts = Date.now();
+      const sanitized = sanitizeFileName(coverLetterFile.name);
+      const uniqueFileName = `${ts}-cover-letter-${sanitized}`;
+      const filePath = join(uploadsDir, uniqueFileName);
+      await writeFile(filePath, buffer);
+
+      const fileUrl = `/uploads/articles/${insertedId}/${uniqueFileName}`;
+
+      let nextContent: any = null;
+      try {
+        nextContent = content && typeof content === 'string' && content.trim() ? JSON.parse(content) : {};
+      } catch {
+        nextContent = {};
+      }
+      if (!nextContent || typeof nextContent !== 'object') nextContent = {};
+      if (!nextContent.declarations || typeof nextContent.declarations !== 'object') nextContent.declarations = {};
+      nextContent.declarations.coverLetterFileName = coverLetterFile.name;
+      nextContent.declarations.coverLetterFileUrl = fileUrl;
+
+      await connection.execute(
+        'UPDATE authors_articles SET content = ? WHERE id = ?',
+        [JSON.stringify(nextContent), insertedId]
+      );
+
+      console.log('Cover letter file saved to:', fileUrl);
     }
 
     // Get the created article

@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
     const title = String(formData.get('title') || '').trim();
     const editionYearRaw = String(formData.get('editionYear') || '').trim();
     const articleIdsRaw = String(formData.get('articleIds') || '').trim();
+    const articleMetaRaw = String(formData.get('articleMeta') || '').trim();
 
     if (!title) {
       return NextResponse.json({ error: 'Missing required fields: title' }, { status: 400 });
@@ -176,6 +177,23 @@ export async function POST(request: NextRequest) {
         }
       } catch {
         return NextResponse.json({ error: 'articleIds must be a JSON array of numbers' }, { status: 400 });
+      }
+    }
+
+    const articleMetaById = new Map<number, { title?: string | null }>();
+    if (articleMetaRaw) {
+      try {
+        const parsed = JSON.parse(articleMetaRaw);
+        if (Array.isArray(parsed)) {
+          for (const x of parsed) {
+            const id = Number(x?.articleId);
+            if (!Number.isFinite(id) || id <= 0) continue;
+            const t = typeof x?.title === 'string' ? x.title.trim() : null;
+            articleMetaById.set(id, { title: t || null });
+          }
+        }
+      } catch {
+        return NextResponse.json({ error: 'articleMeta must be a JSON array' }, { status: 400 });
       }
     }
 
@@ -253,10 +271,45 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Article not found: ${aid}` }, { status: 400 });
       }
 
+      let coverPagePath: string | null = null;
+      const coverKey = `articleCover_${aid}`;
+      const coverValue = formData.get(coverKey);
+      const coverPageFile = coverValue instanceof File ? coverValue : null;
+
+      if (coverPageFile && coverPageFile.size > 0) {
+        const typeCheck = isAllowedFileType(coverPageFile);
+        if (!typeCheck.valid) {
+          await connection.rollback();
+          return NextResponse.json({ error: typeCheck.error }, { status: 400 });
+        }
+
+        const sizeCheck = isFileSizeValid(coverPageFile);
+        if (!sizeCheck.valid) {
+          await connection.rollback();
+          return NextResponse.json({ error: sizeCheck.error }, { status: 400 });
+        }
+
+        const bytes = await coverPageFile.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const uploadsDir = join(process.cwd(), 'public', 'uploads', 'books', bookId.toString(), 'articles');
+        await mkdir(uploadsDir, { recursive: true });
+
+        const ts = Date.now();
+        const sanitized = sanitizeFileName(coverPageFile.name);
+        const uniqueFileName = `${ts}-article-${aid}-${sanitized}`;
+        const filePath = join(uploadsDir, uniqueFileName);
+        await writeFile(filePath, buffer);
+        coverPagePath = `/uploads/books/${bookId}/articles/${uniqueFileName}`;
+      }
+
+      const customTitle = articleMetaById.get(aid)?.title || null;
+      const bookArticleTitle = customTitle || row.title || null;
+
       await connection.execute(
         `INSERT INTO book_articles (book_id, article_id, sort_order, title, author_id, cover_page_path, content)
-         VALUES (?, ?, ?, ?, ?, NULL, ?)`,
-        [bookId, aid, i, row.title || null, row.author_id || null, row.content || null]
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [bookId, aid, i, bookArticleTitle, row.author_id || null, coverPagePath, row.content || null]
       );
     }
 

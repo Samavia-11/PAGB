@@ -14,6 +14,58 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, '');
 }
 
+function hashSlugToId(slug: string) {
+  let h = 2166136261;
+  for (let i = 0; i < slug.length; i++) {
+    h ^= slug.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) || 1;
+}
+
+function extractAllAuthorNames(raw: unknown) {
+  const text = typeof raw === 'string' ? raw : raw == null ? '' : String(raw);
+  if (!text.trim()) return [] as string[];
+  try {
+    const parsed = JSON.parse(text);
+    const out: string[] = [];
+    if (Array.isArray(parsed)) {
+      for (const item of parsed) {
+        if (typeof item === 'string') {
+          const n = item.trim();
+          if (n) out.push(n);
+          continue;
+        }
+        if (typeof item === 'object' && item) {
+          const n = typeof (item as any).name === 'string' ? String((item as any).name).trim() : '';
+          if (n) out.push(n);
+        }
+      }
+    }
+    return out;
+  } catch {
+    return [] as string[];
+  }
+}
+
+function extractFirstAuthorName(raw: unknown) {
+  const text = typeof raw === 'string' ? raw : raw == null ? '' : String(raw);
+  if (!text.trim()) return null;
+  try {
+    const parsed = JSON.parse(text);
+    const first = Array.isArray(parsed) ? parsed[0] : null;
+    if (!first) return null;
+    if (typeof first === 'string') return first.trim() || null;
+    if (typeof first === 'object' && first) {
+      const name = (first as any).name;
+      return typeof name === 'string' && name.trim() ? name.trim() : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -23,7 +75,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const books = (await query(
       `SELECT *
        FROM books
-       WHERE id = ? AND status = 'published'
+       WHERE id = ? AND status IN ('published', 'archived')
        LIMIT 1`,
       [bookId]
     )) as any[];
@@ -56,21 +108,36 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       [bookId]
     )) as any[];
 
-    const authorMap = new Map<number, { id: number; name: string; slug: string; article_count: number }>();
     for (const a of articles || []) {
-      const authorId = Number(a.author_id || 0);
-      const authorName = String(a.author_name || '').trim();
-      if (!authorId || !authorName) continue;
-      const existing = authorMap.get(authorId);
-      if (existing) {
-        existing.article_count += 1;
-      } else {
-        authorMap.set(authorId, {
-          id: authorId,
-          name: authorName,
-          slug: slugify(authorName),
-          article_count: 1,
-        });
+      const override = extractFirstAuthorName(a.article_authors);
+      if (override) {
+        a.author_name = override;
+        a.author_id = null;
+      }
+    }
+
+    const authorMap = new Map<string, { id: number; name: string; slug: string; article_count: number }>();
+    for (const a of articles || []) {
+      const names = extractAllAuthorNames(a.article_authors);
+      const fallback = String(a.author_name || '').trim();
+      if (names.length === 0 && fallback) names.push(fallback);
+
+      for (const name of names) {
+        const n = String(name || '').trim();
+        if (!n) continue;
+        const s = slugify(n);
+        if (!s) continue;
+        const existing = authorMap.get(s);
+        if (existing) {
+          existing.article_count += 1;
+        } else {
+          authorMap.set(s, {
+            id: hashSlugToId(s),
+            name: n,
+            slug: s,
+            article_count: 1,
+          });
+        }
       }
     }
 

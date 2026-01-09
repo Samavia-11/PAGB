@@ -77,7 +77,6 @@ const Layout = ({ children, user }: LayoutProps) => {
       ],
       editor: [
         ...baseItems,
-        { name: 'Dashboard', href: '/dashboard/editor', icon: LayoutDashboard },
         { name: 'Article Management', href: '/dashboard/editor/article-management', icon: FileText },
       ],
       administrator: [

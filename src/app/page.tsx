@@ -166,6 +166,8 @@ export default function Home() {
   const [policiesDropdownOpen, setPoliciesDropdownOpen] = useState<boolean>(false);
 
   const [otherBooks, setOtherBooks] = useState<PublicBook[]>([]);
+  const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
+  const [selectedBookLoading, setSelectedBookLoading] = useState<boolean>(false);
 
   const [stats, setStats] = useState<Stats>({
     publishedArticles: 0,
@@ -252,7 +254,38 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fetch articles from 2024 and 2021 on page load and derive authors from the same data
+  // Fetch contributing authors from DB so author cards always reflect uploaded/published articles
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/pagb-public/contributing-authors', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const list = Array.isArray(data?.authors) ? data.authors : [];
+        const mapped: Author[] = list
+          .map((a: any) => ({
+            name: String(a?.name || '').trim(),
+            slug: String(a?.slug || '').trim(),
+            count: Number(a?.article_count || 0),
+          }))
+          .filter((a) => a.name && a.slug && Number.isFinite(a.count) && a.count > 0);
+        if (!cancelled) {
+          setAuthors(mapped);
+          setAuthorIndex(0);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) {
+          setAuthors([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch articles from 2024 and 2021 on page load
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -275,29 +308,6 @@ export default function Home() {
           // Shuffle and pick 3 random articles for the ARTICLES section
           const shuffled = [...allArticles].sort(() => Math.random() - 0.5);
           setArticles(shuffled.slice(0, 3));
-
-          // Build contributing authors from the same data
-          const authorCounts = new Map<string, number>();
-          for (const art of allArticles) {
-            if (!art.author) continue;
-            const name = art.author.trim();
-            if (!name) continue;
-            authorCounts.set(name, (authorCounts.get(name) || 0) + 1);
-          }
-
-          const derivedAuthors: Author[] = Array.from(authorCounts.entries()).map(([name, count]) => ({
-            name,
-            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            count,
-          }));
-
-          // Sort by article count (desc), then name
-          derivedAuthors.sort((a, b) => {
-            if (b.count !== a.count) return b.count - a.count;
-            return a.name.localeCompare(b.name);
-          });
-
-          setAuthors(derivedAuthors);
         }
       } catch (e) {
         console.error(e);
@@ -404,6 +414,52 @@ export default function Home() {
       }
     } catch (err) {
       console.error('Failed to load issue', err);
+    }
+  };
+
+  const loadBookArticles = async (bookId: number) => {
+    setSelectedBookId(bookId);
+    setSelectedBookLoading(true);
+    try {
+      const res = await fetch(`/api/pagb-public/books/${bookId}`, { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      const book = data?.book || null;
+      const list = Array.isArray(data?.articles) ? data.articles : [];
+
+      const mapped: Article[] = list.map((a: any) => {
+        const title = String(a?.article_title || a?.book_article_title || '').trim();
+        const author = String(a?.author_name || 'Various Contributors').trim() || 'Various Contributors';
+        const description = String(a?.article_abstract || '').trim();
+        const pdfUrl = String(a?.manuscript_file_path || '').trim() || '#';
+        const thumbnail = String(a?.cover_page_path || book?.cover_image_path || '/images/icon.png');
+        const published = String(book?.edition_year || '').trim();
+
+        return {
+          title: title || 'Untitled',
+          author,
+          date: published || '',
+          description: description || '',
+          published: published || '',
+          pdfUrl,
+          thumbnail,
+        };
+      });
+
+      setArticles(mapped);
+
+      if (typeof window !== 'undefined') {
+        const el = articlesRef.current;
+        if (el) {
+          const headerOffset = 90;
+          const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+          const offsetPosition = elementPosition - headerOffset;
+          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load book articles', err);
+    } finally {
+      setSelectedBookLoading(false);
     }
   };
 
@@ -693,6 +749,11 @@ export default function Home() {
                 <h2 className="text-3xl font-black mb-2" style={{fontFamily: 'Arial, sans-serif', letterSpacing: '0.02em', fontWeight: '900'}}>
                   ARTICLES
                 </h2>
+                {selectedBookId != null ? (
+                  <div className="text-sm text-gray-600 font-semibold">
+                    {selectedBookLoading ? 'Loading selected issue…' : `Showing issue #${selectedBookId}`}
+                  </div>
+                ) : null}
               </div>
               <div className="space-y-8">
                 {articles.map((article, index) => (
@@ -754,10 +815,11 @@ export default function Home() {
                     <div className="text-sm text-gray-600">No issues available yet.</div>
                   ) : (
                     otherBooks.slice(0, 2).map((book) => (
-                      <Link
+                      <button
                         key={book.id}
-                        href={`/books/${book.id}`}
-                        className="block w-full text-left border border-gray-300 hover:shadow-xl transition-shadow"
+                        type="button"
+                        onClick={() => loadBookArticles(book.id)}
+                        className={`block w-full text-left border border-gray-300 hover:shadow-xl transition-shadow ${selectedBookId === book.id ? 'ring-2 ring-orange' : ''}`}
                         style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}
                       >
                         <div className="flex">
@@ -776,7 +838,7 @@ export default function Home() {
                             <p className="text-xs text-gray-600 mt-2">{Number(book.article_count || 0)} Articles</p>
                           </div>
                         </div>
-                      </Link>
+                      </button>
                     ))
                   )}
                   <div className="text-center pt-4">

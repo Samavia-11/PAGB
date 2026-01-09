@@ -316,7 +316,21 @@ const ArticleManagementPage = () => {
         }
         
         // Combine all articles
-        allSubmissions = [...transformedSubmissions, ...forwardedArticles];
+        const forwardedByArticleId = new Map<number, Submission>();
+        for (const f of forwardedArticles) {
+          if (typeof f?.articleId === 'number') {
+            forwardedByArticleId.set(f.articleId, f);
+          }
+        }
+
+        const dedupedBase = transformedSubmissions.filter((s: any) => {
+          // If the article has been forwarded to a reviewer, show it only in External (Reviewers)
+          // using the editor-forwarded record (which contains reviewer info).
+          if (s?.status === 'external_review' && forwardedByArticleId.has(s.articleId)) return false;
+          return true;
+        });
+
+        allSubmissions = [...dedupedBase, ...forwardedArticles];
       } else {
         // Fallback to localStorage data
         const realSubmissions = JSON.parse(localStorage.getItem('editor_submissions') || '[]') as Submission[];
@@ -834,7 +848,23 @@ const ArticleManagementPage = () => {
                           throw new Error(err?.error || 'Failed to send to author');
                         }
 
+                        // Mark article as editor review (revision) so it moves out of New Submissions
+                        await fetch('/api/articles', {
+                          method: 'PATCH',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-id': String(user.id),
+                            'x-user-role': 'editor',
+                          },
+                          body: JSON.stringify({
+                            id: articleId,
+                            status: 'editor_review',
+                          }),
+                        }).catch(() => null);
+
                         alert('Sent to author successfully.');
+                        setActiveTab('revision');
+                        loadMockSubmissions();
                       } catch (e: any) {
                         console.error('Forward reviewer doc to author failed:', e);
                         alert(e?.message || 'Failed to send to author');
@@ -844,8 +874,33 @@ const ArticleManagementPage = () => {
                     return;
                   }
 
-                  // Reuse existing Reply-to-Author page so author receives it on /reviewed
-                  router.push(`/dashboard/editor/article-management/${articleId}`);
+                  // Mark as editor review (revision) immediately so it moves out of New Submissions
+                  if (!user) {
+                    router.push(`/dashboard/editor/article-management/${articleId}`);
+                    return;
+                  }
+
+                  (async () => {
+                    try {
+                      await fetch('/api/articles', {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'x-user-id': String(user.id),
+                          'x-user-role': 'editor',
+                        },
+                        body: JSON.stringify({
+                          id: articleId,
+                          status: 'editor_review',
+                        }),
+                      });
+                    } catch (e) {
+                      console.error('Failed to mark article as editor_review:', e);
+                    } finally {
+                      // Reuse existing Reply-to-Author page so author receives it on /reviewed
+                      router.push(`/dashboard/editor/article-management/${articleId}`);
+                    }
+                  })();
                 }}
                 className="w-full px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
               >

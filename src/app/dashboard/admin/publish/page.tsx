@@ -199,7 +199,7 @@ export default function AdminPublishPage() {
           <button
             type="button"
             className="btn-primary"
-            onClick={() => router.push('/dashboard/admin/publications')}
+            onClick={() => router.push('/dashboard/admin/publications/new')}
           >
             Go to Publications
           </button>
