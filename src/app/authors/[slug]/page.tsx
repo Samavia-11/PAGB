@@ -7,19 +7,33 @@ import { FileText, ArrowLeft } from 'lucide-react';
 
 interface Props {
   params: { slug: string };
+  searchParams?: { articleId?: string };
 }
 
 interface Article {
+  id: number;
   title: string;
-  author: string;
-  authorSlug: string;
-  pdfUrl: string;
-  fileName: string;
-  year: string;
-  monthYear: string;
+  abstract: string | null;
+  content: string | null;
+  manuscript_file_path: string | null;
+  submission_date: string | null;
 }
 
-export default async function AuthorPage({ params }: Props) {
+function toInt(value: unknown) {
+  const n = typeof value === 'string' ? Number(value) : typeof value === 'number' ? value : NaN;
+  return Number.isFinite(n) ? Math.trunc(n) : null;
+}
+
+function parseContent(raw: string | null) {
+  const text = raw || '';
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { manuscript: { content: text } };
+  }
+}
+
+export default async function AuthorPage({ params, searchParams }: Props) {
   const { slug } = params;
 
   // Build absolute URL for the API (server components require absolute URLs)
@@ -39,24 +53,28 @@ export default async function AuthorPage({ params }: Props) {
 
   const data = await res.json();
   const authorArticles: Article[] = (data.articles || []).map((a: any) => ({
-    title: a.title,
-    author: a.authors || data.author?.name || 'Various Contributors',
-    authorSlug: data.author?.slug || slug,
-    pdfUrl: a.pdf_path || '#',
-    fileName: String(a.id),
-    year: String(a.year || ''),
-    monthYear: a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '',
+    id: Number(a.id),
+    title: String(a.title || ''),
+    abstract: a.abstract ?? null,
+    content: a.content ?? null,
+    manuscript_file_path: a.manuscript_file_path ?? null,
+    submission_date: a.submission_date ? String(a.submission_date) : null,
   }));
 
   if (authorArticles.length === 0) {
     notFound();
   }
 
-  const authorName = data.author?.name || authorArticles[0].author;
+  const authorName = data.author?.name || 'Author';
+
+  const selectedArticleId = toInt(searchParams?.articleId) ?? Number(authorArticles[0].id);
+  const selected = authorArticles.find((a) => a.id === selectedArticleId) || authorArticles[0];
+  const parsed = parseContent(selected?.content || null);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4 max-w-6xl">
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-32 h-32 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-5xl font-bold shadow-2xl">
@@ -77,30 +95,84 @@ export default async function AuthorPage({ params }: Props) {
           Back to Home
         </Link>
 
-        {/* Articles List */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {authorArticles.map((article) => (
-            <Link
-              key={article.fileName}
-              href={article.pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all p-6 border border-gray-200 group"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center group-hover:bg-orange-200 transition">
-                  <FileText className="w-6 h-6 text-orange-600" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-200">
+                <div className="font-semibold text-gray-900">Articles</div>
+                <div className="text-sm text-gray-600">{authorArticles.length} total</div>
+              </div>
+              <div className="divide-y divide-gray-200 max-h-[70vh] overflow-y-auto">
+                {authorArticles.map((article) => {
+                  const isSelected = Number(article.id) === Number(selected.id);
+                  return (
+                    <Link
+                      key={article.id}
+                      href={`/authors/${encodeURIComponent(slug)}?articleId=${article.id}`}
+                      className={`block p-4 hover:bg-gray-50 ${isSelected ? 'bg-gray-50' : ''}`}
+                    >
+                      <div className="flex gap-3">
+                        <div className="w-12 h-16 bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                          <img
+                            src={'/images/icon.png'}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 line-clamp-2">{article.title}</div>
+                          <div className="mt-2">
+                            <span className="inline-flex items-center text-xs font-medium text-green-700">
+                              Read Article →
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[70vh]">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{selected.title}</h2>
+              </div>
+
+              {selected.abstract ? (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">Abstract</h3>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-700 whitespace-pre-wrap">
+                    {selected.abstract}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 line-clamp-2">
-                    {article.title}
-                  </h3>
-                  {article.monthYear && <p className="text-sm text-gray-500 text-xs mt-1">{article.monthYear}</p>}
-                  <p className="text-sm text-gray-500 text-xs mt-1">Open PDF →</p>
+              ) : null}
+
+              <div className="mb-2">
+                <h3 className="font-semibold text-gray-900 mb-2">Content</h3>
+                <div className="prose max-w-none">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {parsed?.manuscript?.content || selected.content || 'No content available.'}
+                  </div>
                 </div>
               </div>
-            </Link>
-          ))}
+
+              {selected.manuscript_file_path ? (
+                <div className="mt-6">
+                  <a
+                    href={selected.manuscript_file_path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center text-sm font-semibold text-orange hover:text-green transition-colors"
+                  >
+                    <FileText className="w-4 h-4 mr-1" /> Open Manuscript
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {authorArticles.length === 0 && (

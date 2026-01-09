@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Search,
-  Bell
+  Bell,
+  Globe
 } from 'lucide-react';
 
 interface User {
@@ -82,6 +83,8 @@ const Layout = ({ children, user }: LayoutProps) => {
       administrator: [
         ...baseItems,
         { name: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
+        { name: 'Publication', href: '/dashboard/admin/publications', icon: FileText },
+        { name: 'Publish', href: '/dashboard/admin/publish', icon: Globe },
         { name: 'Issues', href: '/dashboard/admin/issues', icon: FileText },
         { name: 'User Requests', href: '/dashboard/admin/user-requests', icon: Users },
         { name: 'Authors', href: '/authors', icon: Users },

@@ -148,12 +148,24 @@ interface EditorialBoardItem {
   sort_order: number;
 }
 
+interface PublicBook {
+  id: number;
+  title: string;
+  edition_year: number;
+  cover_image_path: string | null;
+  is_current: number;
+  featured_rank: number;
+  article_count: number;
+}
+
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [editorialDropdownOpen, setEditorialDropdownOpen] = useState<boolean>(false);
   const [policiesDropdownOpen, setPoliciesDropdownOpen] = useState<boolean>(false);
+
+  const [otherBooks, setOtherBooks] = useState<PublicBook[]>([]);
 
   const [stats, setStats] = useState<Stats>({
     publishedArticles: 0,
@@ -292,6 +304,27 @@ export default function Home() {
       }
     })();
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/pagb-public/books');
+        const data = await res.json();
+        const list = (data?.books || []) as PublicBook[];
+        if (!cancelled) {
+          setOtherBooks(list);
+        }
+      } catch {
+        if (!cancelled) {
+          setOtherBooks([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const [editorialBoardItems, setEditorialBoardItems] = useState<EditorialBoardItem[]>([]);
@@ -717,30 +750,35 @@ export default function Home() {
                   OTHER ISSUES
                 </h3>
                 <div className="space-y-6 mt-8">
-                  <button onClick={() => loadIssue('2025')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
-                    <div className="flex">
-                      <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
-                        <img src="/images/2023.png" alt="2025" className="w-full h-full object-cover opacity-60" />
-                      </div>
-                      <div className="flex-1 p-5">
-                        <div className="text-sm text-gray-700 mb-2 font-semibold">2025 EDITION</div>
-                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2025 </h4>
-                        <p className="text-xs text-gray-600 mt-2">21 Articles</p>
-                      </div>
-                    </div>
-                  </button>
-                  <button onClick={() => loadIssue('2024')} className="w-full text-left border border-gray-300 hover:shadow-xl transition-shadow" style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}>
-                    <div className="flex">
-                      <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
-                        <img src="/images/icon.png" alt="2024" className="w-full h-full object-cover opacity-60" />
-                      </div>
-                      <div className="flex-1 p-5">
-                        <div className="text-sm text-gray-700 mb-2 font-semibold">2024 EDITION</div>
-                        <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>PAKISTAN ARMY GREEN BOOK 2024</h4>
-                        <p className="text-xs text-gray-600 mt-2">18 Articles | 145 MB</p>
-                      </div>
-                    </div>
-                  </button>
+                  {otherBooks.length === 0 ? (
+                    <div className="text-sm text-gray-600">No issues available yet.</div>
+                  ) : (
+                    otherBooks.slice(0, 2).map((book) => (
+                      <Link
+                        key={book.id}
+                        href={`/books/${book.id}`}
+                        className="block w-full text-left border border-gray-300 hover:shadow-xl transition-shadow"
+                        style={{backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)'}}
+                      >
+                        <div className="flex">
+                          <div className="w-40 flex-shrink-0 relative bg-gradient-to-br from-green-900 to-green-700 overflow-hidden">
+                            <img
+                              src={book.cover_image_path || '/images/icon.png'}
+                              alt={String(book.edition_year)}
+                              className="w-full h-full object-cover opacity-60"
+                            />
+                          </div>
+                          <div className="flex-1 p-5">
+                            <div className="text-sm text-gray-700 mb-2 font-semibold">{book.edition_year} EDITION</div>
+                            <h4 className="font-bold text-lg leading-tight" style={{color: '#E85D04'}}>
+                              {book.title || `PAGB ${book.edition_year}`}
+                            </h4>
+                            <p className="text-xs text-gray-600 mt-2">{Number(book.article_count || 0)} Articles</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  )}
                   <div className="text-center pt-4">
                     <Link href="/archives" className="text-gray-800 font-semibold hover:text-orange transition-colors text-base flex items-center justify-center">
                       View All Issues & Articles <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]"/>

@@ -33,6 +33,7 @@ const PUBLIC_ROUTES = [
   '/api/policies',
   '/api/policies-content',
   '/api/editorial-board',
+  '/api/pagb-public',
   '/api/site-stats',
 ];
 

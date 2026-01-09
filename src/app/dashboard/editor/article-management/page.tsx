@@ -91,7 +91,7 @@ const ArticleManagementPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'revision' | 'external_review' | 'author_reply' | 'reviewer_article' | 'author_article'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'revision' | 'external_review' | 'reviewer_article' | 'author_article'>('new');
   const [reviewerDocs, setReviewerDocs] = useState<ReviewerForwardedDoc[]>([]);
   const [authorReplies, setAuthorReplies] = useState<AuthorReplyItem[]>([]);
   const [authors, setAuthors] = useState<AuthorUser[]>([]);
@@ -383,7 +383,7 @@ const ArticleManagementPage = () => {
 
   const tabButton = (
     label: string,
-    type: 'new' | 'revision' | 'external_review' | 'author_reply' | 'reviewer_article' | 'author_article',
+    type: 'new' | 'revision' | 'external_review' | 'reviewer_article' | 'author_article',
     icon: React.ReactNode,
   ) => (
     <button
@@ -415,7 +415,6 @@ const ArticleManagementPage = () => {
         {tabButton('New Submissions', 'new', <Inbox className="w-4 h-4" />)}
         {tabButton('Editorial Role (Revisions)', 'revision', <History className="w-4 h-4" />)}
         {tabButton('External (Reviewers)', 'external_review', <Users className="w-4 h-4" />)}
-        {tabButton('Reply', 'author_reply', <Send className="w-4 h-4" />)}
         {tabButton('Reviewer Article', 'reviewer_article', <Download className="w-4 h-4" />)}
         {tabButton('Author Article', 'author_article', <User className="w-4 h-4" />)}
       </div>
@@ -605,87 +604,7 @@ const ArticleManagementPage = () => {
             </div>
           )}
 
-          <div className="p-4 border-b border-gray-200">
-            <div className="text-base font-semibold text-gray-900">Send Reviewer Document to Author</div>
-            <div className="text-sm text-gray-600 mt-1">Select an author and send the reviewer document.</div>
-          </div>
-
-          {reviewerDocs.length === 0 ? (
-            <div className="p-6 text-gray-600">No reviewer documents available to send.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Article</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Select Author</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comment</th>
-                    <th className="px-6 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {reviewerDocs.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{doc.article_title || `Article #${doc.article_id}`}</div>
-                        {doc.attachment_name ? (
-                          <div className="text-xs text-gray-500 mt-1 truncate">File: {doc.attachment_name}</div>
-                        ) : null}
-                      </td>
-                      <td className="px-6 py-4">
-                        <select
-                          className="form-input"
-                          value={selectedAuthorByDoc[doc.id] ?? ''}
-                          onChange={(e) => {
-                            const v = e.target.value ? Number(e.target.value) : '';
-                            setSelectedAuthorByDoc((prev) => ({ ...prev, [doc.id]: v }));
-                          }}
-                        >
-                          <option value="">Select author</option>
-                          {authors.map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.full_name || a.username}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4">
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="Comment (optional)"
-                          value={sendCommentByDoc[doc.id] ?? ''}
-                          onChange={(e) => setSendCommentByDoc((prev) => ({ ...prev, [doc.id]: e.target.value }))}
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2 justify-end">
-                          {doc.attachment_path ? (
-                            <a
-                              href={doc.attachment_path}
-                              download
-                              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                            >
-                              Download
-                            </a>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="text-green-600 hover:text-green-700 text-sm font-medium disabled:text-gray-400"
-                            disabled={sendingDocId === doc.id}
-                            onClick={() => sendToAuthor(doc)}
-                          >
-                            {sendingDocId === doc.id ? 'Sending...' : 'Send'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </div>
       ) : null}
 
       {/* Table */}
