@@ -4,27 +4,23 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-interface UserRequest {
+interface User {
   id: number;
-  requester_name: string;
-  requester_email: string;
-  requested_role: string;
-  request_type: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  reason: string;
-  admin_comments: string;
-  processed_by: number | null;
-  processed_by_name: string | null;
+  username: string;
+  full_name: string;
+  email: string;
+  role: 'author' | 'reviewer' | 'editor' | 'administrator';
   created_at: string;
-  processed_at: string | null;
 }
 
 export default function UserRequestsPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [requests, setRequests] = useState<UserRequest[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<number | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [homeDropdown, setHomeDropdown] = useState(false);
 
   useEffect(() => {
@@ -42,47 +38,82 @@ export default function UserRequestsPage() {
     }
 
     setUser(parsedUser);
-    fetchRequests();
+    fetchUsers();
   }, [router]);
 
-  const fetchRequests = async () => {
+  const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/user-requests');
+      const response = await fetch('/api/users');
       if (response.ok) {
         const data = await response.json();
-        setRequests(data.requests || []);
+        // Filter to show only authors and reviewers
+        const filteredUsers = data.users.filter((user: User) => 
+          user.role === 'author' || user.role === 'reviewer'
+        );
+        setUsers(filteredUsers || []);
       }
     } catch (error) {
-      console.error('Error fetching user requests:', error);
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProcessRequest = async (requestId: number, status: 'accepted' | 'rejected', comments: string = '') => {
-    setProcessing(requestId);
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (updatedUser: Partial<User>) => {
+    if (!editingUser) return;
+    
+    setProcessing(editingUser.id);
     try {
-      const response = await fetch(`/api/user-requests/${requestId}`, {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          status,
-          admin_comments: comments,
-          processed_by: user.id,
-        }),
+        body: JSON.stringify(updatedUser),
       });
 
       if (response.ok) {
-        await fetchRequests(); // Refresh the list
-        alert(`✅ Request ${status.charAt(0).toUpperCase() + status.slice(1)} Successfully!\n\nThe user request has been processed and the user will be notified.`);
+        await fetchUsers();
+        setShowEditModal(false);
+        setEditingUser(null);
+        alert('✅ User Updated Successfully!');
       } else {
         const error = await response.json();
-        alert(`❌ Processing Failed\n\n${error.error || 'Unable to process the request. Please try again.'}`);
+        alert(`❌ Update Failed\n\n${error.error || 'Unable to update user. Please try again.'}`);
       }
     } catch (error) {
-      console.error('Error processing request:', error);
+      console.error('Error updating user:', error);
+      alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId: number, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setProcessing(userId);
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        await fetchUsers();
+        alert('✅ User Deleted Successfully!');
+      } else {
+        const error = await response.json();
+        alert(`❌ Delete Failed\n\n${error.error || 'Unable to delete user. Please try again.'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
       alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
     } finally {
       setProcessing(null);
@@ -94,27 +125,31 @@ export default function UserRequestsPage() {
     router.push('/login');
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'author':
+        return 'bg-blue-100 text-blue-800';
+      case 'reviewer':
+        return 'bg-purple-100 text-purple-800';
+      case 'editor':
+        return 'bg-orange-100 text-orange-800';
+      case 'administrator':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return '⏳';
-      case 'accepted':
-        return '✅';
-      case 'rejected':
-        return '❌';
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'author':
+        return '✍️';
+      case 'reviewer':
+        return '👁️';
+      case 'editor':
+        return '📝';
+      case 'administrator':
+        return '👑';
       default:
         return '❓';
     }
@@ -281,8 +316,8 @@ export default function UserRequestsPage() {
         {/* User Requests Content */}
         <main className="flex-1 p-6 bg-gray-100">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">User Requests</h2>
-            <p className="text-gray-600">Manage user account requests and role changes.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Authors & Reviewers</h2>
+            <p className="text-gray-600">Manage all authors and reviewers who have access to the application.</p>
           </div>
 
           {/* Stats Cards */}
@@ -291,12 +326,12 @@ export default function UserRequestsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-4xl font-bold text-gray-900 mb-1">
-                    {requests.filter(r => r.status === 'pending').length}
+                    {users.filter(u => u.role === 'author').length}
                   </p>
-                  <p className="text-sm text-gray-600">Pending Requests</p>
+                  <p className="text-sm text-gray-600">Total Authors</p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">⏳</span>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">✍️</span>
                 </div>
               </div>
             </div>
@@ -305,26 +340,26 @@ export default function UserRequestsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-4xl font-bold text-gray-900 mb-1">
-                    {requests.filter(r => r.status === 'accepted').length}
+                    {users.filter(u => u.role === 'reviewer').length}
                   </p>
-                  <p className="text-sm text-gray-600">Accepted Requests</p>
+                  <p className="text-sm text-gray-600">Total Reviewers</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">👁️</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">
+                    {users.length}
+                  </p>
+                  <p className="text-sm text-gray-600">Total Users</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">✅</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-4xl font-bold text-gray-900 mb-1">
-                    {requests.filter(r => r.status === 'rejected').length}
-                  </p>
-                  <p className="text-sm text-gray-600">Rejected Requests</p>
-                </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">❌</span>
+                  <span className="text-2xl">👥</span>
                 </div>
               </div>
             </div>
@@ -333,97 +368,172 @@ export default function UserRequestsPage() {
           {/* User Requests Table */}
           <div className="bg-white rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">All User Requests</h3>
+              <h3 className="text-lg font-semibold text-gray-900">All Authors & Reviewers</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requester</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {requests.map((request) => (
-                    <tr key={request.id}>
+                  {users.map((user) => (
+                    <tr key={user.id}>
                       <td className="px-6 py-4">
                         <div>
-                          <h4 className="text-sm font-medium text-gray-900">{request.requester_name}</h4>
-                          <p className="text-sm text-gray-600">{request.requester_email}</p>
-                          {request.reason && (
-                            <p className="text-sm text-gray-500 mt-1">{request.reason}</p>
-                          )}
+                          <h4 className="text-sm font-medium text-gray-900">{user.full_name}</h4>
+                          <p className="text-sm text-gray-600">{user.email}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 capitalize">
-                        {request.request_type.replace('_', ' ')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 capitalize">
-                        {request.requested_role}
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {user.username}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
-                          <span className="mr-1">{getStatusIcon(request.status)}</span>
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(user.role)}`}>
+                          <span className="mr-1">{getRoleIcon(user.role)}</span>
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        {new Date(request.created_at).toLocaleDateString('en-GB')}
+                        {new Date(user.created_at).toLocaleDateString('en-GB')}
                       </td>
                       <td className="px-6 py-4">
-                        {request.status === 'pending' ? (
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleProcessRequest(request.id, 'accepted')}
-                              disabled={processing === request.id}
-                              className="text-green-600 hover:text-green-900 text-sm font-medium disabled:opacity-50"
-                            >
-                              {processing === request.id ? 'Processing...' : 'Accept'}
-                            </button>
-                            <button
-                              onClick={() => handleProcessRequest(request.id, 'rejected')}
-                              disabled={processing === request.id}
-                              className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
-                            >
-                              {processing === request.id ? 'Processing...' : 'Reject'}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-500">
-                            {request.processed_at && (
-                              <div>
-                                <div>Processed: {new Date(request.processed_at).toLocaleDateString('en-GB')}</div>
-                                {request.processed_by_name && (
-                                  <div>By: {request.processed_by_name}</div>
-                                )}
-                                {request.admin_comments && (
-                                  <div className="text-xs mt-1">Comments: {request.admin_comments}</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            disabled={processing === user.id}
+                            className="text-blue-600 hover:text-blue-900 text-sm font-medium disabled:opacity-50"
+                          >
+                            {processing === user.id ? 'Processing...' : 'Edit'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.full_name)}
+                            disabled={processing === user.id}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
+                          >
+                            {processing === user.id ? 'Processing...' : 'Delete'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {requests.length === 0 && (
+              {users.length === 0 && (
                 <div className="px-6 py-12 text-center">
                   <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No user requests</h3>
-                  <p className="mt-1 text-sm text-gray-500">User requests will appear here when submitted.</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No authors or reviewers found</h3>
+                  <p className="mt-1 text-sm text-gray-500">Authors and reviewers will appear here when they register.</p>
                 </div>
               )}
             </div>
           </div>
         </main>
+
+        {/* Edit User Modal */}
+        {showEditModal && editingUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit User</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    defaultValue={editingUser.full_name}
+                    id="edit-full-name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    defaultValue={editingUser.username}
+                    id="edit-username"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    defaultValue={editingUser.email}
+                    id="edit-email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select
+                    defaultValue={editingUser.role}
+                    id="edit-role"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="author">Author</option>
+                    <option value="reviewer">Reviewer</option>
+                    <option value="editor">Editor</option>
+                    <option value="administrator">Administrator</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password (leave empty to keep current)</label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password (optional)"
+                    id="edit-password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingUser(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const fullName = (document.getElementById('edit-full-name') as HTMLInputElement).value;
+                    const username = (document.getElementById('edit-username') as HTMLInputElement).value;
+                    const email = (document.getElementById('edit-email') as HTMLInputElement).value;
+                    const role = (document.getElementById('edit-role') as HTMLSelectElement).value;
+                    const password = (document.getElementById('edit-password') as HTMLInputElement).value;
+                    
+                    handleUpdateUser({
+                      full_name: fullName,
+                      username: username,
+                      email: email,
+                      role: role as 'author' | 'reviewer' | 'editor' | 'administrator',
+                      ...(password && { password: password })
+                    });
+                  }}
+                  disabled={processing === editingUser.id}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {processing === editingUser.id ? 'Updating...' : 'Update User'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

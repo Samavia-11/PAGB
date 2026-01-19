@@ -182,8 +182,8 @@ export default function AdminPublicationsPage() {
                       <td className="px-6 py-4 text-sm text-gray-700">{item.editor_name || '--'}</td>
                       <td className="px-6 py-4 text-sm text-gray-700">{item.author_name || '--'}</td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {item.article_status || '--'}
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Approved
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
@@ -243,7 +243,7 @@ export default function AdminPublicationsPage() {
                     <div><strong>Article Title:</strong> {selected.article_title || '--'}</div>
                     <div><strong>Editor:</strong> {selected.editor_name || '--'}</div>
                     <div><strong>Author:</strong> {selected.author_name || '--'}</div>
-                    <div><strong>Status:</strong> {selected.article_status || '--'}</div>
+                    <div><strong>Status:</strong> Approved</div>
                     <div><strong>Forwarded At:</strong> {selected.created_at ? new Date(selected.created_at).toLocaleString() : '--'}</div>
                     {selected.comment ? <div><strong>Comment:</strong> {selected.comment}</div> : null}
                   </div>

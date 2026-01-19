@@ -30,7 +30,7 @@ export const redirectToDashboard = (role: string): void => {
   const roleRedirects = {
     author: '/dashboard/author',
     reviewer: '/dashboard/reviewer',
-    editor: '/dashboard/editor',
+    editor: '/dashboard/editor/article-management',
     administrator: '/dashboard/admin'
   };
   

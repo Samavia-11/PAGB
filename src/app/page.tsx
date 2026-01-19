@@ -477,7 +477,7 @@ export default function Home() {
               <div className="flex items-center space-x-3">
                 <Link href="/login" className="hover:text-gray-300">Login</Link>
                 <span>|</span>
-                <Link href="https://ojs-trial.infinityfreeapp.com/ojs/index.php/pagb-v1i1/user/register?source=" className="hover:text-gray-300">Sign Up</Link>
+                <Link href="http://localhost:3000/login" className="hover:text-gray-300">Sign Up</Link>
               </div>
             </div>
           </div>

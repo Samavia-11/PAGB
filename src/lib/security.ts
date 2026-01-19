@@ -42,28 +42,9 @@ export const ALLOWED_EXTENSIONS = [
   '.jpg', '.jpeg', '.png', '.gif', '.webp'
 ];
 
-// Validate file type and extension
+// Validate file type and extension - now allows all file types
 export function isAllowedFileType(file: File): { valid: boolean; error?: string } {
-  const fileName = file.name.toLowerCase();
-  const fileType = file.type.toLowerCase();
-  
-  // Check extension
-  const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
-  if (!hasValidExtension) {
-    return { 
-      valid: false, 
-      error: `File extension not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` 
-    };
-  }
-  
-  // Check MIME type
-  if (!ALLOWED_FILE_TYPES.all.includes(fileType)) {
-    return { 
-      valid: false, 
-      error: `File type not allowed. Allowed types: PDF, Word documents, text files, and images.` 
-    };
-  }
-  
+  // All file types are now allowed
   return { valid: true };
 }
 

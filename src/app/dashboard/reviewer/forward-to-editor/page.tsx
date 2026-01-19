@@ -139,7 +139,7 @@ export default function ReviewerForwardToEditorPage() {
 
   return (
     <Layout user={user}>
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-2xl mx-auto">
         <div className="mb-6">
           <button
             type="button"
@@ -173,8 +173,8 @@ export default function ReviewerForwardToEditorPage() {
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                rows={6}
-                className="form-textarea"
+                rows={10}
+                className="form-textarea w-full"
                 placeholder="Write comments for the editor (optional)"
               />
             </div>

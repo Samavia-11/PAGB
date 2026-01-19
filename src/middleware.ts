@@ -26,6 +26,8 @@ const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const PUBLIC_ROUTES = [
   '/api/auth/login',
   '/api/auth/signup',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
   '/api/list-pdfs',
   '/api/list-author-pdfs',
   '/api/random-articles',
@@ -41,6 +43,10 @@ const PUBLIC_ROUTES = [
 const CSRF_EXEMPT_ROUTES = [
   '/api/auth/login',
   '/api/auth/signup',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/profile',
+  '/api/auth/change-password',
 ];
 
 // ============================================================================

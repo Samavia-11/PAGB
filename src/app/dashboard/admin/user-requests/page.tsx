@@ -11,29 +11,18 @@ interface User {
   role: 'author' | 'reviewer' | 'editor' | 'administrator';
   full_name?: string;
   email?: string;
-}
-
-interface SignupRequest {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  password: string;
-  confirmPassword: string;
-  fatherName: string;
-  cnic: string;
-  contactNumber: string;
-  qualification: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
+  created_at?: string;
 }
 
 const UserRequestsPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [requests, setRequests] = useState<SignupRequest[]>([]);
+  const [requests, setRequests] = useState<User[]>([]);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<Partial<User & { password?: string }>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -84,120 +73,119 @@ const UserRequestsPage = () => {
     }
   };
 
-  const loadRequests = () => {
-    const savedRequests = JSON.parse(localStorage.getItem('signup_requests') || '[]');
-    // Sort requests: pending first (newest first), then approved/rejected (newest first)
-    const sortedRequests = savedRequests.sort((a: any, b: any) => {
-      // First sort by status priority: pending > approved/rejected
-      if (a.status === 'pending' && b.status !== 'pending') return -1;
-      if (b.status === 'pending' && a.status !== 'pending') return 1;
-      
-      // Within same status group, sort by creation date (newest first)
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-    setRequests(sortedRequests);
-  };
-
-  const handleRequestAction = async (requestId: number, action: 'approved' | 'rejected') => {
+  const loadRequests = async () => {
     try {
-      const updatedRequests = requests.map(req => 
-        req.id === requestId ? { ...req, status: action } : req
-      );
-      
-      localStorage.setItem('signup_requests', JSON.stringify(updatedRequests));
-      setRequests(updatedRequests);
-
-      // Broadcast status update to login page
-      if ('BroadcastChannel' in window) {
-        const statusChannel = new BroadcastChannel('request_status_updates');
-        statusChannel.postMessage({
-          requestId: requestId,
-          newStatus: action
-        });
-        statusChannel.close();
-      }
-
-      // Add notification
-      const actionText = action === 'approved' ? 'approved' : 'rejected';
-      const requestUser = requests.find(req => req.id === requestId);
-      if (requestUser) {
-        setNotifications(prev => [
-          `Request ${actionText}: ${requestUser.username} (${requestUser.role})`,
-          ...prev.slice(0, 4)
-        ]);
-      }
-
-      // Log email notification (temporarily disabled API call to fix server error)
-      const targetRequest = requests.find(req => req.id === requestId);
-      if (targetRequest) {
-        console.log(`📧 Email notification would be sent to: ${targetRequest.email}`);
-        console.log(`📧 Type: ${action}`);
-        console.log(`📧 User: ${targetRequest.username}`);
-      }
-
-      // If approved, create user account in database
-      if (action === 'approved') {
-        const approvedRequest = requests.find(req => req.id === requestId);
-        if (approvedRequest) {
-          try {
-            const response = await fetch('/api/auth/create-user', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                username: approvedRequest.username,
-                email: approvedRequest.email,
-                password: approvedRequest.password,
-                role: approvedRequest.role,
-                fatherName: approvedRequest.fatherName,
-                cnic: approvedRequest.cnic,
-                contactNumber: approvedRequest.contactNumber,
-                qualification: approvedRequest.qualification
-              }),
-            });
-
-            if (response.ok) {
-              alert(`User ${approvedRequest.username} has been approved and can now login with their credentials!`);
-            } else {
-              const error = await response.json();
-              alert(`User approved but account creation failed: ${error.error}`);
-            }
-          } catch (error) {
-            console.error('Error creating user account:', error);
-            alert(`User approved but account creation failed. Please try again.`);
-          }
-        }
-      } else {
-        alert('Request has been rejected.');
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter to show only authors and reviewers
+        const filteredUsers = data.users.filter((user: any) => 
+          user.role === 'author' || user.role === 'reviewer'
+        );
+        setRequests(filteredUsers);
       }
     } catch (error) {
-      console.error('Error updating request:', error);
-      alert('Failed to update request.');
+      console.error('Error loading users:', error);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'approved':
-        return <Check className="w-4 h-4 text-green-500" />;
-      case 'rejected':
-        return <X className="w-4 h-4 text-red-500" />;
+  const handleRequestAction = async (userId: number, action: 'edit' | 'delete') => {
+    if (action === 'delete') {
+      if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+      }
+    }
+
+    try {
+      if (action === 'delete') {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          alert('User deleted successfully!');
+          loadRequests();
+        } else {
+          const error = await response.json();
+          alert(`Failed to delete user: ${error.error}`);
+        }
+      } else if (action === 'edit') {
+        const userToEdit = requests.find(user => user.id === userId);
+        if (userToEdit) {
+          setEditingUser(userToEdit);
+          setEditForm({
+            username: userToEdit.username,
+            full_name: userToEdit.full_name || '',
+            email: userToEdit.email || '',
+            role: userToEdit.role
+          });
+          setIsEditModalOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Failed to update user.');
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    try {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (response.ok) {
+        alert('User updated successfully!');
+        setIsEditModalOpen(false);
+        setEditingUser(null);
+        setEditForm({});
+        loadRequests(); // Reload users to reflect changes
+      } else {
+        const error = await response.json();
+        alert(`Failed to update user: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Failed to update user.');
+    }
+  };
+
+  const handleEditInputChange = (field: keyof User | 'password', value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getStatusIcon = (role: string) => {
+    switch (role) {
+      case 'author':
+        return <Check className="w-4 h-4 text-blue-500" />;
+      case 'reviewer':
+        return <Check className="w-4 h-4 text-purple-500" />;
+      case 'editor':
+        return <Check className="w-4 h-4 text-orange-500" />;
+      case 'administrator':
+        return <Check className="w-4 h-4 text-red-500" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
+        return <User className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (role: string) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-    switch (status) {
-      case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'approved':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'rejected':
+    switch (role) {
+      case 'author':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'reviewer':
+        return `${baseClasses} bg-purple-100 text-purple-800`;
+      case 'editor':
+        return `${baseClasses} bg-orange-100 text-orange-800`;
+      case 'administrator':
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -221,9 +209,9 @@ const UserRequestsPage = () => {
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-academic-900 font-serif">User Requests Management</h1>
+            <h1 className="text-3xl font-bold text-academic-900 font-serif">Authors & Reviewers Management</h1>
             <p className="text-academic-600 mt-2">
-              Review and manage user signup requests.
+              View and manage all authors and reviewers in the system.
             </p>
           </div>
           
@@ -281,11 +269,11 @@ const UserRequestsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
             <div className="flex items-center">
-              <Clock className="w-8 h-8 text-yellow-500 mr-3" />
+              <User className="w-8 h-8 text-blue-500 mr-3" />
               <div>
-                <p className="text-sm font-medium text-academic-600">Pending Requests</p>
+                <p className="text-sm font-medium text-academic-600">Total Authors</p>
                 <p className="text-2xl font-bold text-academic-900">
-                  {requests.filter(r => r.status === 'pending').length}
+                  {requests.filter(r => r.role === 'author').length}
                 </p>
               </div>
             </div>
@@ -293,11 +281,11 @@ const UserRequestsPage = () => {
 
           <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
             <div className="flex items-center">
-              <Check className="w-8 h-8 text-green-500 mr-3" />
+              <User className="w-8 h-8 text-purple-500 mr-3" />
               <div>
-                <p className="text-sm font-medium text-academic-600">Approved</p>
+                <p className="text-sm font-medium text-academic-600">Total Reviewers</p>
                 <p className="text-2xl font-bold text-academic-900">
-                  {requests.filter(r => r.status === 'approved').length}
+                  {requests.filter(r => r.role === 'reviewer').length}
                 </p>
               </div>
             </div>
@@ -305,21 +293,21 @@ const UserRequestsPage = () => {
 
           <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
             <div className="flex items-center">
-              <X className="w-8 h-8 text-red-500 mr-3" />
+              <User className="w-8 h-8 text-green-500 mr-3" />
               <div>
-                <p className="text-sm font-medium text-academic-600">Rejected</p>
+                <p className="text-sm font-medium text-academic-600">Total Users</p>
                 <p className="text-2xl font-bold text-academic-900">
-                  {requests.filter(r => r.status === 'rejected').length}
+                  {requests.length}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Requests Cards */}
+        {/* User Cards */}
         <div className="space-y-6">
-          {requests.map((request) => (
-            <div key={request.id} className="bg-white rounded-lg shadow-sm border border-academic-200 overflow-hidden">
+          {requests.map((user) => (
+            <div key={user.id} className="bg-white rounded-lg shadow-sm border border-academic-200 overflow-hidden">
               {/* Header */}
               <div className="bg-academic-50 px-6 py-4 border-b border-academic-200">
                 <div className="flex items-center justify-between">
@@ -327,23 +315,23 @@ const UserRequestsPage = () => {
                     <User className="w-8 h-8 text-academic-500" />
                     <div>
                       <h3 className="text-lg font-semibold text-academic-900">
-                        Request #{request.id}
+                        {user.full_name || user.username}
                       </h3>
                       <p className="text-sm text-academic-600">
-                        Submitted on {new Date(request.createdAt).toLocaleDateString('en-US', {
+                        Joined on {user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit'
-                        })}
+                        }) : 'Unknown'}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    {getStatusIcon(request.status)}
-                    <span className={getStatusBadge(request.status)}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    {getStatusIcon(user.role)}
+                    <span className={getStatusBadge(user.role)}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -351,104 +339,76 @@ const UserRequestsPage = () => {
 
               {/* Content */}
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Personal Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* User Information */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-academic-700 uppercase tracking-wider border-b border-academic-200 pb-2">
-                      Personal Information
+                      User Information
                     </h4>
                     <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-academic-500 uppercase">Username</label>
+                        <p className="text-sm text-academic-900 font-medium">{user.username}</p>
+                      </div>
                       <div>
                         <label className="text-xs font-medium text-academic-500 uppercase">Full Name</label>
-                        <p className="text-sm text-academic-900 font-medium">{request.username}</p>
+                        <p className="text-sm text-academic-900">{user.full_name || 'Not provided'}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">Father's Name</label>
-                        <p className="text-sm text-academic-900">{request.fatherName || 'Not provided'}</p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">CNIC</label>
-                        <p className="text-sm text-academic-900 font-mono">{request.cnic || 'Not provided'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-academic-700 uppercase tracking-wider border-b border-academic-200 pb-2">
-                      Contact Information
-                    </h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">Email Address</label>
+                        <label className="text-xs font-medium text-academic-500 uppercase">Email</label>
                         <p className="text-sm text-academic-900 flex items-center">
                           <Mail className="w-4 h-4 mr-2 text-academic-400" />
-                          {request.email}
+                          {user.email || 'Not provided'}
                         </p>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">Contact Number</label>
-                        <p className="text-sm text-academic-900">{request.contactNumber || 'Not provided'}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Professional Information */}
+                  {/* Role Information */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-academic-700 uppercase tracking-wider border-b border-academic-200 pb-2">
-                      Professional Information
+                      Role Information
                     </h4>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">Requested Role</label>
+                        <label className="text-xs font-medium text-academic-500 uppercase">Current Role</label>
                         <p className="text-sm text-academic-900 flex items-center">
                           <Shield className="w-4 h-4 mr-2 text-academic-400" />
-                          <span className="capitalize font-medium">{request.role}</span>
+                          <span className="capitalize font-medium">{user.role}</span>
                         </p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-academic-500 uppercase">Qualification</label>
-                        <p className="text-sm text-academic-900">{request.qualification || 'Not provided'}</p>
+                        <label className="text-xs font-medium text-academic-500 uppercase">User ID</label>
+                        <p className="text-sm text-academic-900 font-mono">#{user.id}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                {request.status === 'pending' && (
-                  <div className="mt-6 pt-6 border-t border-academic-200">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-academic-600">
-                        Review all details above and make a decision:
-                      </p>
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => handleRequestAction(request.id, 'rejected')}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          Reject Request
-                        </button>
-                        <button
-                          onClick={() => handleRequestAction(request.id, 'approved')}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                        >
-                          <Check className="w-4 h-4 mr-2" />
-                          Approve Request
-                        </button>
-                      </div>
+                <div className="mt-6 pt-6 border-t border-academic-200">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-academic-600">
+                      Manage this user account:
+                    </p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => handleRequestAction(user.id, 'edit')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Edit User
+                      </button>
+                      <button
+                        onClick={() => handleRequestAction(user.id, 'delete')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Delete User
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {request.status !== 'pending' && (
-                  <div className="mt-6 pt-6 border-t border-academic-200">
-                    <p className="text-sm text-academic-600">
-                      This request has been <span className="font-semibold capitalize">{request.status}</span>.
-                      {request.status === 'approved' && ' The user can now login with their credentials.'}
-                    </p>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           ))}
@@ -457,10 +417,99 @@ const UserRequestsPage = () => {
         {requests.length === 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-12 text-center">
             <User className="w-12 h-12 text-academic-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-academic-900 mb-2">No requests yet</h3>
+            <h3 className="text-lg font-medium text-academic-900 mb-2">No authors or reviewers found</h3>
             <p className="text-academic-500">
-              User signup requests will appear here when submitted.
+              Authors and reviewers will appear here when they register.
             </p>
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {isEditModalOpen && editingUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-academic-900 mb-4">Edit User</h3>
+              
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-academic-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={editForm.username || ''}
+                    onChange={(e) => handleEditInputChange('username', e.target.value)}
+                    className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-academic-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={editForm.full_name || ''}
+                    onChange={(e) => handleEditInputChange('full_name', e.target.value)}
+                    className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-academic-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email || ''}
+                    onChange={(e) => handleEditInputChange('email', e.target.value)}
+                    className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-academic-700 mb-1">Role</label>
+                  <select
+                    value={editForm.role || ''}
+                    onChange={(e) => handleEditInputChange('role', e.target.value)}
+                    className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="author">Author</option>
+                    <option value="reviewer">Reviewer</option>
+                    <option value="editor">Editor</option>
+                    <option value="administrator">Administrator</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-academic-700 mb-1">New Password (leave empty to keep current)</label>
+                  <input
+                    type="password"
+                    value={editForm.password || ''}
+                    onChange={(e) => handleEditInputChange('password', e.target.value)}
+                    placeholder="Enter new password (optional)"
+                    className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-academic-500 mt-1">Leave empty if you don't want to change the password</p>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditModalOpen(false);
+                      setEditingUser(null);
+                      setEditForm({});
+                    }}
+                    className="px-4 py-2 text-academic-700 bg-academic-200 rounded-md hover:bg-academic-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Update User
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import ThemeSelector from '@/components/ThemeSelector';
 import { 
   Home, 
   FileText, 
@@ -15,7 +14,8 @@ import {
   X,
   Search,
   Bell,
-  Globe
+  Globe,
+  Settings
 } from 'lucide-react';
 
 interface User {
@@ -70,14 +70,17 @@ const Layout = ({ children, user }: LayoutProps) => {
         { name: 'Dashboard', href: '/dashboard/author', icon: LayoutDashboard },
         { name: 'View Drafts', href: '/drafts', icon: FileText },
         { name: 'Reviewed', href: '/reviewed', icon: FileText },
+        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ],
       reviewer: [
         ...baseItems,
         { name: 'Dashboard', href: '/dashboard/reviewer', icon: LayoutDashboard },
+        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ],
       editor: [
         ...baseItems,
         { name: 'Article Management', href: '/dashboard/editor/article-management', icon: FileText },
+        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ],
       administrator: [
         ...baseItems,
@@ -85,8 +88,8 @@ const Layout = ({ children, user }: LayoutProps) => {
         { name: 'Publication', href: '/dashboard/admin/publications', icon: FileText },
         { name: 'Publish', href: '/dashboard/admin/publish', icon: Globe },
         { name: 'Issues', href: '/dashboard/admin/issues', icon: FileText },
-        { name: 'User Requests', href: '/dashboard/admin/user-requests', icon: Users },
-        { name: 'Authors', href: '/authors', icon: Users },
+        { name: 'Users', href: '/dashboard/admin/user-requests', icon: Users },
+        { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ],
     };
 
@@ -208,8 +211,6 @@ const Layout = ({ children, user }: LayoutProps) => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Theme toggle */}
-              <ThemeSelector />
               {/* Login button for unauthenticated users */}
               {!user && (
                 <button

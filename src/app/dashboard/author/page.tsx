@@ -1,30 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
-import { getAuthToken, isAuthenticated, redirectToLogin } from '@/lib/client-auth';
+import { getAuthToken, redirectToLogin } from '@/lib/client-auth';
 import { 
   PlusCircle, 
   FileText, 
-  Upload,
   Clock, 
   CheckCircle, 
   XCircle, 
   Eye,
   Edit,
-  Calendar,
-  BarChart3,
-  AlertCircle
 } from 'lucide-react';
-
-// Dynamically import Pie to avoid SSR issues
-const Pie = dynamic(() => import('react-chartjs-2').then(mod => mod.Pie), { ssr: false });
-const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), { ssr: false });
-// Import chart.js components only on client
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 interface User {
   id: number;
@@ -67,6 +55,8 @@ const AuthorDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [publishedCount, setPublishedCount] = useState(0);
+  const [publishedLoading, setPublishedLoading] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const router = useRouter();
 
@@ -123,6 +113,48 @@ const AuthorDashboard = () => {
 
     initializeDashboard();
   }, [router]);
+
+  const loadPublishedCount = async (authorId: number) => {
+    setPublishedLoading(true);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`/api/articles?authorId=${encodeURIComponent(String(authorId))}&status=published`, {
+        headers: {
+          'x-user-id': String(authorId),
+          'x-user-role': 'author',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        setPublishedCount(0);
+        return;
+      }
+
+      const data = await response.json();
+      const list = Array.isArray(data.articles) ? data.articles : [];
+      setPublishedCount(list.length);
+    } catch (error) {
+      console.error('Failed to load published count:', error);
+      setPublishedCount(0);
+    } finally {
+      setPublishedLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    loadPublishedCount(user.id);
+
+    const onFocus = () => loadPublishedCount(user.id);
+    window.addEventListener('focus', onFocus);
+    const intervalId = window.setInterval(() => loadPublishedCount(user.id), 15000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(intervalId);
+    };
+  }, [user?.id]);
 
   const checkAuth = async () => {
     try {
@@ -258,12 +290,6 @@ const AuthorDashboard = () => {
     );
   }
 
-  const currentYear = new Date().getFullYear();
-  const yearlyLabels = [currentYear - 3, currentYear - 2, currentYear - 1, currentYear].map(String);
-  const yearlyCounts = yearlyLabels.map(y =>
-    articles.filter(a => a.status === 'published' && new Date(a.last_updated || a.submission_date).getFullYear().toString() === y).length
-  );
-
   return (
     <Layout user={user}>
       {/* Header */}
@@ -275,7 +301,7 @@ const AuthorDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -290,102 +316,16 @@ const AuthorDashboard = () => {
         
         <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
           <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => ['submitted', 'under_review', 'reviewed', 'editor_review'].includes(a.status)).length}
-              </p>
-              <p className="text-academic-600">In Review</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => a.status === 'published').length}
+                {publishedLoading ? '...' : publishedCount}
               </p>
               <p className="text-academic-600">Published</p>
             </div>
           </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => a.status === 'accepted').length}
-              </p>
-              <p className="text-academic-600">Accepted</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Status Distribution Pie Chart */}
-        <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4 flex items-center"><BarChart3 className="w-5 h-5 mr-2"/>Status Distribution</h2>
-          {typeof window !== 'undefined' && (
-            <div className="h-40 mx-auto"><Pie
-            data={{
-              labels: ['Submitted', 'Under Review', 'Reviewed', 'Editor Review', 'Accepted', 'Published', 'Rejected'],
-              datasets: [
-                {
-                  label: '# of Articles',
-                  data: [
-                    articles.filter(a=>a.status==='submitted').length,
-                    articles.filter(a=>a.status==='under_review').length,
-                    articles.filter(a=>a.status==='reviewed').length,
-                    articles.filter(a=>a.status==='editor_review').length,
-                    articles.filter(a=>a.status==='accepted').length,
-                    articles.filter(a=>a.status==='published').length,
-                    articles.filter(a=>a.status==='rejected').length,
-                  ],
-                  backgroundColor: [
-                    '#3b82f6', // blue
-                    '#facc15', // yellow
-                    '#a855f7', // purple
-                    '#fb923c', // orange
-                    '#22c55e', // green
-                    '#10b981', // emerald
-                    '#ef4444', // red
-                  ],
-                  borderWidth: 1,
-                },
-              ],
-            }}
-            options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} height={160}
-          />
-          </div>
-        )}
-              </div>
-
-        {/* Yearly Publications Bar Chart */}
-        <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-6">
-          <h2 className="text-xl font-semibold text-academic-900 mb-4 flex items-center"><BarChart3 className="w-5 h-5 mr-2"/>Yearly Publications</h2>
-          {typeof window !== 'undefined' && (
-            <Bar
-              data={{
-                labels: yearlyLabels,
-                datasets:[{
-                  label:'Articles Published',
-                  data: yearlyCounts,
-                  backgroundColor:'#3b82f6'
-                }]}}
-              options={{responsive:true,plugins:{legend:{display:false}}}} height={160}
-            />
-          )}
         </div>
       </div>
 
@@ -472,18 +412,6 @@ const AuthorDashboard = () => {
                       >
                         View
                       </button>
-                      {canEditArticle(article) ? (
-                        <button 
-                          onClick={() => router.push(`/submit-article?edit=${article.id}`)}
-                          className="text-academic-600 hover:text-academic-700 text-sm font-medium"
-                        >
-                          Edit
-                        </button>
-                      ) : ['submitted', 'under_review'].includes(article.status) ? (
-                        <span className="text-gray-400 text-sm font-medium" title="Edit window expired (3 hours)">
-                          Edit Expired
-                        </span>
-                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -565,25 +493,6 @@ const AuthorDashboard = () => {
             </div>
             
             <div className="mt-6 flex justify-end space-x-3">
-              {canEditArticle(selectedArticle) ? (
-                <button 
-                  onClick={() => {
-                    setSelectedArticle(null);
-                    router.push(`/submit-article?edit=${selectedArticle.id}`);
-                  }}
-                  className="btn-secondary"
-                >
-                  Edit Article
-                </button>
-              ) : ['submitted', 'under_review'].includes(selectedArticle.status) ? (
-                <button 
-                  disabled
-                  className="btn-secondary opacity-50 cursor-not-allowed"
-                  title="Edit window expired (3 hours after submission)"
-                >
-                  Edit Expired
-                </button>
-              ) : null}
               <button
                 onClick={() => setSelectedArticle(null)}
                 className="btn-primary"

@@ -59,6 +59,9 @@ interface StoredArticle {
   manuscriptFileName?: string;
   editorAttachment?: string;
   editorAttachmentName?: string;
+  funding?: string;
+  ethics?: boolean;
+  licenseAgreement?: boolean;
 }
 
 interface EditorSubmission {
@@ -128,7 +131,6 @@ const SubmitArticlePage = () => {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<ArticleForm>({
     title: '',
     abstract: '',
@@ -365,12 +367,6 @@ const SubmitArticlePage = () => {
     }
   };
 
-  const handleCoverLetterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCoverLetterFile(e.target.files[0]);
-    }
-  };
-
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ArticleForm | 'authorsContact' | 'affiliation', string>> = {};
 
@@ -416,35 +412,13 @@ const SubmitArticlePage = () => {
           submitForm.append('title', formData.title);
           submitForm.append('abstract', formData.abstract);
           submitForm.append('keywords', formData.keywords);
-          submitForm.append(
-            'content',
-            JSON.stringify({
-              authors: formData.authors || [],
-              affiliation: formData.affiliation,
-              manuscript: {
-                articleType: formData.articleType,
-                abstract: formData.abstract,
-                keywords: keywords,
-              },
-              fileName: formData.manuscriptFile?.name || null,
-              declarations: {
-                coverLetter: formData.coverLetter,
-                conflict: formData.conflicts,
-                funding: formData.funding,
-                ethicsOk: formData.ethics,
-                licenseOk: formData.licenseAgreement,
-              },
-            })
-          );
+          submitForm.append('content', formData.content);
           submitForm.append('authors', JSON.stringify(formData.authors || []));
           submitForm.append('affiliation', formData.affiliation);
           submitForm.append('articleType', formData.articleType);
           submitForm.append('status', 'submitted');
           if (formData.manuscriptFile) {
             submitForm.append('manuscript', formData.manuscriptFile);
-          }
-          if (coverLetterFile) {
-            submitForm.append('coverLetterFile', coverLetterFile);
           }
 
           const createResponse = await fetch('/api/articles', {
@@ -532,35 +506,13 @@ const SubmitArticlePage = () => {
         submitForm.append('title', formData.title);
         submitForm.append('abstract', formData.abstract);
         submitForm.append('keywords', formData.keywords);
-        submitForm.append(
-          'content',
-          JSON.stringify({
-            authors: formData.authors || [],
-            affiliation: formData.affiliation,
-            manuscript: {
-              articleType: formData.articleType,
-              abstract: formData.abstract,
-              keywords: keywords,
-            },
-            fileName: formData.manuscriptFile?.name || null,
-            declarations: {
-              coverLetter: formData.coverLetter,
-              conflict: formData.conflicts,
-              funding: formData.funding,
-              ethicsOk: formData.ethics,
-              licenseOk: formData.licenseAgreement,
-            },
-          })
-        );
+        submitForm.append('content', formData.content);
         submitForm.append('authors', JSON.stringify(formData.authors || []));
         submitForm.append('affiliation', formData.affiliation);
         submitForm.append('articleType', formData.articleType);
         submitForm.append('status', 'submitted');
         if (formData.manuscriptFile) {
           submitForm.append('manuscript', formData.manuscriptFile);
-        }
-        if (coverLetterFile) {
-          submitForm.append('coverLetterFile', coverLetterFile);
         }
 
         const createResponse = await fetch('/api/articles', {
@@ -618,7 +570,9 @@ const SubmitArticlePage = () => {
         
         alert('Article submitted successfully!');
         // Use window.location for more reliable navigation
-        window.location.href = '/dashboard/author';
+        setTimeout(() => {
+          window.location.href = '/dashboard/author';
+        }, 100);
       }
     } catch (error: any) {
       console.error('Submission error:', error);
@@ -649,6 +603,10 @@ const SubmitArticlePage = () => {
                 authors: formData.authors,
                 affiliation: formData.affiliation,
                 articleType: formData.articleType,
+                funding: formData.funding,
+                ethics: formData.ethics,
+                licenseAgreement: formData.licenseAgreement,
+                manuscriptFileName: formData.manuscriptFile?.name,
                 last_updated: now.toISOString(),
               }
             : article
@@ -666,12 +624,20 @@ const SubmitArticlePage = () => {
           authors: formData.authors,
           affiliation: formData.affiliation,
           articleType: formData.articleType,
+          funding: formData.funding,
+          ethics: formData.ethics,
+          licenseAgreement: formData.licenseAgreement,
+          manuscriptFileName: formData.manuscriptFile?.name,
           status: 'draft',
           submission_date: now.toISOString(),
           last_updated: now.toISOString(),
         };
         writeArticlesToStorage(user.id, [draftArticle, ...allArticles]);
         alert('Draft saved successfully! You can continue editing it later from the "View Drafts" page.');
+        // Refresh page to ensure all data is properly loaded
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
       
       console.log('Draft saved:', { title: formData.title || 'Untitled Draft', status: 'draft' });
@@ -717,7 +683,7 @@ const SubmitArticlePage = () => {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
+              className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
             />
             {errors.title && <p className="text-red-500 text-sm mt-2">{errors.title}</p>}
           </div>
@@ -735,65 +701,66 @@ const SubmitArticlePage = () => {
             {openSections.authors && (
               <div className="p-6 bg-white">
                 {formData.authors.map((author, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                    <input
-                      type="text"
-                      placeholder="Name *"
-                      value={author.name}
-                      onChange={(e) => handleAuthorChange(index, 'name', e.target.value)}
-                      className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      required
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email *"
-                      value={author.email}
-                      onChange={(e) => handleAuthorChange(index, 'email', e.target.value)}
-                      className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      required
-                    />
-                    {index > 0 && (
-                      <select
-                        value={author.role}
-                        onChange={(e) => handleAuthorChange(index, 'role', e.target.value)}
-                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option>Main Author</option>
-                        <option>Co-Author</option>
-                      </select>
-                    )}
-                    {index === 0 && (
-                      <div className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium flex items-center">
-                        Main Author
-                      </div>
-                    )}
-                    {author.role === 'Main Author' && (
+                  <div key={index} className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    {/* First Row: Name and Email */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <input
+                        type="text"
+                        placeholder="Name *"
+                        value={author.name}
+                        onChange={(e) => handleAuthorChange(index, 'name', e.target.value)}
+                        className="w-full px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email *"
+                        value={author.email}
+                        onChange={(e) => handleAuthorChange(index, 'email', e.target.value)}
+                        className="w-full px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                      />
+                    </div>
+                    
+                    {/* Second Row: Role and Contact */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {index > 0 && (
+                        <select
+                          value={author.role}
+                          onChange={(e) => handleAuthorChange(index, 'role', e.target.value)}
+                          className="w-full px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          style={{ color: '#111827' }}
+                        >
+                          <option>Main Author</option>
+                          <option>Co-Author</option>
+                        </select>
+                      )}
+                      {index === 0 && (
+                        <div className="w-full px-4 py-4 h-14 border-2 border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-medium flex items-center">
+                          Main Author
+                        </div>
+                      )}
                       <input
                         type="tel"
                         placeholder="Contact Number *"
                         value={author.contact || ''}
                         onChange={(e) => handleAuthorChange(index, 'contact', e.target.value)}
-                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        required
+                        className="w-full px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required={author.role === 'Main Author'}
                       />
-                    )}
-                    {author.role === 'Co-Author' && (
-                      <input
-                        type="tel"
-                        placeholder="Contact Number"
-                        value={author.contact || ''}
-                        onChange={(e) => handleAuthorChange(index, 'contact', e.target.value)}
-                        className="px-4 py-4 h-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      />
-                    )}
+                    </div>
+                    
+                    {/* Third Row: Remove Button */}
                     {index > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => removeAuthor(index)}
-                        className="md:col-span-2 px-4 py-4 h-14 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeAuthor(index)}
+                          className="px-6 py-3 h-14 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
@@ -809,7 +776,7 @@ const SubmitArticlePage = () => {
                     name="affiliation"
                     value={formData.affiliation}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.affiliation ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.affiliation ? 'border-red-500' : 'border-gray-300'}`}
                     required
                   />
                   {errors.affiliation && <p className="text-red-500 text-sm mt-2">{errors.affiliation}</p>}
@@ -836,7 +803,8 @@ const SubmitArticlePage = () => {
                     name="articleType"
                     value={formData.articleType}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.articleType ? 'border-red-500' : 'border-gray-300'}`}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.articleType ? 'border-red-500' : 'border-gray-300'}`}
+                    style={{ color: '#111827' }}
                   >
                     <option value="">Select Article Type</option>
                     <option>Research Article</option>
@@ -886,21 +854,32 @@ const SubmitArticlePage = () => {
                       onChange={handleKeywordInputChange}
                       onKeyDown={handleKeywordKeyDown}
                       placeholder="Type keywords and press comma or Enter to add"
-                      className={`w-full px-4 py-3 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.keywords ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`w-full px-4 py-4 h-12 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.keywords ? 'border-red-500' : 'border-gray-300'}`}
                     />
                     <p className="text-sm text-gray-500">Press comma or Enter to add keywords</p>
                   </div>
                   {errors.keywords && <p className="text-red-500 text-sm mt-2">{errors.keywords}</p>}
                 </div>
 
+                
                 <div>
                   <label className="block text-sm font-semibold mb-3 text-gray-700">Manuscript File *</label>
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    accept=".doc,.docx"
-                    className={`w-full px-4 py-3 h-12 border-2 border-dashed rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${errors.manuscriptFile ? 'border-red-500' : 'border-gray-300'}`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      accept=".doc,.docx"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      id="manuscript-file-input"
+                    />
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 bg-green-700 text-white font-medium rounded-lg hover:bg-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
+                      onClick={() => document.getElementById('manuscript-file-input')?.click()}
+                    >
+                      {formData.manuscriptFile ? formData.manuscriptFile.name : 'Choose File'}
+                    </button>
+                  </div>
                   <p className="text-sm text-gray-500 mt-2">Accepted formats: DOC, DOCX (max 10MB)</p>
                   {errors.manuscriptFile && <p className="text-red-500 text-sm mt-2">{errors.manuscriptFile}</p>}
                 </div>
@@ -930,32 +909,6 @@ const SubmitArticlePage = () => {
                     rows={3}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                   />
-                  <div className="mt-3">
-                    <label className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Select Cover Letter File
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleCoverLetterFileChange}
-                      />
-                    </label>
-                    {coverLetterFile ? (
-                      <div className="mt-2 flex items-center gap-3">
-                        <span className="text-sm text-gray-700 truncate">{coverLetterFile.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => setCoverLetterFile(null)}
-                          className="text-sm text-red-600 hover:text-red-700 font-medium"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-2 text-sm text-gray-500">No file selected</div>
-                    )}
-                  </div>
                 </div>
                 <div>
                   <div className="text-sm font-semibold mb-3 text-gray-700">Conflict of Interest</div>
@@ -1011,7 +964,7 @@ const SubmitArticlePage = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center"
+              className="px-8 py-3 bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:bg-gray-400 transition-colors font-medium flex items-center"
             >
               {submitting 
                 ? (isEditMode && !isEditingDraft ? 'Updating...' : 'Submitting...') 

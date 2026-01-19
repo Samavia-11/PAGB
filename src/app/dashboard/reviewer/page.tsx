@@ -319,6 +319,9 @@ const ReviewerDashboard = () => {
     );
   }
 
+  const pendingForwarded = forwardedArticles.filter((a) => a.status === 'pending');
+  const processedForwarded = forwardedArticles.filter((a) => a.status === 'accepted' || a.status === 'rejected');
+
   return (
     <Layout user={user}>
       {/* Header */}
@@ -334,11 +337,10 @@ const ReviewerDashboard = () => {
         <button
           type="button"
           onClick={() => setActiveTab('forwarded')}
-          style={{ color: activeTab === 'forwarded' ? '#ffffff' : '#111827' }}
           className={`px-5 py-2.5 rounded-full text-sm font-semibold border shadow-sm transition-colors ${
             activeTab === 'forwarded'
-              ? 'bg-primary-600 !text-white border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40'
-              : 'bg-white !text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/30'
+              ? 'bg-[var(--army-green)] text-white border-[var(--army-green)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--army-green)]/40'
+              : 'bg-white text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--army-green)]/30'
           }`}
         >
           Forwarded From Editor
@@ -346,11 +348,10 @@ const ReviewerDashboard = () => {
         <button
           type="button"
           onClick={() => setActiveTab('reviewed')}
-          style={{ color: activeTab === 'reviewed' ? '#ffffff' : '#111827' }}
           className={`px-5 py-2.5 rounded-full text-sm font-semibold border shadow-sm transition-colors ${
             activeTab === 'reviewed'
-              ? 'bg-primary-600 !text-white border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40'
-              : 'bg-white !text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/30'
+              ? 'bg-[var(--army-green)] text-white border-[var(--army-green)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--army-green)]/40'
+              : 'bg-white text-gray-900 border-academic-200 hover:bg-academic-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--army-green)]/30'
           }`}
         >
           Reviewed Articles
@@ -364,11 +365,11 @@ const ReviewerDashboard = () => {
             <h2 className="text-xl font-semibold text-academic-900">Forwarded From Editor</h2>
           </div>
 
-          {forwardedArticles.length === 0 ? (
+          {pendingForwarded.length === 0 ? (
             <div className="p-6 text-academic-600">No forwarded articles.</div>
           ) : (
             <div className="divide-y divide-academic-200">
-              {forwardedArticles.map((item) => (
+              {pendingForwarded.map((item) => (
                 <div key={item.id} className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -415,7 +416,7 @@ const ReviewerDashboard = () => {
                           disabled={item.status !== 'pending' || processingForwardedId === item.id}
                           className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          {processingForwardedId === item.id ? '...' : 'Delete'}
+                          {processingForwardedId === item.id ? '...' : 'Reject'}
                         </button>
                       </div>
                     </div>
@@ -424,6 +425,57 @@ const ReviewerDashboard = () => {
               ))}
             </div>
           )}
+
+          {processedForwarded.length > 0 ? (
+            <div className="border-t border-academic-200">
+              <div className="p-6 border-b border-academic-200">
+                <h3 className="text-lg font-semibold text-academic-900">Accepted / Rejected</h3>
+                <p className="text-sm text-academic-600 mt-1">Your responses are also shown here with status.</p>
+              </div>
+              <div className="divide-y divide-academic-200">
+                {processedForwarded.map((item) => (
+                  <div key={item.id} className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-academic-900 truncate">{item.title}</div>
+                        <div className="text-sm text-academic-600 mt-1 line-clamp-2">{item.abstract}</div>
+                        <div className="text-xs text-academic-500 mt-2">
+                          From: {item.editor_name || 'Editor'}
+                          {item.assigned_date ? ` • ${new Date(item.assigned_date).toLocaleString()}` : ''}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 items-end">
+                        <span
+                          className={`badge ${item.status === 'accepted' ? 'badge-accepted' : 'badge-rejected'}`}
+                        >
+                          {item.status.toUpperCase()}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openForwarded(item)}
+                            className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Open
+                          </button>
+                          {item.status === 'accepted' ? (
+                            <button
+                              onClick={() => setActiveTab('reviewed')}
+                              className="px-3 py-2 text-sm bg-[var(--army-green)] text-white rounded-lg hover:bg-[var(--army-green-light)] transition-colors flex items-center"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Reviewed
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -472,154 +524,6 @@ const ReviewerDashboard = () => {
           )}
         </div>
       ) : null}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => a.status === 'pending').length}
-              </p>
-              <p className="text-academic-600">Pending Reviews</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Eye className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => a.status === 'in_review').length}
-              </p>
-              <p className="text-academic-600">In Progress</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => a.status === 'completed').length}
-              </p>
-              <p className="text-academic-600">Completed</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-red-100 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">
-                {articles.filter(a => getDaysUntilDeadline(a.deadline) <= 7).length}
-              </p>
-              <p className="text-academic-600">Due Soon</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Articles Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-academic-200">
-        <div className="p-6 border-b border-academic-200">
-          <h2 className="text-xl font-semibold text-academic-900">Assigned Articles</h2>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-academic-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Article
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Priority
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Deadline
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-academic-200">
-              {articles.map((article) => {
-                const daysLeft = getDaysUntilDeadline(article.deadline);
-                return (
-                  <tr key={article.id} className="hover:bg-academic-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-academic-900">
-                          {article.title}
-                        </div>
-                        <div className="text-sm text-academic-500 mt-1">
-                          By {article.authors}
-                        </div>
-                        <div className="text-sm text-academic-500 mt-1 line-clamp-2">
-                          {article.abstract}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        {getStatusIcon(article.status)}
-                        <span className={`ml-2 ${getStatusBadge(article.status)}`}>
-                          {article.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={getPriorityBadge(article.priority)}>
-                        {article.priority.charAt(0).toUpperCase() + article.priority.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-academic-900">
-                        {new Date(article.deadline).toLocaleDateString()}
-                      </div>
-                      <div className={`text-xs ${daysLeft <= 7 ? 'text-red-600' : 'text-academic-500'}`}>
-                        {daysLeft > 0 ? `${daysLeft} days left` : `${Math.abs(daysLeft)} days overdue`}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                          View
-                        </button>
-                        {article.status !== 'completed' && (
-                          <button 
-                            onClick={() => startReview(article)}
-                            className="text-green-600 hover:text-green-700 text-sm font-medium"
-                          >
-                            {article.status === 'pending' ? 'Start Review' : 'Continue Review'}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Review Modal */}
       {showReviewModal && selectedArticle && (
@@ -738,14 +642,6 @@ const ReviewerDashboard = () => {
                       <div className="flex items-center gap-2">
                         <a
                           href={(selectedForwardedDetails?.attachment_path || selectedForwarded.attachment_path) as string}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-secondary"
-                        >
-                          Open
-                        </a>
-                        <a
-                          href={(selectedForwardedDetails?.attachment_path || selectedForwarded.attachment_path) as string}
                           download
                           className="btn-primary"
                         >
@@ -756,13 +652,6 @@ const ReviewerDashboard = () => {
                   </div>
                 </div>
               ) : null}
-
-              <div>
-                <h4 className="font-medium text-academic-900 mb-2">Document</h4>
-                <div className="bg-academic-50 rounded-lg p-4 text-academic-700 whitespace-pre-wrap">
-                  {selectedForwardedDetails?.content || selectedForwarded.content || 'No content provided.'}
-                </div>
-              </div>
             </div>
           </div>
         </div>

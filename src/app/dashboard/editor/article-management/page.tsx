@@ -471,14 +471,16 @@ const ArticleManagementPage = () => {
                         <div className="flex gap-2 justify-end">
                           {doc.attachment_path ? (
                             <>
-                              <a
-                                href={doc.attachment_path}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                              >
-                                Open
-                              </a>
+                              {doc.attachment_path.endsWith('.pdf') ? (
+                                <a
+                                  href={doc.attachment_path}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                >
+                                  Open
+                                </a>
+                              ) : null}
                               <a
                                 href={doc.attachment_path}
                                 download
@@ -567,14 +569,16 @@ const ArticleManagementPage = () => {
                         <div className="flex gap-3 justify-end">
                           {r.file_url ? (
                             <>
-                              <a
-                                href={r.file_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                              >
-                                Open
-                              </a>
+                              {r.file_url.endsWith('.pdf') ? (
+                                <a
+                                  href={r.file_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                >
+                                  Open
+                                </a>
+                              ) : null}
                               <a
                                 href={r.file_url}
                                 download
@@ -695,14 +699,16 @@ const ArticleManagementPage = () => {
                   <td className="px-6 py-4">
                     {s.manuscriptFilePath ? (
                       <div className="flex gap-3">
-                        <a
-                          href={s.manuscriptFilePath}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                        >
-                          Open
-                        </a>
+                        {s.manuscriptFilePath.endsWith('.pdf') ? (
+                          <a
+                            href={s.manuscriptFilePath}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            Open
+                          </a>
+                        ) : null}
                         <a
                           href={s.manuscriptFilePath}
                           download
@@ -718,20 +724,9 @@ const ArticleManagementPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={() => {
-                          console.log('Reply clicked for submission:', s);
-                          console.log('Current active tab:', activeTab);
-                          const selected = { ...s, id: s.articleId };
-                          sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
-                          router.push(`/dashboard/editor/article-management/${s.articleId}`);
-                        }}
-                        className="text-blue-600 hover:text-blue-700 flex items-center text-sm font-medium"
-                      >
-                        Reply <ArrowRight className="w-4 h-4 ml-1" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('Forward clicked for submission:', s);
+                          // Open existing forward modal (Forward to Reviewer / Forward to Author)
                           const selected = { ...s, id: s.articleId };
                           sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
                           setForwardChoiceSubmission(selected);
@@ -739,7 +734,19 @@ const ArticleManagementPage = () => {
                         }}
                         className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium"
                       >
-                        Forward <Users className="w-4 h-4 ml-1" />
+                        Forward <Send className="w-4 h-4 ml-1" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('View clicked for submission:', s);
+                          console.log('Current active tab:', activeTab);
+                          const selected = { ...s, id: s.articleId };
+                          sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
+                          router.push(`/dashboard/editor/article-management/${s.articleId}`);
+                        }}
+                        className="text-blue-600 hover:text-blue-700 flex items-center text-sm font-medium"
+                      >
+                        View <ArrowRight className="w-4 h-4 ml-1" />
                       </button>
                     </div>
                   </td>

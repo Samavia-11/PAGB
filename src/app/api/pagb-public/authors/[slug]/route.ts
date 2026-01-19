@@ -53,7 +53,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         slug,
       };
 
-      const articles = (await query(
+      // Get articles linked to user ID
+      const userArticles = (await query(
         `SELECT aa.id,
                 aa.title,
                 aa.abstract,
@@ -73,7 +74,42 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         [author.id]
       )) as any[];
 
-      return NextResponse.json({ author, articles: articles || [] });
+      // Also get articles where author name appears in the authors JSON
+      const allRows = (await query(
+        `SELECT aa.id,
+                aa.title,
+                aa.abstract,
+                aa.keywords,
+                aa.content,
+                aa.authors,
+                aa.affiliation,
+                aa.article_type,
+                aa.manuscript_file_name,
+                aa.manuscript_file_path,
+                aa.status,
+                aa.submission_date,
+                aa.last_updated
+         FROM authors_articles aa
+         WHERE aa.status = 'published'
+         ORDER BY aa.submission_date DESC, aa.id DESC`
+      )) as any[];
+
+      const jsonArticles = (allRows || []).filter((r) => {
+        const names = extractAllAuthorNames(r?.authors);
+        return names.some((n) => slugify(String(n || '')) === slug);
+      });
+
+      // Combine both sets of articles, avoiding duplicates
+      const allArticles = [...userArticles || []];
+      const existingIds = new Set(allArticles.map(a => a.id));
+      
+      for (const article of jsonArticles || []) {
+        if (!existingIds.has(article.id)) {
+          allArticles.push(article);
+        }
+      }
+
+      return NextResponse.json({ author, articles: allArticles });
     }
 
     // Fallback: author name not present in users table. Match against authors_articles.authors JSON.

@@ -394,7 +394,7 @@ export default function AdminCreatePublicationPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Article Cover Page (optional)</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Article Cover Page</label>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <label className="btn-primary inline-flex items-center justify-center cursor-pointer">
                         Choose File

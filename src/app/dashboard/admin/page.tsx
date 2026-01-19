@@ -86,11 +86,12 @@ const AdminDashboard = () => {
   });
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [stats, setStats] = useState<AdminStats>({
-    readyToPublish: 2,
-    published: 8,
+    readyToPublish: 0,
+    published: 0,
     currentVolume: 15,
-    totalUsers: 45
+    totalUsers: 0
   });
+  const [statsLoading, setStatsLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     statusDistribution: {
       submitted: 5,
@@ -111,9 +112,27 @@ const AdminDashboard = () => {
   useEffect(() => {
     checkAuth();
     loadAcceptedArticles();
-    loadStats();
     loadAnalytics();
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    loadStats();
+
+    const onFocus = () => {
+      loadStats();
+    };
+
+    window.addEventListener('focus', onFocus);
+    const intervalId = window.setInterval(() => {
+      loadStats();
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(intervalId);
+    };
+  }, [user?.id]);
 
   const checkAuth = async () => {
     try {
@@ -137,14 +156,54 @@ const AdminDashboard = () => {
   };
 
   const loadStats = async () => {
+    if (!user?.id) return;
+    setStatsLoading(true);
     try {
-      const response = await fetch('/api/admin/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
+      const adminHeaders = {
+        'x-user-id': String(user.id),
+        'x-user-role': 'administrator',
+      };
+
+      // 1st card: same source as /dashboard/admin/publications
+      const publicationsRes = await fetch(
+        `/api/editor-admin-documents?adminId=${encodeURIComponent(String(user.id))}`,
+        { headers: adminHeaders }
+      );
+      let readyToPublishCount = 0;
+      if (publicationsRes.ok) {
+        const publications = await publicationsRes.json();
+        readyToPublishCount = Array.isArray(publications.items) ? publications.items.length : 0;
       }
+
+      // 2nd card: same source as /dashboard/admin/publish
+      const publishRes = await fetch('/api/books?status=published', { headers: adminHeaders });
+      let publishedCount = 0;
+      if (publishRes.ok) {
+        const published = await publishRes.json();
+        publishedCount = Array.isArray(published.books) ? published.books.length : 0;
+      }
+
+      // Fetch Total Users from user-requests
+      const usersRes = await fetch('/api/users');
+      let totalUsersCount = 0;
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        // Count only authors and reviewers
+        totalUsersCount = Array.isArray(users.users) 
+          ? users.users.filter((user: any) => user.role === 'author' || user.role === 'reviewer').length
+          : 0;
+      }
+
+      setStats({
+        readyToPublish: readyToPublishCount,
+        published: publishedCount,
+        currentVolume: 15, // Keep current volume as static
+        totalUsers: totalUsersCount
+      });
     } catch (error) {
       console.error('Failed to load stats:', error);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -329,7 +388,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
@@ -337,7 +396,7 @@ const AdminDashboard = () => {
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-academic-900">
-                {stats.readyToPublish}
+                {statsLoading ? '...' : stats.readyToPublish}
               </p>
               <p className="text-academic-600">Ready to Publish</p>
             </div>
@@ -351,21 +410,9 @@ const AdminDashboard = () => {
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-academic-900">
-                {stats.published}
+                {statsLoading ? '...' : stats.published}
               </p>
               <p className="text-academic-600">Published</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-academic-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <BookOpen className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">{stats.currentVolume}</p>
-              <p className="text-academic-600">Current Volume</p>
             </div>
           </div>
         </div>
@@ -376,188 +423,8 @@ const AdminDashboard = () => {
               <Users className="w-6 h-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-2xl font-bold text-academic-900">{stats.totalUsers}</p>
+              <p className="text-2xl font-bold text-academic-900">{statsLoading ? '...' : stats.totalUsers}</p>
               <p className="text-academic-600">Total Users</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-academic-200 p-3 mb-8">
-        <h2 className="text-xs font-semibold text-academic-900 mb-2">Analytics Overview</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Status Distribution Pie Chart */}
-          <div>
-            <div className="flex items-center mb-1">
-              <PieChartIcon className="w-3 h-3 text-primary-600 mr-1" />
-              <h3 className="text-xs font-medium text-academic-900">Status Distribution</h3>
-            </div>
-            <div className="h-36 flex items-center justify-center">
-              <div className="w-full" style={{ maxWidth: '200px' }}>
-                <Pie
-                  data={{
-                    labels: [
-                      'Submissions',
-                      'Editor',
-                      'Reviewer',
-                      'Publication'
-                    ],
-                    datasets: [
-                      {
-                        label: 'Articles',
-                        data: [
-                          analytics.statusDistribution['submitted'] || 0,
-                          analytics.statusDistribution['editor_review'] || 0,
-                          analytics.statusDistribution['under_review'] || 0,
-                          (analytics.statusDistribution['accepted'] || 0) + (analytics.statusDistribution['published'] || 0)
-                        ],
-                        backgroundColor: [
-                          'rgba(59, 130, 246, 0.8)',
-                          'rgba(139, 92, 246, 0.8)',
-                          'rgba(251, 191, 36, 0.8)',
-                          'rgba(34, 197, 94, 0.8)'
-                        ],
-                        borderColor: [
-                          'rgba(59, 130, 246, 1)',
-                          'rgba(139, 92, 246, 1)',
-                          'rgba(251, 191, 36, 1)',
-                          'rgba(34, 197, 94, 1)'
-                        ],
-                        borderWidth: 2
-                      }
-                    ]
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    layout: {
-                      padding: {
-                        bottom: 5,
-                        top: 0
-                      }
-                    },
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        align: 'center',
-                        fullSize: true,
-                        labels: {
-                          padding: 5,
-                          font: {
-                            size: 8
-                          },
-                          boxWidth: 10,
-                          boxHeight: 10,
-                          usePointStyle: false
-                        }
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                            return `${label}: ${value} (${percentage}%)`;
-                          }
-                        }
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Yearly Publications Bar Chart */}
-          <div>
-            <div className="flex items-center mb-1">
-              <TrendingUp className="w-3 h-3 text-primary-600 mr-1" />
-              <h3 className="text-xs font-medium text-academic-900">Yearly Publications</h3>
-            </div>
-            <div className="h-36">
-              <Bar
-                data={{
-                  labels: analytics.yearlyPublications.map(item => item.year.toString()),
-                  datasets: [
-                    {
-                      label: 'Published Articles',
-                      data: analytics.yearlyPublications.map(item => item.count),
-                      backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                      borderColor: 'rgba(59, 130, 246, 1)',
-                      borderWidth: 1,
-                      borderRadius: 3,
-                      barThickness: 30,
-                      maxBarThickness: 35
-                    }
-                  ]
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: false
-                    },
-                    tooltip: {
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      padding: 6,
-                      titleFont: {
-                        size: 9
-                      },
-                      bodyFont: {
-                        size: 9
-                      },
-                      callbacks: {
-                        label: function(context) {
-                          return `Articles: ${context.parsed.y}`;
-                        }
-                      }
-                    }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      grid: {
-                        color: 'rgba(0, 0, 0, 0.08)'
-                      },
-                      ticks: {
-                        stepSize: 5,
-                        font: {
-                          size: 9
-                        },
-                        color: '#6B7280',
-                        padding: 5
-                      },
-                      border: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.2)',
-                        width: 1
-                      }
-                    },
-                    x: {
-                      grid: {
-                        display: false
-                      },
-                      ticks: {
-                        font: {
-                          size: 9,
-                          weight: 500
-                        },
-                        color: '#374151',
-                        padding: 5
-                      },
-                      border: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.2)',
-                        width: 1
-                      }
-                    }
-                  }
-                }}
-              />
             </div>
           </div>
         </div>
@@ -579,99 +446,6 @@ const AdminDashboard = () => {
             <Settings className="w-4 h-4 mr-2" />
             Journal Settings
           </button>
-        </div>
-      </div>
-
-      {/* Articles Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-academic-200">
-        <div className="p-6 border-b border-academic-200">
-          <h2 className="text-xl font-semibold text-academic-900">Articles for Publication</h2>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-academic-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Article
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Acceptance Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Publication Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-academic-200">
-              {articles.map((article) => (
-                <tr key={article.id} className="hover:bg-academic-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-academic-900">
-                        {article.title}
-                      </div>
-                      <div className="text-sm text-academic-500 mt-1">
-                        By {article.authors}
-                      </div>
-                      <div className="text-sm text-academic-500 mt-1 line-clamp-2">
-                        {article.abstract}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      {getStatusIcon(article.status)}
-                      <span className={`ml-2 ${getStatusBadge(article.status)}`}>
-                        {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-academic-500">
-                    {new Date(article.acceptance_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    {article.status === 'published' ? (
-                      <div className="text-sm">
-                        <div className="text-academic-900">Vol. {article.volume}, Issue {article.issue}</div>
-                        <div className="text-academic-500">Pages: {article.pages}</div>
-                        <div className="text-academic-500">DOI: {article.doi}</div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-academic-500">Pending publication</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                        View
-                      </button>
-                      {article.status === 'accepted' && (
-                        <button 
-                          onClick={() => publishArticle(article)}
-                          className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center"
-                        >
-                          <Globe className="w-3 h-3 mr-1" />
-                          Publish
-                        </button>
-                      )}
-                      {article.status === 'published' && (
-                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                          Edit Details
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 

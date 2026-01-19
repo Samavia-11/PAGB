@@ -13,13 +13,13 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>("forest");
 
   useEffect(() => {
     // Load saved theme from localStorage or system preference
     const saved = (typeof window !== "undefined" && localStorage.getItem("theme")) as Theme | null;
     const prefersDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = saved ?? (prefersDark ? "dark" : "light");
+    const initial = saved ?? "forest";
     setThemeState(initial);
     applyTheme(initial);
   }, []);
