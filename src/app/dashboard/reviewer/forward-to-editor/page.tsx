@@ -189,7 +189,7 @@ export default function ReviewerForwardToEditorPage() {
                   <input
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
                     onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
                   />
                 </label>

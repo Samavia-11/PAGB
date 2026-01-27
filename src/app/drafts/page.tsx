@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { FileText, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
 
 interface User {
   id: number;
@@ -54,6 +55,7 @@ const deleteArticleFromStorage = (userId: number, articleId: number) => {
 
 export default function DraftsPage() {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [user, setUser] = useState<User | null>(null);
   const [drafts, setDrafts] = useState<StoredArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,9 +117,16 @@ export default function DraftsPage() {
     router.push(`/submit-article?edit=${articleId}`);
   };
 
-  const handleDelete = (articleId: number) => {
-    if (!confirm('Are you sure you want to delete this draft?')) return;
-    
+  const handleDelete = async (articleId: number) => {
+    const ok = await confirm({
+      title: 'Delete this draft?',
+      message: 'Are you sure you want to delete this draft?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
+
     if (user) {
       deleteArticleFromStorage(user.id, articleId);
       loadDrafts(user.id);

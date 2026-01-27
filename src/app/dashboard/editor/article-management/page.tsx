@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 import {
   FileText,
   Clock,
@@ -98,9 +100,12 @@ const ArticleManagementPage = () => {
   const [selectedAuthorByDoc, setSelectedAuthorByDoc] = useState<Record<number, number | ''>>({});
   const [sendCommentByDoc, setSendCommentByDoc] = useState<Record<number, string>>({});
   const [sendingDocId, setSendingDocId] = useState<number | null>(null);
+  const [forwardedReviewerDocIds, setForwardedReviewerDocIds] = useState<Set<number>>(new Set());
+  const [forwardedArticleIds, setForwardedArticleIds] = useState<Set<number>>(new Set());
   const [forwardChoiceOpen, setForwardChoiceOpen] = useState(false);
   const [forwardChoiceSubmission, setForwardChoiceSubmission] = useState<Submission | null>(null);
   const router = useRouter();
+  const confirm = useConfirmDialog();
 
   const mapDbStatusToTabStatus = (status: string): Submission['status'] => {
     if (status === 'submitted') return 'new';
@@ -131,7 +136,52 @@ const ArticleManagementPage = () => {
     if (!user) return;
     loadReviewerForwardedDocs(user.id);
     loadAuthors();
+    loadReviewerDocForwardStatus(user.id);
   }, [user]);
+
+  const loadReviewerDocForwardStatus = async (editorId: number) => {
+    try {
+      const [toAuthorRes, toAdminRes] = await Promise.all([
+        fetch(`/api/editor-author-documents?editorId=${editorId}`, {
+          headers: {
+            'x-user-id': String(editorId),
+            'x-user-role': 'editor',
+          },
+        }),
+        fetch(`/api/editor-admin-documents?editorId=${editorId}`, {
+          headers: {
+            'x-user-id': String(editorId),
+            'x-user-role': 'editor',
+          },
+        }),
+      ]);
+
+      const next = new Set<number>();
+
+      if (toAuthorRes.ok) {
+        const data = await toAuthorRes.json().catch(() => ({}));
+        const items = Array.isArray(data?.items) ? data.items : [];
+        for (const it of items) {
+          const id = Number((it as any)?.reviewer_forward_id);
+          if (Number.isFinite(id) && id > 0) next.add(id);
+        }
+      }
+
+      if (toAdminRes.ok) {
+        const data = await toAdminRes.json().catch(() => ({}));
+        const items = Array.isArray(data?.items) ? data.items : [];
+        for (const it of items) {
+          const id = Number((it as any)?.reviewer_forward_id);
+          if (Number.isFinite(id) && id > 0) next.add(id);
+        }
+      }
+
+      setForwardedReviewerDocIds(next);
+    } catch (e) {
+      console.error('Failed to load reviewer-doc forward status:', e);
+      setForwardedReviewerDocIds(new Set());
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -220,7 +270,7 @@ const ArticleManagementPage = () => {
     if (!user) return;
     const authorId = selectedAuthorByDoc[doc.id];
     if (!authorId) {
-      alert('Please select an author first.');
+      showNotification.warning('Please select an author first.');
       return;
     }
 
@@ -245,11 +295,11 @@ const ArticleManagementPage = () => {
         throw new Error(err?.error || 'Failed to send');
       }
 
-      alert('Sent to author successfully.');
+      showNotification.success('Sent to author successfully.');
       setSendCommentByDoc((prev) => ({ ...prev, [doc.id]: '' }));
     } catch (e: any) {
       console.error('Failed to send to author:', e);
-      alert(e?.message || 'Failed to send');
+      showNotification.error(e?.message || 'Failed to send');
     } finally {
       setSendingDocId(null);
     }
@@ -304,6 +354,8 @@ const ArticleManagementPage = () => {
               status: 'external_review',
               abstract: ea.abstract,
               content: ea.content,
+              manuscriptFileName: ea.manuscript_file_name || ea.attachment_name,
+              manuscriptFilePath: ea.manuscript_file_path || ea.attachment_path,
               assignmentId: ea.id,
               reviewerId: ea.reviewer_id,
               reviewerName: ea.reviewer_name,
@@ -314,6 +366,13 @@ const ArticleManagementPage = () => {
         } catch (e) {
           console.error('Failed to load forwarded articles:', e);
         }
+
+        const nextForwardedArticleIds = new Set<number>();
+        for (const f of forwardedArticles) {
+          const aid = Number((f as any)?.articleId);
+          if (Number.isFinite(aid) && aid > 0) nextForwardedArticleIds.add(aid);
+        }
+        setForwardedArticleIds(nextForwardedArticleIds);
         
         // Combine all articles
         const forwardedByArticleId = new Map<number, Submission>();
@@ -494,7 +553,8 @@ const ArticleManagementPage = () => {
                           )}
                           <button
                             type="button"
-                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            disabled={forwardedReviewerDocIds.has(doc.id)}
+                            className="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => {
                               const selected: Submission = {
                                 rowKey: `reviewer-doc-${doc.article_id}-${doc.id}`,
@@ -593,7 +653,8 @@ const ArticleManagementPage = () => {
 
                           <button
                             type="button"
-                            className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            disabled={forwardedArticleIds.has(r.article_id)}
+                            className="text-green-600 hover:text-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => {
                               const selected: Submission = {
                                 rowKey: `author-reply-${r.article_id}-${r.message_id}`,
@@ -725,6 +786,7 @@ const ArticleManagementPage = () => {
                     <div className="flex gap-2">
                       <button
                         type="button"
+                        disabled={activeTab === 'external_review' && (s.reviewerDecision || 'pending') === 'accepted'}
                         onClick={() => {
                           // Open existing forward modal (Forward to Reviewer / Forward to Author)
                           const selected = { ...s, id: s.articleId };
@@ -732,21 +794,9 @@ const ArticleManagementPage = () => {
                           setForwardChoiceSubmission(selected);
                           setForwardChoiceOpen(true);
                         }}
-                        className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium"
+                        className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Forward <Send className="w-4 h-4 ml-1" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('View clicked for submission:', s);
-                          console.log('Current active tab:', activeTab);
-                          const selected = { ...s, id: s.articleId };
-                          sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
-                          router.push(`/dashboard/editor/article-management/${s.articleId}`);
-                        }}
-                        className="text-blue-600 hover:text-blue-700 flex items-center text-sm font-medium"
-                      >
-                        View <ArrowRight className="w-4 h-4 ml-1" />
                       </button>
                     </div>
                   </td>
@@ -812,12 +862,20 @@ const ArticleManagementPage = () => {
                   if (forwardChoiceSubmission.forwardSource === 'reviewer_doc') {
                     const reviewerForwardId = forwardChoiceSubmission.reviewerForwardId;
                     if (!user || !reviewerForwardId) {
-                      alert('Missing data. Please try again.');
+                      showNotification.error('Missing data. Please try again.');
                       return;
                     }
 
                     (async () => {
                       try {
+                        const ok = await confirm({
+                          title: 'Send to author?',
+                          message: 'Do you want to forward this reviewer document to the author?',
+                          confirmText: 'Send',
+                          cancelText: 'Cancel',
+                        });
+                        if (!ok) return;
+
                         const articleRes = await fetch(`/api/articles?id=${articleId}`, {
                           headers: {
                             'x-user-id': String(user.id),
@@ -869,12 +927,12 @@ const ArticleManagementPage = () => {
                           }),
                         }).catch(() => null);
 
-                        alert('Sent to author successfully.');
+                        showNotification.success('Sent to author successfully.');
                         setActiveTab('revision');
                         loadMockSubmissions();
                       } catch (e: any) {
                         console.error('Forward reviewer doc to author failed:', e);
-                        alert(e?.message || 'Failed to send to author');
+                        showNotification.error(e?.message || 'Failed to send to author');
                       }
                     })();
 
@@ -889,6 +947,14 @@ const ArticleManagementPage = () => {
 
                   (async () => {
                     try {
+                      const ok = await confirm({
+                        title: 'Send to author?',
+                        message: 'Do you want to send this article back to the author for revision?',
+                        confirmText: 'Send',
+                        cancelText: 'Cancel',
+                      });
+                      if (!ok) return;
+
                       await fetch('/api/articles', {
                         method: 'PATCH',
                         headers: {

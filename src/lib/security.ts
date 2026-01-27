@@ -42,9 +42,45 @@ export const ALLOWED_EXTENSIONS = [
   '.jpg', '.jpeg', '.png', '.gif', '.webp'
 ];
 
-// Validate file type and extension - now allows all file types
-export function isAllowedFileType(file: File): { valid: boolean; error?: string } {
-  // All file types are now allowed
+const getFileExtension = (fileName: string): string => {
+  const lastDot = String(fileName || '').lastIndexOf('.');
+  if (lastDot < 0) return '';
+  return String(fileName).slice(lastDot).toLowerCase();
+};
+
+// Validate file type and extension
+export function isAllowedFileType(
+  file: File,
+  options?: { allowedMimeTypes?: string[]; allowedExtensions?: string[] }
+): { valid: boolean; error?: string } {
+  const allowedMimeTypes = options?.allowedMimeTypes || ALLOWED_FILE_TYPES.all;
+  const allowedExtensions = options?.allowedExtensions || ALLOWED_EXTENSIONS;
+
+  const ext = getFileExtension(file?.name || '');
+  const mime = String((file as any)?.type || '').toLowerCase();
+
+  if (allowedExtensions.length > 0 && ext && !allowedExtensions.includes(ext)) {
+    return {
+      valid: false,
+      error: `Invalid file extension. Allowed: ${allowedExtensions.join(', ')}`,
+    };
+  }
+
+  if (allowedMimeTypes.length > 0 && mime && !allowedMimeTypes.includes(mime)) {
+    return {
+      valid: false,
+      error: `Invalid file type. Allowed: ${allowedExtensions.join(', ')}`,
+    };
+  }
+
+  // If we can't determine mime/ext, fall back to extension check only
+  if (!ext && mime && allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(mime)) {
+    return {
+      valid: false,
+      error: `Invalid file type. Allowed: ${allowedExtensions.join(', ')}`,
+    };
+  }
+
   return { valid: true };
 }
 
@@ -83,6 +119,48 @@ export function validateEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
+export type ValidationResult = { valid: boolean; error?: string };
+
+export function validateLettersAndSpaces(value: string, fieldLabel: string = 'Value'): ValidationResult {
+  const v = String(value || '').trim();
+  if (!v) return { valid: false, error: `${fieldLabel} is required` };
+  if (!/^[A-Za-z ]+$/.test(v)) {
+    return { valid: false, error: `${fieldLabel} can only contain letters and spaces` };
+  }
+  return { valid: true };
+}
+
+export function validateAlphanumericAndSpaces(value: string, fieldLabel: string = 'Value'): ValidationResult {
+  const v = String(value || '').trim();
+  if (!v) return { valid: false, error: `${fieldLabel} is required` };
+  if (!/^[A-Za-z0-9 ]+$/.test(v)) {
+    return { valid: false, error: `${fieldLabel} can only contain letters, numbers, and spaces` };
+  }
+  return { valid: true };
+}
+
+export function validateNoSpecialCharacters(value: string, fieldLabel: string = 'Value'): ValidationResult {
+  const v = String(value || '').trim();
+  if (!v) return { valid: false, error: `${fieldLabel} is required` };
+  if (!/^[A-Za-z0-9\s]+$/.test(v)) {
+    return { valid: false, error: `${fieldLabel} can only contain letters, numbers, and spaces` };
+  }
+  return { valid: true };
+}
+
+export function normalizeDigits(value: string): string {
+  return String(value || '').replace(/\D/g, '');
+}
+
+export function validateExactDigits(value: string, digitCount: number, fieldLabel: string = 'Value'): ValidationResult {
+  const digits = normalizeDigits(value);
+  if (!digits) return { valid: false, error: `${fieldLabel} is required` };
+  if (digits.length !== digitCount) {
+    return { valid: false, error: `${fieldLabel} must be exactly ${digitCount} digits` };
+  }
+  return { valid: true };
+}
+
 export function validateUsername(username: string): { valid: boolean; error?: string } {
   if (!username || username.length < 3) {
     return { valid: false, error: 'Username must be at least 3 characters' };
@@ -97,11 +175,24 @@ export function validateUsername(username: string): { valid: boolean; error?: st
 }
 
 export function validatePassword(password: string): { valid: boolean; error?: string } {
-  if (!password || password.length < 8) {
+  const v = String(password || '');
+  if (!v || v.length < 8) {
     return { valid: false, error: 'Password must be at least 8 characters' };
   }
-  if (password.length > 128) {
+  if (v.length > 128) {
     return { valid: false, error: 'Password must be less than 128 characters' };
+  }
+  if (!/[A-Z]/.test(v)) {
+    return { valid: false, error: 'Password must include at least 1 uppercase letter' };
+  }
+  if (!/[a-z]/.test(v)) {
+    return { valid: false, error: 'Password must include at least 1 lowercase letter' };
+  }
+  if (!/\d/.test(v)) {
+    return { valid: false, error: 'Password must include at least 1 digit' };
+  }
+  if (!/[^A-Za-z0-9]/.test(v)) {
+    return { valid: false, error: 'Password must include at least 1 special character' };
   }
   return { valid: true };
 }

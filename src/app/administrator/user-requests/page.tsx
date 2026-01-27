@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -15,6 +17,7 @@ interface User {
 
 export default function UserRequestsPage() {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [user, setUser] = useState<any>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,23 +84,28 @@ export default function UserRequestsPage() {
         await fetchUsers();
         setShowEditModal(false);
         setEditingUser(null);
-        alert('✅ User Updated Successfully!');
+        showNotification.success('User Updated Successfully!');
       } else {
         const error = await response.json();
-        alert(`❌ Update Failed\n\n${error.error || 'Unable to update user. Please try again.'}`);
+        showNotification.error(error.error || 'Unable to update user. Please try again.');
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
+      showNotification.error('Unable to connect to the server. Please check your internet connection and try again.');
     } finally {
       setProcessing(null);
     }
   };
 
   const handleDeleteUser = async (userId: number, userName: string) => {
-    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete user?',
+      message: `Are you sure you want to delete ${userName}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
 
     setProcessing(userId);
     try {
@@ -107,14 +115,14 @@ export default function UserRequestsPage() {
 
       if (response.ok) {
         await fetchUsers();
-        alert('✅ User Deleted Successfully!');
+        showNotification.success('User Deleted Successfully!');
       } else {
         const error = await response.json();
-        alert(`❌ Delete Failed\n\n${error.error || 'Unable to delete user. Please try again.'}`);
+        showNotification.error(error.error || 'Unable to delete user. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('⚠️ Connection Error\n\nUnable to connect to the server. Please check your internet connection and try again.');
+      showNotification.error('Unable to connect to the server. Please check your internet connection and try again.');
     } finally {
       setProcessing(null);
     }

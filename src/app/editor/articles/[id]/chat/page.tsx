@@ -4,6 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Send, User, Clock, Eye, MessageSquare, Phone, Video, MoreVertical, Paperclip, FileText, Download, X } from 'lucide-react';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface Message {
   id: string;
   sender: string;
@@ -147,6 +149,11 @@ export default function EditorAuthorChat() {
 
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || sending) return;
+
+    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
+      alert('Message can only contain letters, numbers, and spaces');
+      return;
+    }
 
     setSending(true);
     setUploading(!!selectedFile);

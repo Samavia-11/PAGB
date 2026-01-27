@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserFromRequest } from '@/lib/auth';
+import {
+  validateLettersAndSpaces,
+  validateAlphanumericAndSpaces,
+  validateExactDigits,
+  normalizeDigits,
+  validatePassword,
+} from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,14 +28,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const passwordValidation = validatePassword(String(password));
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.error || 'Invalid password' },
+        { status: 400 }
+      );
+    }
+
+    const nameValidation = validateLettersAndSpaces(String(username), 'Full name');
+    if (!nameValidation.valid) {
+      return NextResponse.json({ error: nameValidation.error || 'Invalid name' }, { status: 400 });
+    }
+    if (String(fatherName || '').trim()) {
+      const v = validateLettersAndSpaces(String(fatherName), 'Father name');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid father name' }, { status: 400 });
+    }
+    if (String(cnic || '').trim()) {
+      const v = validateExactDigits(String(cnic), 13, 'CNIC');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid CNIC' }, { status: 400 });
+    }
+    if (String(contactNumber || '').trim()) {
+      const v = validateExactDigits(String(contactNumber), 11, 'Contact number');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid contact number' }, { status: 400 });
+    }
+    if (String(qualification || '').trim()) {
+      const v = validateAlphanumericAndSpaces(String(qualification), 'Highest qualification');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid qualification' }, { status: 400 });
+    }
+
     const user = await createUserFromRequest({
       username,
       email,
       password,
       role,
       fatherName,
-      cnic,
-      contactNumber,
+      cnic: String(cnic || '').trim() ? normalizeDigits(String(cnic)) : undefined,
+      contactNumber: String(contactNumber || '').trim() ? normalizeDigits(String(contactNumber)) : undefined,
       qualification
     });
 

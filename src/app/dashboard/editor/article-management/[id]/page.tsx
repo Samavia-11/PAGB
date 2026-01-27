@@ -4,6 +4,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Send, Paperclip } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
+
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
 
 interface User {
   id: number;
@@ -26,6 +30,7 @@ const SubmissionDetailPage = () => {
   const params = useParams();
   const id = Number(params?.id);
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [user, setUser] = useState<User | null>(null);
   const [detail, setDetail] = useState<SubmissionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,15 +81,28 @@ const SubmissionDetailPage = () => {
 
   const handleSend = async () => {
     if (!comment.trim() && !file) {
-      alert('Please enter your comments or attach a file before sending.');
+      showNotification.warning('Please enter your comments or attach a file before sending.');
       return;
     }
+
+    if (comment.trim() && !isNoSpecialChars(comment)) {
+      showNotification.error('Comments can only contain letters, numbers, and spaces');
+      return;
+    }
+
+    const ok = await confirm({
+      title: 'Send to author?',
+      message: 'Do you want to send this reply to the author?',
+      confirmText: 'Send',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
 
     try {
       // Get the actual submission data from sessionStorage
       const storedSubmission = sessionStorage.getItem('selectedSubmission');
       if (!storedSubmission) {
-        alert('Article data not found. Please go back and try again.');
+        showNotification.error('Article data not found. Please go back and try again.');
         return;
       }
 
@@ -92,7 +110,7 @@ const SubmissionDetailPage = () => {
       console.log('Editor sending reply for:', submissionData);
 
       if (!user?.id) {
-        alert('Not authenticated. Please login again.');
+        showNotification.error('Not authenticated. Please login again.');
         router.push('/login');
         return;
       }
@@ -133,11 +151,11 @@ const SubmissionDetailPage = () => {
         throw new Error(err?.error || 'Failed to update article status');
       }
 
-      alert('Sent to author successfully.');
+      showNotification.success('Sent to author successfully.');
       router.push('/dashboard/editor/article-management');
     } catch (error) {
       console.error('Error sending reply:', error);
-      alert('Failed to send reply. Please try again.');
+      showNotification.error('Failed to send reply. Please try again.');
     }
   };
 

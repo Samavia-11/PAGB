@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { query } from '@/lib/db';
+import {
+  validateLettersAndSpaces,
+  validateAlphanumericAndSpaces,
+  validateExactDigits,
+  normalizeDigits,
+  validatePassword,
+} from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,11 +34,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const passwordValidation = validatePassword(String(password));
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { message: passwordValidation.error || 'Invalid password' },
+        { status: 400 }
+      );
+    }
+
     if (!String(securityAnswer1 || '').trim() || !String(securityAnswer2 || '').trim()) {
       return NextResponse.json(
         { message: 'Security question answers are required' },
         { status: 400 }
       );
+    }
+
+    const fullNameValidation = validateLettersAndSpaces(String(fullName), 'Full name');
+    if (!fullNameValidation.valid) {
+      return NextResponse.json({ message: fullNameValidation.error }, { status: 400 });
+    }
+
+    if (String(fatherName || '').trim()) {
+      const fatherNameValidation = validateLettersAndSpaces(String(fatherName), 'Father name');
+      if (!fatherNameValidation.valid) {
+        return NextResponse.json({ message: fatherNameValidation.error }, { status: 400 });
+      }
+    }
+
+    if (String(cnic || '').trim()) {
+      const cnicValidation = validateExactDigits(String(cnic), 13, 'CNIC');
+      if (!cnicValidation.valid) {
+        return NextResponse.json({ message: cnicValidation.error }, { status: 400 });
+      }
+    }
+
+    if (String(contactNumber || '').trim()) {
+      const contactValidation = validateExactDigits(String(contactNumber), 11, 'Contact number');
+      if (!contactValidation.valid) {
+        return NextResponse.json({ message: contactValidation.error }, { status: 400 });
+      }
+    }
+
+    if (String(qualification || '').trim()) {
+      const qualificationValidation = validateAlphanumericAndSpaces(String(qualification), 'Highest qualification');
+      if (!qualificationValidation.valid) {
+        return NextResponse.json({ message: qualificationValidation.error }, { status: 400 });
+      }
+    }
+
+    const security1Validation = validateAlphanumericAndSpaces(String(securityAnswer1), 'Security answer 1');
+    if (!security1Validation.valid) {
+      return NextResponse.json({ message: security1Validation.error }, { status: 400 });
+    }
+    const security2Validation = validateAlphanumericAndSpaces(String(securityAnswer2), 'Security answer 2');
+    if (!security2Validation.valid) {
+      return NextResponse.json({ message: security2Validation.error }, { status: 400 });
     }
 
     // Validate role
@@ -138,7 +195,7 @@ export async function POST(request: NextRequest) {
       id: userId,
       username,
       email: resolvedEmail,
-      fullName,
+      fullName: String(fullName).trim(),
       role,
     };
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { query } from '@/lib/db';
+import { validateAlphanumericAndSpaces } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,15 @@ export async function POST(request: NextRequest) {
 
     if (!String(securityAnswer1 || '').trim() || !String(securityAnswer2 || '').trim()) {
       return NextResponse.json({ success: false, error: 'Both security answers are required' }, { status: 400 });
+    }
+
+    const a1 = validateAlphanumericAndSpaces(String(securityAnswer1), 'Security answer 1');
+    if (!a1.valid) {
+      return NextResponse.json({ success: false, error: a1.error || 'Invalid security answer 1' }, { status: 400 });
+    }
+    const a2 = validateAlphanumericAndSpaces(String(securityAnswer2), 'Security answer 2');
+    if (!a2.valid) {
+      return NextResponse.json({ success: false, error: a2.error || 'Invalid security answer 2' }, { status: 400 });
     }
 
     const users = (await query(

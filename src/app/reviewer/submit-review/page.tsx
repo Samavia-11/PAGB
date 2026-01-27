@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface Article {
   id: number;
   title: string;
@@ -67,6 +69,27 @@ export default function SubmitReview() {
   const handleSubmitReview = async () => {
     if (!comments.trim()) {
       showNotification.error('Please provide review comments');
+      return;
+    }
+
+    if (!isNoSpecialChars(comments)) {
+      showNotification.error('Comments can only contain letters, numbers, and spaces');
+      return;
+    }
+    if (strengths.trim() && !isNoSpecialChars(strengths)) {
+      showNotification.error('Strengths can only contain letters, numbers, and spaces');
+      return;
+    }
+    if (weaknesses.trim() && !isNoSpecialChars(weaknesses)) {
+      showNotification.error('Weaknesses can only contain letters, numbers, and spaces');
+      return;
+    }
+    if (suggestions.trim() && !isNoSpecialChars(suggestions)) {
+      showNotification.error('Suggestions can only contain letters, numbers, and spaces');
+      return;
+    }
+    if (confidentialComments.trim() && !isNoSpecialChars(confidentialComments)) {
+      showNotification.error('Confidential comments can only contain letters, numbers, and spaces');
       return;
     }
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Send, FileText } from 'lucide-react';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -119,11 +120,11 @@ export default function ForwardAdminPage() {
         throw new Error(err?.error || 'Failed to forward to admin');
       }
 
-      alert('Forwarded to admin successfully.');
+      showNotification.success('Forwarded to admin successfully.');
       router.push('/dashboard/editor/article-management');
     } catch (e: any) {
       console.error('Forward to admin failed:', e);
-      alert(e?.message || 'Failed to forward to admin');
+      showNotification.error(e?.message || 'Failed to forward to admin');
     } finally {
       setSending(false);
     }

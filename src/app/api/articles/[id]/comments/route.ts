@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { isAllowedFileType, isFileSizeValid, sanitizeFileName, isValidId } from '@/lib/security';
+import {
+  isAllowedFileType,
+  isFileSizeValid,
+  sanitizeFileName,
+  isValidId,
+  validateNoSpecialCharacters,
+} from '@/lib/security';
 
 // GET - Fetch all messages for an article
 export async function GET(
@@ -84,6 +90,16 @@ export async function POST(
         { error: 'Message or file is required' },
         { status: 400 }
       );
+    }
+
+    if (message?.trim()) {
+      const messageValidation = validateNoSpecialCharacters(message, 'Message');
+      if (!messageValidation.valid) {
+        return NextResponse.json(
+          { error: messageValidation.error || 'Invalid message' },
+          { status: 400 }
+        );
+      }
     }
 
     let fileUrl = null;

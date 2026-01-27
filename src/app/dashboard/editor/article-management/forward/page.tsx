@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Users, Send, FileText, UserCheck, Mail, Phone, Award, Upload } from 'lucide-react';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -203,14 +204,14 @@ const ForwardPage = () => {
         );
         setReviewers(updatedReviewers);
 
-        alert(`Article forwarded to ${selectedReviewer.name} successfully!`);
+        showNotification.success(`Article forwarded to ${selectedReviewer.name} successfully!`);
         router.push('/dashboard/editor/article-management');
       } else {
         throw new Error('Failed to forward article');
       }
     } catch (error) {
       console.error('Error forwarding to reviewer:', error);
-      alert('Failed to forward article. Please try again.');
+      showNotification.error('Failed to forward article. Please try again.');
     } finally {
       setSending(false);
     }
@@ -399,7 +400,7 @@ const ForwardPage = () => {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
                       onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
                     />
                   </label>

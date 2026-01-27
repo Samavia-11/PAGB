@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Merriweather, Open_Sans } from 'next/font/google';
 import { ToastContainer } from '@/components/Toast';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ConfirmDialogProvider } from '@/contexts/ConfirmDialogContext';
 
 // Load the fonts with the new recommended approach
 const merriweather = Merriweather({
@@ -60,7 +61,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${merriweather.variable} ${openSans.variable}`}>
       <body className="antialiased font-sans">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        </ThemeProvider>
         <ToastContainer />
       </body>
     </html>

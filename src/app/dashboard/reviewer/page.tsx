@@ -75,6 +75,7 @@ const ReviewerDashboard = () => {
   const [articles, setArticles] = useState<ArticleForReview[]>([]);
   const [assignments, setAssignments] = useState<ReviewerAssignment[]>([]);
   const [forwardedArticles, setForwardedArticles] = useState<EditorForwardedArticle[]>([]);
+  const [alreadyForwardedEditorArticleIds, setAlreadyForwardedEditorArticleIds] = useState<Set<number>>(new Set());
   const [processingForwardedId, setProcessingForwardedId] = useState<number | null>(null);
   const [selectedForwarded, setSelectedForwarded] = useState<EditorForwardedArticle | null>(null);
   const [selectedForwardedDetails, setSelectedForwardedDetails] = useState<EditorForwardedArticle | null>(null);
@@ -95,9 +96,38 @@ const ReviewerDashboard = () => {
   useEffect(() => {
     if (!user) return;
     fetchForwardedArticles(user.id);
+    loadAlreadyForwardedToEditor(user.id);
     const interval = setInterval(() => fetchForwardedArticles(user.id), 5000);
     return () => clearInterval(interval);
   }, [user]);
+
+  const loadAlreadyForwardedToEditor = async (reviewerId: number) => {
+    try {
+      const res = await fetch(`/api/reviewer-forwarded-documents?reviewerId=${reviewerId}`, {
+        headers: {
+          'x-user-id': String(reviewerId),
+          'x-user-role': 'reviewer',
+        },
+      });
+
+      if (!res.ok) {
+        setAlreadyForwardedEditorArticleIds(new Set());
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      const items = Array.isArray(data?.items) ? data.items : [];
+      const next = new Set<number>();
+      for (const it of items) {
+        const editorArticleId = Number((it as any)?.editor_article_id);
+        if (Number.isFinite(editorArticleId) && editorArticleId > 0) next.add(editorArticleId);
+      }
+      setAlreadyForwardedEditorArticleIds(next);
+    } catch (e) {
+      console.error('Failed to load reviewer forwarded docs:', e);
+      setAlreadyForwardedEditorArticleIds(new Set());
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -510,10 +540,11 @@ const ReviewerDashboard = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => router.push(`/dashboard/reviewer/forward-to-editor?editorArticleId=${item.id}`)}
-                            className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                            disabled={alreadyForwardedEditorArticleIds.has(item.id)}
+                            className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Send className="w-4 h-4 mr-2" />
-                            Forward
+                            {alreadyForwardedEditorArticleIds.has(item.id) ? 'Forwarded' : 'Forward'}
                           </button>
                         </div>
                       </div>

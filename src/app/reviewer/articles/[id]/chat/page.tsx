@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface FileAttachment {
   name: string;
   type: string;
@@ -119,6 +121,12 @@ export default function ReviewerArticleChat() {
 
   const sendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || sending || !user) return;
+
+    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
+      alert('Message can only contain letters, numbers, and spaces');
+      setSending(false);
+      return;
+    }
 
     setSending(true);
     const messageId = Date.now().toString();
@@ -373,7 +381,7 @@ export default function ReviewerArticleChat() {
             type="file"
             onChange={handleFileSelect}
             className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.txt"
+            accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
           />
         </div>
       </div>

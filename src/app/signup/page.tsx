@@ -4,6 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+const isLettersAndSpaces = (value: string) => /^[A-Za-z ]+$/.test(String(value || '').trim());
+const validateStrongPassword = (value: string): string | null => {
+  const v = String(value || '');
+  if (v.length < 8) return 'Password must be at least 8 characters long';
+  if (v.length > 128) return 'Password must be less than 128 characters long';
+  if (!/[A-Z]/.test(v)) return 'Password must include at least 1 uppercase letter';
+  if (!/[a-z]/.test(v)) return 'Password must include at least 1 lowercase letter';
+  if (!/\d/.test(v)) return 'Password must include at least 1 digit';
+  if (!/[^A-Za-z0-9]/.test(v)) return 'Password must include at least 1 special character';
+  return null;
+};
+
 export default function SignupPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -37,8 +49,15 @@ export default function SignupPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    const pwError = validateStrongPassword(formData.password);
+    if (pwError) {
+      setError(pwError);
+      setLoading(false);
+      return;
+    }
+
+    if (!isLettersAndSpaces(formData.fullName)) {
+      setError('Full name can only contain letters and spaces');
       setLoading(false);
       return;
     }

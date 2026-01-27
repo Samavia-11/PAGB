@@ -161,6 +161,8 @@ export async function GET(request: NextRequest) {
     let query = `
       SELECT ea.*, u.full_name as editor_name, r.full_name as reviewer_name,
              aa.title as original_title, aa.author_id,
+             aa.manuscript_file_name as manuscript_file_name,
+             aa.manuscript_file_path as manuscript_file_path,
              au.full_name as author_name, au.username as author_username,
              aa.status as article_status, aa.submission_date
       FROM editor_articles ea

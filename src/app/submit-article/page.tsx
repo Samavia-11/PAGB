@@ -362,9 +362,26 @@ const SubmitArticlePage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('handleFileChange:', e.target.files);
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, manuscriptFile: e.target.files[0] });
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const ext = '.' + String(file.name || '').split('.').pop()?.toLowerCase();
+    if (ext !== '.doc' && ext !== '.docx') {
+      setErrors((prev) => ({ ...prev, manuscriptFile: 'Only DOC/DOCX files are allowed' }));
+      setFormData({ ...formData, manuscriptFile: null });
+      e.target.value = '';
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, manuscriptFile: 'File too large. Maximum size is 10MB' }));
+      setFormData({ ...formData, manuscriptFile: null });
+      e.target.value = '';
+      return;
+    }
+
+    setErrors((prev) => ({ ...prev, manuscriptFile: '' }));
+    setFormData({ ...formData, manuscriptFile: file });
   };
 
   const validateForm = (): boolean => {

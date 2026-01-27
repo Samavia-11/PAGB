@@ -485,13 +485,10 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded flex items-center justify-center">
-                <img src="/images/pagblogo.png" alt="PAGB Logo" className="w-20 h-20 object-contain" />
+              <div className="w-8 h-8 bg-[#002300] rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-serif font-bold text-green">PAGB</h1>
-                <p className="text-xs text-gray-600">Pakistan Army Green Book</p>
-              </div>
+              <span className="ml-1 text-lg font-semibold text-[#002300]">PAGB Journal</span>
             </Link>
             <nav className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="nav-link active">Home</Link>

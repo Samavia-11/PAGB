@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/database';
 import mysql from 'mysql2/promise';
 import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
-import { isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
+import { ALLOWED_FILE_TYPES, isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
 
 function requireRole(request: NextRequest, roles: string[]) {
   const role = request.headers.get('x-user-role');
@@ -205,7 +205,10 @@ export async function POST(request: NextRequest) {
     const coverFile = cover instanceof File ? cover : null;
 
     if (coverFile && coverFile.size > 0) {
-      const typeCheck = isAllowedFileType(coverFile);
+      const typeCheck = isAllowedFileType(coverFile, {
+        allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+        allowedMimeTypes: [...ALLOWED_FILE_TYPES.images],
+      });
       if (!typeCheck.valid) return NextResponse.json({ error: typeCheck.error }, { status: 400 });
 
       const sizeCheck = isFileSizeValid(coverFile);
@@ -277,7 +280,10 @@ export async function POST(request: NextRequest) {
       const coverPageFile = coverValue instanceof File ? coverValue : null;
 
       if (coverPageFile && coverPageFile.size > 0) {
-        const typeCheck = isAllowedFileType(coverPageFile);
+        const typeCheck = isAllowedFileType(coverPageFile, {
+          allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+          allowedMimeTypes: [...ALLOWED_FILE_TYPES.images],
+        });
         if (!typeCheck.valid) {
           await connection.rollback();
           return NextResponse.json({ error: typeCheck.error }, { status: 400 });

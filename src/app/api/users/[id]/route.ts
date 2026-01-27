@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { validateUsername, validateEmail, isValidRole } from '@/lib/security';
+import { validateUsername, validateEmail, isValidRole, validatePassword } from '@/lib/security';
 
 export async function GET(
   request: NextRequest,
@@ -71,7 +71,6 @@ export async function PUT(
     let sql, params;
     if (password && password.trim() !== '') {
       // Validate password if provided
-      const { validatePassword } = await import('@/lib/security');
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
         return NextResponse.json({ error: passwordValidation.error }, { status: 400 });

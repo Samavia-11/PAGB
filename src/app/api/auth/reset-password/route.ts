@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { query } from '@/lib/db';
+import { validatePassword } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +13,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Reset token is required' }, { status: 400 });
     }
 
-    if (!newPassword || String(newPassword).length < 6) {
-      return NextResponse.json({ success: false, error: 'Password must be at least 6 characters' }, { status: 400 });
+    const passwordValidation = validatePassword(String(newPassword));
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: passwordValidation.error || 'Invalid password' },
+        { status: 400 }
+      );
     }
 
     await query(

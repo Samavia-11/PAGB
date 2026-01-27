@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
-import { isValidId } from '@/lib/security';
+import { isValidId, validateNoSpecialCharacters } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
         { error: 'Forwarded article ID, article ID, and editor response are required' },
         { status: 400 }
       );
+    }
+
+    const responseValidation = validateNoSpecialCharacters(String(editor_response), 'Editor response');
+    if (!responseValidation.valid) {
+      return NextResponse.json({ error: responseValidation.error || 'Invalid editor response' }, { status: 400 });
     }
 
     // Get editor info from request headers (set by auth middleware)

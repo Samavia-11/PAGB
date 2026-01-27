@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
-import { isValidId, escapeHtml } from '@/lib/security';
+import { isValidId, escapeHtml, validateNoSpecialCharacters } from '@/lib/security';
 
 // Valid recommendations
 const VALID_RECOMMENDATIONS = ['accept', 'minor_revision', 'major_revision', 'reject'];
@@ -44,6 +44,17 @@ export async function POST(request: NextRequest) {
         { error: 'Reviewer comments are required (minimum 10 characters)' },
         { status: 400 }
       );
+    }
+
+    const reviewerCommentsValidation = validateNoSpecialCharacters(String(reviewerComments), 'Reviewer comments');
+    if (!reviewerCommentsValidation.valid) {
+      return NextResponse.json({ error: reviewerCommentsValidation.error || 'Invalid reviewer comments' }, { status: 400 });
+    }
+    if (String(editorComments || '').trim()) {
+      const editorCommentsValidation = validateNoSpecialCharacters(String(editorComments), 'Editor comments');
+      if (!editorCommentsValidation.valid) {
+        return NextResponse.json({ error: editorCommentsValidation.error || 'Invalid editor comments' }, { status: 400 });
+      }
     }
 
     const pool = getPool();

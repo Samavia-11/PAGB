@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, XCircle, Upload, Edit3, Save } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface Article {
   id: number;
   title: string;
@@ -77,6 +79,15 @@ export default function ForwardArticle() {
   const handleForwardArticle = async () => {
     if (!reviewerComments.trim()) {
       showNotification.error('Please provide reviewer comments');
+      return;
+    }
+
+    if (!isNoSpecialChars(reviewerComments)) {
+      showNotification.error('Reviewer comments can only contain letters, numbers, and spaces');
+      return;
+    }
+    if (editorComments.trim() && !isNoSpecialChars(editorComments)) {
+      showNotification.error('Comments for editor can only contain letters, numbers, and spaces');
       return;
     }
 

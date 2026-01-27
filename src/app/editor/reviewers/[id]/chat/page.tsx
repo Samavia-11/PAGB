@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image, File, MessageCircle, User, ArrowLeft } from 'lucide-react';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface FileAttachment {
   name: string;
   type: string;
@@ -147,6 +149,11 @@ export default function ReviewerChatPage() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !selectedFile) return;
     if (!user || !reviewer) return;
+
+    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
+      alert('Message can only contain letters, numbers, and spaces');
+      return;
+    }
 
     setSending(true);
     try {

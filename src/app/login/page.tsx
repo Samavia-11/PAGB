@@ -18,6 +18,38 @@ interface SignupData {
   securityAnswer2: string;
 }
 
+const normalizeDigits = (value: string) => String(value || '').replace(/\D/g, '');
+const sanitizeAlnumSpaces = (value: string) => String(value || '').replace(/[^A-Za-z0-9 ]+/g, '');
+const formatCnic = (value: string) => {
+  const digits = normalizeDigits(value).slice(0, 13);
+  const p1 = digits.slice(0, 5);
+  const p2 = digits.slice(5, 12);
+  const p3 = digits.slice(12, 13);
+  if (digits.length <= 5) return p1;
+  if (digits.length <= 12) return `${p1}-${p2}`;
+  return `${p1}-${p2}-${p3}`;
+};
+
+const formatContactNumber = (value: string) => {
+  const digits = normalizeDigits(value).slice(0, 11);
+  const p1 = digits.slice(0, 4);
+  const p2 = digits.slice(4);
+  if (digits.length <= 4) return p1;
+  return `${p1}-${p2}`;
+};
+const validateStrongPassword = (value: string): string | null => {
+  const v = String(value || '');
+  if (v.length < 8) return 'Password must be at least 8 characters';
+  if (v.length > 128) return 'Password must be less than 128 characters';
+  if (!/[A-Z]/.test(v)) return 'Password must include at least 1 uppercase letter';
+  if (!/[a-z]/.test(v)) return 'Password must include at least 1 lowercase letter';
+  if (!/\d/.test(v)) return 'Password must include at least 1 digit';
+  if (!/[^A-Za-z0-9]/.test(v)) return 'Password must include at least 1 special character';
+  return null;
+};
+const isLettersAndSpaces = (value: string) => /^[A-Za-z ]+$/.test(String(value || '').trim());
+const isAlnumAndSpaces = (value: string) => /^[A-Za-z0-9 ]+$/.test(String(value || '').trim());
+
 interface LoginData {
   username: string;
   password: string;
@@ -111,6 +143,13 @@ const LoginPage = () => {
 
     if (forgotNewPassword !== forgotConfirmPassword) {
       setForgotError('Passwords do not match');
+      setForgotLoading(false);
+      return;
+    }
+
+    const pwError = validateStrongPassword(forgotNewPassword);
+    if (pwError) {
+      setForgotError(pwError);
       setForgotLoading(false);
       return;
     }
@@ -307,9 +346,62 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
+    if (!isLettersAndSpaces(signupData.username)) {
+      setError('Full name can only contain letters and spaces');
+      setLoading(false);
+      return;
+    }
+
+    if (!isLettersAndSpaces(signupData.fatherName)) {
+      setError('Father name can only contain letters and spaces');
+      setLoading(false);
+      return;
+    }
+
+    const cnicDigits = normalizeDigits(signupData.cnic);
+    if (cnicDigits.length !== 13) {
+      setError('CNIC must be exactly 13 digits');
+      setLoading(false);
+      return;
+    }
+
+    const contactDigits = normalizeDigits(signupData.contactNumber);
+    if (contactDigits.length !== 11) {
+      setError('Contact number must be exactly 11 digits');
+      setLoading(false);
+      return;
+    }
+
+    if (!contactDigits.startsWith('03')) {
+      setError('Contact number must start with 03');
+      setLoading(false);
+      return;
+    }
+
+    if (!isAlnumAndSpaces(signupData.qualification)) {
+      setError('Highest qualification can only contain letters, numbers, and spaces');
+      setLoading(false);
+      return;
+    }
+
+    if (signupData.securitySetup === 'enabled') {
+      if (!isAlnumAndSpaces(signupData.securityAnswer1) || !isAlnumAndSpaces(signupData.securityAnswer2)) {
+        setError('Security answers can only contain letters, numbers, and spaces');
+        setLoading(false);
+        return;
+      }
+    }
+
     // Validate passwords match
     if (signupData.password !== signupData.confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    const pwError = validateStrongPassword(signupData.password);
+    if (pwError) {
+      setError(pwError);
       setLoading(false);
       return;
     }
@@ -346,8 +438,8 @@ const LoginPage = () => {
           password: signupData.password,
           fullName: signupData.username,
           fatherName: signupData.fatherName,
-          cnic: signupData.cnic,
-          contactNumber: signupData.contactNumber,
+          cnic: cnicDigits,
+          contactNumber: contactDigits,
           qualification: signupData.qualification,
           role: signupData.role,
           securityAnswer1: signupData.securityAnswer1,
@@ -388,11 +480,28 @@ const LoginPage = () => {
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    setSignupData({
-      ...signupData,
-      [name]: value
-    });
+
+    if (name === 'cnic') {
+      setSignupData({
+        ...signupData,
+        cnic: formatCnic(value),
+      });
+    } else if (name === 'contactNumber') {
+      setSignupData({
+        ...signupData,
+        contactNumber: formatContactNumber(value),
+      });
+    } else if (name === 'securityAnswer1' || name === 'securityAnswer2') {
+      setSignupData({
+        ...signupData,
+        [name]: sanitizeAlnumSpaces(value),
+      } as any);
+    } else {
+      setSignupData({
+        ...signupData,
+        [name]: value
+      });
+    }
 
     // Clear username error when user starts typing a new username
     if (name === 'username' && usernameError) {
@@ -524,6 +633,8 @@ const LoginPage = () => {
                     required
                     value={signupData.cnic}
                     onChange={handleSignupChange}
+                    inputMode="numeric"
+                    maxLength={15}
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all duration-200 text-sm"
                     placeholder="CNIC (e.g., 12345-1234567-1)"
                   />
@@ -550,8 +661,10 @@ const LoginPage = () => {
                     required
                     value={signupData.contactNumber}
                     onChange={handleSignupChange}
+                    inputMode="numeric"
+                    maxLength={12}
                     className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all duration-200 text-sm"
-                    placeholder="Contact Number (e.g., +92-300-1234567)"
+                    placeholder="Contact Number (e.g., 03XX-XXXXXXX)"
                   />
                 </div>
               </div>
@@ -722,7 +835,7 @@ const LoginPage = () => {
                   <input
                     type="text"
                     value={forgotAnswer1}
-                    onChange={(e) => setForgotAnswer1(e.target.value)}
+                    onChange={(e) => setForgotAnswer1(sanitizeAlnumSpaces(e.target.value))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all duration-200"
                     placeholder="Answer"
                   />
@@ -733,7 +846,7 @@ const LoginPage = () => {
                   <input
                     type="text"
                     value={forgotAnswer2}
-                    onChange={(e) => setForgotAnswer2(e.target.value)}
+                    onChange={(e) => setForgotAnswer2(sanitizeAlnumSpaces(e.target.value))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all duration-200"
                     placeholder="Answer"
                   />

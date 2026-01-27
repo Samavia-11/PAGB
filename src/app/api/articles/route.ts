@@ -3,7 +3,7 @@ import { getDatabase } from '@/lib/database';
 import mysql from 'mysql2/promise';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
+import { ALLOWED_FILE_TYPES, isAllowedFileType, isFileSizeValid, sanitizeFileName } from '@/lib/security';
 
 export const runtime = 'nodejs';
 
@@ -185,7 +185,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (manuscriptFile && manuscriptFile.size > 0) {
-      const typeCheck = isAllowedFileType(manuscriptFile);
+      const typeCheck = isAllowedFileType(manuscriptFile, {
+        allowedExtensions: ['.doc', '.docx'],
+        allowedMimeTypes: [
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ],
+      });
       if (!typeCheck.valid) {
         return NextResponse.json({ error: typeCheck.error }, { status: 400 });
       }
@@ -197,7 +203,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (coverLetterFile && coverLetterFile.size > 0) {
-      const typeCheck = isAllowedFileType(coverLetterFile);
+      const typeCheck = isAllowedFileType(coverLetterFile, {
+        allowedExtensions: ['.pdf', '.doc', '.docx', '.txt'],
+        allowedMimeTypes: [
+          ...ALLOWED_FILE_TYPES.documents,
+        ],
+      });
       if (!typeCheck.valid) {
         return NextResponse.json({ error: typeCheck.error }, { status: 400 });
       }

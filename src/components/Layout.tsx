@@ -13,7 +13,6 @@ import {
   Menu,
   X,
   Search,
-  Bell,
   Globe,
   Settings
 } from 'lucide-react';
@@ -218,12 +217,6 @@ const Layout = ({ children, user }: LayoutProps) => {
                   className="px-4 py-2 text-sm font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                 >
                   Login
-                </button>
-              )}
-              {/* Notifications */}
-              {user && (
-                <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg">
-                  <Bell className="w-5 h-5" />
                 </button>
               )}
               

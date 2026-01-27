@@ -5,6 +5,35 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Eye, EyeOff, Lock, Save, Settings, User as UserIcon } from 'lucide-react';
 
+const normalizeDigits = (value: string) => String(value || '').replace(/\D/g, '');
+const formatCnic = (value: string) => {
+  const digits = normalizeDigits(value).slice(0, 13);
+  const p1 = digits.slice(0, 5);
+  const p2 = digits.slice(5, 12);
+  const p3 = digits.slice(12, 13);
+  if (digits.length <= 5) return p1;
+  if (digits.length <= 12) return `${p1}-${p2}`;
+  return `${p1}-${p2}-${p3}`;
+};
+const formatContactNumber = (value: string) => {
+  const digits = normalizeDigits(value).slice(0, 11);
+  const p1 = digits.slice(0, 4);
+  const p2 = digits.slice(4);
+  if (digits.length <= 4) return p1;
+  return `${p1}-${p2}`;
+};
+
+const validateStrongPassword = (value: string): string | null => {
+  const v = String(value || '');
+  if (v.length < 8) return 'Password must be at least 8 characters';
+  if (v.length > 128) return 'Password must be less than 128 characters';
+  if (!/[A-Z]/.test(v)) return 'Password must include at least 1 uppercase letter';
+  if (!/[a-z]/.test(v)) return 'Password must include at least 1 lowercase letter';
+  if (!/\d/.test(v)) return 'Password must include at least 1 digit';
+  if (!/[^A-Za-z0-9]/.test(v)) return 'Password must include at least 1 special character';
+  return null;
+};
+
 interface MeUser {
   id: number;
   username: string;
@@ -93,8 +122,8 @@ const DashboardSettingsPage = () => {
           email: pdata.user?.email || '',
           fullName: pdata.user?.fullName || '',
           fatherName: pdata.user?.fatherName || '',
-          cnic: pdata.user?.cnic || '',
-          contactNumber: pdata.user?.contactNumber || '',
+          cnic: formatCnic(pdata.user?.cnic || ''),
+          contactNumber: formatContactNumber(pdata.user?.contactNumber || ''),
           qualification: pdata.user?.qualification || '',
         });
       } catch (e) {
@@ -157,6 +186,13 @@ const DashboardSettingsPage = () => {
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError('Passwords do not match');
+      setSavingPassword(false);
+      return;
+    }
+
+    const pwError = validateStrongPassword(passwordForm.newPassword);
+    if (pwError) {
+      setPasswordError(pwError);
       setSavingPassword(false);
       return;
     }
@@ -280,7 +316,9 @@ const DashboardSettingsPage = () => {
                 <input
                   className={inputClassName}
                   value={profileForm.contactNumber}
-                  onChange={(e) => setProfileForm({ ...profileForm, contactNumber: e.target.value })}
+                  onChange={(e) => setProfileForm({ ...profileForm, contactNumber: formatContactNumber(e.target.value) })}
+                  inputMode="numeric"
+                  maxLength={12}
                 />
               </div>
             </div>
@@ -291,7 +329,9 @@ const DashboardSettingsPage = () => {
                 <input
                   className={inputClassName}
                   value={profileForm.cnic}
-                  onChange={(e) => setProfileForm({ ...profileForm, cnic: e.target.value })}
+                  onChange={(e) => setProfileForm({ ...profileForm, cnic: formatCnic(e.target.value) })}
+                  inputMode="numeric"
+                  maxLength={15}
                 />
               </div>
               <div>

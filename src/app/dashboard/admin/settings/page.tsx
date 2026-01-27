@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Settings, Plus, Pencil, Trash2, X } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -52,6 +54,7 @@ const JournalSettingsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   
   const router = useRouter();
+  const confirm = useConfirmDialog();
 
   useEffect(() => {
     checkAuth();
@@ -139,7 +142,7 @@ const JournalSettingsPage = () => {
 
       if (section === 'executive_leadership') {
         if (!form.title.trim() || !form.name.trim()) {
-          alert('Please fill all required fields.');
+          showNotification.warning('Please fill all required fields.');
           return;
         }
         payload.title = form.title.trim();
@@ -147,21 +150,21 @@ const JournalSettingsPage = () => {
         payload.affiliation = form.affiliation.trim() || null;
       } else if (section === 'editorial_team_editor') {
         if (!form.title.trim() || !form.name.trim()) {
-          alert('Please fill all required fields.');
+          showNotification.warning('Please fill all required fields.');
           return;
         }
         payload.title = form.title.trim();
         payload.name = form.name.trim();
       } else if (section === 'editorial_team_sub_editor') {
         if (!form.name.trim()) {
-          alert('Please fill all required fields.');
+          showNotification.warning('Please fill all required fields.');
           return;
         }
         payload.name = form.name.trim();
         payload.title = null;
       } else {
         if (!form.name.trim()) {
-          alert('Please fill all required fields.');
+          showNotification.warning('Please fill all required fields.');
           return;
         }
         payload.name = form.name.trim();
@@ -194,14 +197,21 @@ const JournalSettingsPage = () => {
       await loadEditorialBoard();
     } catch (error: any) {
       console.error('Failed to submit editorial board item:', error);
-      alert(error?.message || 'Operation failed');
+      showNotification.error(error?.message || 'Operation failed');
     } finally {
       setSubmitting(false);
     }
   };
 
   const deleteItem = async (id: number) => {
-    const ok = confirm('Delete this entry?');
+    const ok = await confirm({
+      title: 'Delete this entry?'
+      ,
+      message: 'Delete this entry?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      danger: true,
+    });
     if (!ok) return;
     try {
       const res = await fetch(`/api/editorial-board/${id}`, { method: 'DELETE' });
@@ -212,7 +222,7 @@ const JournalSettingsPage = () => {
       await loadEditorialBoard();
     } catch (error: any) {
       console.error('Failed to delete item:', error);
-      alert(error?.message || 'Delete failed');
+      showNotification.error(error?.message || 'Delete failed');
     }
   };
 

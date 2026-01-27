@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Layout from "@/components/Layout";
+import { useConfirmDialog } from "@/contexts/ConfirmDialogContext";
+import { showNotification } from "@/utils/notifications";
 
 interface User {
   id: number;
@@ -25,6 +27,7 @@ interface Issue {
 
 export default function AdminIssuesPage() {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -68,7 +71,7 @@ export default function AdminIssuesPage() {
       await loadIssues();
     } catch (e) {
       console.error(e);
-      alert("Failed to update issue. Try again.");
+      showNotification.error("Failed to update issue. Try again.");
     } finally {
       setBusyId(null);
     }
@@ -77,11 +80,15 @@ export default function AdminIssuesPage() {
   const deleteIssue = async (id: number) => {
     const target = issues.find((i) => i.id === id);
     const isCurrent = Boolean(target && Number(target.is_current_issue) === 1);
-    const ok = window.confirm(
-      isCurrent
+    const ok = await confirm({
+      title: "Delete this issue?",
+      message: isCurrent
         ? "You are deleting the CURRENT issue. The system will automatically set the latest remaining issue as current. Continue?"
-        : "Delete this issue?"
-    );
+        : "Delete this issue?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      danger: true,
+    });
     if (!ok) return;
 
     setBusyId(id);
@@ -91,7 +98,7 @@ export default function AdminIssuesPage() {
       await loadIssues();
     } catch (e) {
       console.error(e);
-      alert("Failed to delete issue. Try again.");
+      showNotification.error("Failed to delete issue. Try again.");
     } finally {
       setBusyId(null);
     }

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Send, X, Eye, FileText, User, Calendar, Tag } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface Article {
   id: number;
@@ -24,6 +26,7 @@ export default function EditArticle() {
   const router = useRouter();
   const params = useParams();
   const articleId = params.id as string;
+  const confirm = useConfirmDialog();
   
   const [user, setUser] = useState<any>(null);
   const [article, setArticle] = useState<Article | null>(null);
@@ -156,20 +159,26 @@ export default function EditArticle() {
       });
 
       if (response.ok) {
-        alert('Article saved successfully!');
+        showNotification.success('Article saved successfully!');
         fetchArticle(); // Refresh the article data
       } else {
-        alert('Failed to save article');
+        showNotification.error('Failed to save article');
       }
     } catch (error) {
-      alert('Error saving article');
+      showNotification.error('Error saving article');
     } finally {
       setSaving(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!confirm('Are you sure you want to publish this article?')) return;
+    const ok = await confirm({
+      title: 'Publish this article?',
+      message: 'Are you sure you want to publish this article?',
+      confirmText: 'Publish',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
     
     try {
       const response = await fetch(`/api/articles/${articleId}/workflow`, {
@@ -186,18 +195,25 @@ export default function EditArticle() {
       });
 
       if (response.ok) {
-        alert('Article published successfully! Comments sent to author.');
+        showNotification.success('Article published successfully! Comments sent to author.');
         router.push('/editor/dashboard');
       } else {
-        alert('Failed to publish article');
+        showNotification.error('Failed to publish article');
       }
     } catch (error) {
-      alert('Error publishing article');
+      showNotification.error('Error publishing article');
     }
   };
 
   const handleReject = async () => {
-    if (!confirm('Are you sure you want to reject this article?')) return;
+    const ok = await confirm({
+      title: 'Reject this article?',
+      message: 'Are you sure you want to reject this article?',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     
     try {
       const response = await fetch(`/api/articles/${articleId}/workflow`, {
@@ -214,23 +230,29 @@ export default function EditArticle() {
       });
 
       if (response.ok) {
-        alert('Article rejected and comments sent to author');
+        showNotification.success('Article rejected and comments sent to author');
         router.push('/editor/dashboard');
       } else {
-        alert('Failed to reject article');
+        showNotification.error('Failed to reject article');
       }
     } catch (error) {
-      alert('Error rejecting article');
+      showNotification.error('Error rejecting article');
     }
   };
 
   const handleSendComments = async () => {
     if (!comments.trim()) {
-      alert('Please enter comments before sending');
+      showNotification.warning('Please enter comments before sending');
       return;
     }
 
-    if (!confirm('Send these comments to the author?')) return;
+    const ok = await confirm({
+      title: 'Send comments to author?',
+      message: 'Send these comments to the author?',
+      confirmText: 'Send',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
     
     console.log('Sending comments:', {
       articleId,
@@ -280,15 +302,15 @@ export default function EditArticle() {
         const updatedNotifications = existingNotifications.slice(0, 50);
         localStorage.setItem('author_notifications', JSON.stringify(updatedNotifications));
         
-        alert('Comments sent to author successfully!');
+        showNotification.success('Comments sent to author successfully!');
         setComments(''); // Clear the comments after sending
       } else {
         console.error('API Error:', responseData);
-        alert(`Failed to send comments: ${responseData.error || responseData.details || 'Unknown error'}`);
+        showNotification.error(`Failed to send comments: ${responseData.error || responseData.details || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Network Error:', error);
-      alert(`Error sending comments: ${error instanceof Error ? error.message : 'Network error'}`);
+      showNotification.error(`Error sending comments: ${error instanceof Error ? error.message : 'Network error'}`);
     }
   };
 

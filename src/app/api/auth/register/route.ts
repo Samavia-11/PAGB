@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '@/lib/database';
 import mysql from 'mysql2/promise';
+import {
+  validateLettersAndSpaces,
+  validateAlphanumericAndSpaces,
+  validateExactDigits,
+  normalizeDigits,
+  validatePassword,
+} from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   let connection: mysql.Connection | null = null;
@@ -26,6 +33,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const passwordValidation = validatePassword(String(password));
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.error || 'Invalid password' },
+        { status: 400 }
+      );
+    }
+
+    if (String(fullName || '').trim()) {
+      const v = validateLettersAndSpaces(String(fullName), 'Full name');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid full name' }, { status: 400 });
+    }
+    if (String(phone || '').trim()) {
+      const v = validateExactDigits(String(phone), 11, 'Contact number');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid contact number' }, { status: 400 });
+    }
+    if (String(qualification || '').trim()) {
+      const v = validateAlphanumericAndSpaces(String(qualification), 'Highest qualification');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid qualification' }, { status: 400 });
+    }
+
     connection = await getDatabase();
 
     // Check if user already exists
@@ -48,7 +76,16 @@ export async function POST(request: NextRequest) {
     const [result] = await connection.execute(
       `INSERT INTO users (username, email, password_hash, full_name, role, phone, qualification, specialization)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [username, email, passwordHash, fullName || null, role, phone || null, qualification || null, specialization || null]
+      [
+        username,
+        email,
+        passwordHash,
+        fullName || null,
+        role,
+        phone ? normalizeDigits(String(phone)) : null,
+        qualification || null,
+        specialization || null,
+      ]
     ) as [any, any];
 
     // Get the created user

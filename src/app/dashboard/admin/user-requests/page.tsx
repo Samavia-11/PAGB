@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Check, X, Clock, User, Mail, Shield } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -24,6 +26,7 @@ const UserRequestsPage = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState<Partial<User & { password?: string }>>({});
   const router = useRouter();
+  const confirm = useConfirmDialog();
 
   useEffect(() => {
     checkAuth();
@@ -91,9 +94,14 @@ const UserRequestsPage = () => {
 
   const handleRequestAction = async (userId: number, action: 'edit' | 'delete') => {
     if (action === 'delete') {
-      if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        return;
-      }
+      const ok = await confirm({
+        title: 'Delete this user?',
+        message: 'Are you sure you want to delete this user? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        danger: true,
+      });
+      if (!ok) return;
     }
 
     try {
@@ -103,11 +111,11 @@ const UserRequestsPage = () => {
         });
 
         if (response.ok) {
-          alert('User deleted successfully!');
+          showNotification.success('User deleted successfully!');
           loadRequests();
         } else {
           const error = await response.json();
-          alert(`Failed to delete user: ${error.error}`);
+          showNotification.error(`Failed to delete user: ${error.error}`);
         }
       } else if (action === 'edit') {
         const userToEdit = requests.find(user => user.id === userId);
@@ -124,7 +132,7 @@ const UserRequestsPage = () => {
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Failed to update user.');
+      showNotification.error('Failed to update user.');
     }
   };
 
@@ -142,18 +150,18 @@ const UserRequestsPage = () => {
       });
 
       if (response.ok) {
-        alert('User updated successfully!');
+        showNotification.success('User updated successfully!');
         setIsEditModalOpen(false);
         setEditingUser(null);
         setEditForm({});
         loadRequests(); // Reload users to reflect changes
       } else {
         const error = await response.json();
-        alert(`Failed to update user: ${error.error}`);
+        showNotification.error(`Failed to update user: ${error.error}`);
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Failed to update user.');
+      showNotification.error('Failed to update user.');
     }
   };
 

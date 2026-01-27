@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, MessageCircle, ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface FileAttachment {
   name: string;
   type: string;
@@ -139,6 +141,11 @@ export default function ReviewerMessagesPage() {
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !selectedFile) return;
     if (!user || !selectedEditor) return;
+
+    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
+      alert('Message can only contain letters, numbers, and spaces');
+      return;
+    }
 
     setSending(true);
     try {

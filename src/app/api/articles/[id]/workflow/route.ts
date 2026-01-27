@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { isValidId, escapeHtml } from '@/lib/security';
+import { isValidId, escapeHtml, validateNoSpecialCharacters } from '@/lib/security';
 
 // Valid workflow actions
 const VALID_ACTIONS = ['submit', 'assign_assistant_editor', 'send_to_peer_review', 'approve', 'publish', 'reject', 'request_revision'];
@@ -41,6 +41,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Validate action
     if (!action || !VALID_ACTIONS.includes(action)) {
       return NextResponse.json({ error: 'Invalid workflow action' }, { status: 400 });
+    }
+
+    if (String(comments || '').trim()) {
+      const commentsValidation = validateNoSpecialCharacters(String(comments), 'Comments');
+      if (!commentsValidation.valid) {
+        return NextResponse.json({ error: commentsValidation.error || 'Invalid comments' }, { status: 400 });
+      }
     }
 
     // Authors can only submit their own articles

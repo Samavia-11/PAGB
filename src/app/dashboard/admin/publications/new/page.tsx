@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -42,6 +43,18 @@ export default function AdminCreatePublicationPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
+  const isPdfFile = (file: File | null) => {
+    if (!file) return false;
+    const ext = '.' + String(file.name || '').split('.').pop()?.toLowerCase();
+    return ext === '.pdf';
+  };
+
+  const isImageFile = (file: File | null) => {
+    if (!file) return false;
+    const ext = '.' + String(file.name || '').split('.').pop()?.toLowerCase();
+    return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -70,15 +83,15 @@ export default function AdminCreatePublicationPage() {
     const title = pendingTitle.trim();
     const authorName = pendingAuthorName.trim();
     if (!pendingManuscript) {
-      alert('Please choose the article PDF file.');
+      showNotification.warning('Please choose the article PDF file.');
       return;
     }
     if (!title) {
-      alert('Please enter the article title.');
+      showNotification.warning('Please enter the article title.');
       return;
     }
     if (!authorName) {
-      alert('Please enter the author name.');
+      showNotification.warning('Please enter the author name.');
       return;
     }
 
@@ -112,29 +125,44 @@ export default function AdminCreatePublicationPage() {
     const t = bookTitle.trim();
     const year = Number(editionYear);
     if (!t) {
-      alert('Please enter a book title.');
+      showNotification.warning('Please enter a book title.');
       return;
     }
     if (!Number.isFinite(year) || year < 1900 || year > 3000) {
-      alert('Please enter a valid edition year.');
+      showNotification.warning('Please enter a valid edition year.');
       return;
     }
     if (selectedArticles.length === 0) {
-      alert('Please add at least one article.');
+      showNotification.warning('Please add at least one article.');
+      return;
+    }
+
+    if (bookCover && !isImageFile(bookCover)) {
+      showNotification.warning('Book cover must be an image file (JPG, PNG, GIF, WEBP).');
       return;
     }
 
     for (const s of selectedArticles) {
       if (!s.manuscriptFile) {
-        alert('Each article must have a PDF file.');
+        showNotification.warning('Each article must have a PDF file.');
+        return;
+      }
+
+      if (!isPdfFile(s.manuscriptFile)) {
+        showNotification.warning('Each article manuscript must be a PDF file.');
+        return;
+      }
+
+      if (s.coverFile && !isImageFile(s.coverFile)) {
+        showNotification.warning('Article cover must be an image file (JPG, PNG, GIF, WEBP).');
         return;
       }
       if (!s.title.trim()) {
-        alert('Each article must have a title.');
+        showNotification.warning('Each article must have a title.');
         return;
       }
       if (!s.authorName.trim()) {
-        alert('Each article must have an author name.');
+        showNotification.warning('Each article must have an author name.');
         return;
       }
     }
@@ -215,11 +243,11 @@ export default function AdminCreatePublicationPage() {
         throw new Error(data?.error || 'Failed to create publication');
       }
 
-      alert('Publication created successfully. You can publish it from the Publish page.');
+      showNotification.success('Publication created successfully. You can publish it from the Publish page.');
       router.push('/dashboard/admin/publish');
     } catch (e: any) {
       console.error(e);
-      alert(e?.message || 'Failed to create publication');
+      showNotification.error(e?.message || 'Failed to create publication');
     } finally {
       setSubmitting(false);
     }
@@ -299,7 +327,7 @@ export default function AdminCreatePublicationPage() {
                 <input
                   key={bookCoverPickerKey}
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp"
                   onChange={(e) => setBookCover(e.target.files?.[0] || null)}
                   className="hidden"
                 />
@@ -401,7 +429,7 @@ export default function AdminCreatePublicationPage() {
                         <input
                           key={pendingCoverPickerKey}
                           type="file"
-                          accept="image/*"
+                          accept=".jpg,.jpeg,.png,.gif,.webp"
                           onChange={(e) => setPendingCover(e.target.files?.[0] || null)}
                           className="hidden"
                         />

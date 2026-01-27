@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
-import { isValidId } from '@/lib/security';
+import { isValidId, validateNoSpecialCharacters } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +21,27 @@ export async function POST(request: NextRequest) {
         { error: 'Article ID, recommendation, and comments are required' },
         { status: 400 }
       );
+    }
+
+    const commentsValidation = validateNoSpecialCharacters(String(comments), 'Comments');
+    if (!commentsValidation.valid) {
+      return NextResponse.json({ error: commentsValidation.error || 'Invalid comments' }, { status: 400 });
+    }
+    if (String(strengths || '').trim()) {
+      const v = validateNoSpecialCharacters(String(strengths), 'Strengths');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid strengths' }, { status: 400 });
+    }
+    if (String(weaknesses || '').trim()) {
+      const v = validateNoSpecialCharacters(String(weaknesses), 'Weaknesses');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid weaknesses' }, { status: 400 });
+    }
+    if (String(suggestions || '').trim()) {
+      const v = validateNoSpecialCharacters(String(suggestions), 'Suggestions');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid suggestions' }, { status: 400 });
+    }
+    if (String(confidential_comments || '').trim()) {
+      const v = validateNoSpecialCharacters(String(confidential_comments), 'Confidential comments');
+      if (!v.valid) return NextResponse.json({ error: v.error || 'Invalid confidential comments' }, { status: 400 });
     }
 
     // Get reviewer info from request headers (set by auth middleware)

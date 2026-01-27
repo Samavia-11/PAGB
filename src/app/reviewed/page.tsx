@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { FileText, MessageSquare, Calendar, User, Eye, Download } from 'lucide-react';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface User {
   id: number;
   username: string;
@@ -98,6 +100,7 @@ export default function ReviewedPage() {
   const [user, setUser] = useState<User | null>(null);
   const [reviewedArticles, setReviewedArticles] = useState<ReviewedArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alreadyForwardedArticleIds, setAlreadyForwardedArticleIds] = useState<Set<number>>(new Set());
   const [selectedArticle, setSelectedArticle] = useState<ReviewedArticle | null>(null);
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardArticle, setForwardArticle] = useState<ReviewedArticle | null>(null);
@@ -359,6 +362,41 @@ export default function ReviewedPage() {
 
       const enrichedReviewed = await hydrateWithMessages(reviewed);
       setReviewedArticles(enrichedReviewed);
+
+      const numericIds = Array.from(
+        new Set(
+          enrichedReviewed
+            .map(getNumericArticleId)
+            .filter((id): id is number => typeof id === 'number' && Number.isFinite(id))
+        )
+      );
+
+      try {
+        const results = await Promise.all(
+          numericIds.map(async (id) => {
+            try {
+              const res = await fetch(`/api/articles/${id}/comments`);
+              if (!res.ok) return { id, forwarded: false };
+              const data = await res.json().catch(() => ({}));
+              const messages = (data?.messages || []) as ArticleMessage[];
+              const forwarded = Array.isArray(messages)
+                ? messages.some((m) => m?.sender_role === 'author')
+                : false;
+              return { id, forwarded };
+            } catch {
+              return { id, forwarded: false };
+            }
+          })
+        );
+
+        const next = new Set<number>();
+        for (const r of results) {
+          if (r.forwarded) next.add(r.id);
+        }
+        setAlreadyForwardedArticleIds(next);
+      } catch (e) {
+        setAlreadyForwardedArticleIds(new Set());
+      }
     } catch (error) {
       console.error('Error loading reviewed articles:', error);
     }
@@ -451,14 +489,23 @@ export default function ReviewedPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
+                      const numericId = typeof article.id === 'number' ? article.id : article.originalId;
+                      if (numericId && alreadyForwardedArticleIds.has(numericId)) return;
                       setForwardArticle(article);
                       setForwardComment('');
                       setForwardFile(null);
                       setForwardModalOpen(true);
                     }}
-                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    disabled={(() => {
+                      const numericId = typeof article.id === 'number' ? article.id : article.originalId;
+                      return !!(numericId && alreadyForwardedArticleIds.has(numericId));
+                    })()}
+                    className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Forward
+                    {(() => {
+                      const numericId = typeof article.id === 'number' ? article.id : article.originalId;
+                      return numericId && alreadyForwardedArticleIds.has(numericId) ? 'Forwarded' : 'Forward';
+                    })()}
                   </button>
                 </div>
 
@@ -650,6 +697,11 @@ export default function ReviewedPage() {
                     disabled={sendingForward || (!forwardComment.trim() && !forwardFile)}
                     onClick={async () => {
                       if (!user) return;
+
+                      if (forwardComment.trim() && !isNoSpecialChars(forwardComment)) {
+                        alert('Comment can only contain letters, numbers, and spaces');
+                        return;
+                      }
 
                       const numericId = typeof forwardArticle.id === 'number' ? forwardArticle.id : forwardArticle.originalId;
                       if (!numericId) {

@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
 
+const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+
 interface ForwardedArticle {
   id: number;
   article_id: number;
@@ -70,6 +72,11 @@ export default function ForwardedArticles() {
   const submitResponse = async () => {
     if (!selectedArticle || !editorResponse.trim()) {
       showNotification.error('Please provide a response');
+      return;
+    }
+
+    if (!isNoSpecialChars(editorResponse)) {
+      showNotification.error('Response can only contain letters, numbers, and spaces');
       return;
     }
 

@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, FileText, CheckCircle, XCircle, Clock, Eye, Edit, Send, Users, BookOpen, Award, MessageSquare } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Eye, Edit, Send, Users, BookOpen, Award, MessageSquare } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface Article {
   id: number;
@@ -18,6 +20,7 @@ interface Article {
 
 export default function EditorDashboard() {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [user, setUser] = useState<any>(null);
   const [articles, setArticles] = useState<Article[]>([]);
   const [reviewers, setReviewers] = useState<any[]>([]);
@@ -138,7 +141,13 @@ export default function EditorDashboard() {
   };
 
   const handlePublish = async (articleId: number) => {
-    if (!confirm('Publish this article?')) return;
+    const ok = await confirm({
+      title: 'Publish this article?',
+      message: 'Do you want to publish this article?',
+      confirmText: 'Publish',
+      cancelText: 'Cancel',
+    });
+    if (!ok) return;
     try {
       const response = await fetch(`/api/articles/${articleId}/workflow`, {
         method: 'POST',
@@ -150,18 +159,25 @@ export default function EditorDashboard() {
         })
       });
       if (response.ok) {
-        alert('Article published successfully!');
+        showNotification.success('Article published successfully!');
         fetchArticles(user.id);
       } else {
-        alert('Failed to publish article');
+        showNotification.error('Failed to publish article');
       }
     } catch (error) {
-      alert('Error publishing article');
+      showNotification.error('Error publishing article');
     }
   };
 
   const handleReject = async (articleId: number) => {
-    if (!confirm('Reject this article?')) return;
+    const ok = await confirm({
+      title: 'Reject this article?',
+      message: 'Do you want to reject this article?',
+      confirmText: 'Reject',
+      cancelText: 'Cancel',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       const response = await fetch(`/api/articles/${articleId}/workflow`, {
         method: 'POST',
@@ -173,13 +189,13 @@ export default function EditorDashboard() {
         })
       });
       if (response.ok) {
-        alert('Article rejected');
+        showNotification.success('Article rejected');
         fetchArticles(user.id);
       } else {
-        alert('Failed to reject article');
+        showNotification.error('Failed to reject article');
       }
     } catch (error) {
-      alert('Error rejecting article');
+      showNotification.error('Error rejecting article');
     }
   };
 
@@ -225,9 +241,6 @@ export default function EditorDashboard() {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">PAGB Editor Dashboard</h1>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Bell className="w-6 h-6" />
-            </div>
             <div>
               <p className="font-semibold">{user?.full_name || user?.username}</p>
               <p className="text-sm capitalize">{user?.role}</p>

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserFromToken } from '@/lib/auth';
-import { validateEmail, validateUsername } from '@/lib/security';
+import {
+  validateEmail,
+  validateUsername,
+  validateLettersAndSpaces,
+  validateAlphanumericAndSpaces,
+  validateExactDigits,
+  normalizeDigits,
+} from '@/lib/security';
 
 async function getAuthenticatedUserId(request: NextRequest): Promise<number | null> {
   const headerUserId = request.headers.get('x-user-id');
@@ -123,7 +130,14 @@ export async function PUT(request: NextRequest) {
     }
 
     if (fullName !== undefined) {
-      updates.push({ key: 'full_name', value: String(fullName).trim() || null });
+      const v = String(fullName).trim();
+      if (v) {
+        const validation = validateLettersAndSpaces(v, 'Full name');
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error || 'Invalid full name' }, { status: 400 });
+        }
+      }
+      updates.push({ key: 'full_name', value: v || null });
     }
 
     const dbName = await getDbName();
@@ -140,16 +154,44 @@ export async function PUT(request: NextRequest) {
     const colSet = new Set((cols || []).map((c) => String(c.name).toLowerCase()));
 
     if (fatherName !== undefined && colSet.has('father_name')) {
-      updates.push({ key: 'father_name', value: String(fatherName).trim() || null });
+      const v = String(fatherName).trim();
+      if (v) {
+        const validation = validateLettersAndSpaces(v, 'Father name');
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error || 'Invalid father name' }, { status: 400 });
+        }
+      }
+      updates.push({ key: 'father_name', value: v || null });
     }
     if (cnic !== undefined && colSet.has('cnic')) {
-      updates.push({ key: 'cnic', value: String(cnic).trim() || null });
+      const v = String(cnic).trim();
+      if (v) {
+        const validation = validateExactDigits(v, 13, 'CNIC');
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error || 'Invalid CNIC' }, { status: 400 });
+        }
+      }
+      updates.push({ key: 'cnic', value: v ? normalizeDigits(v) : null });
     }
     if (contactNumber !== undefined && colSet.has('contact_number')) {
-      updates.push({ key: 'contact_number', value: String(contactNumber).trim() || null });
+      const v = String(contactNumber).trim();
+      if (v) {
+        const validation = validateExactDigits(v, 11, 'Contact number');
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error || 'Invalid contact number' }, { status: 400 });
+        }
+      }
+      updates.push({ key: 'contact_number', value: v ? normalizeDigits(v) : null });
     }
     if (qualification !== undefined && colSet.has('qualification')) {
-      updates.push({ key: 'qualification', value: String(qualification).trim() || null });
+      const v = String(qualification).trim();
+      if (v) {
+        const validation = validateAlphanumericAndSpaces(v, 'Highest qualification');
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error || 'Invalid qualification' }, { status: 400 });
+        }
+      }
+      updates.push({ key: 'qualification', value: v || null });
     }
 
     if (updates.length === 0) {

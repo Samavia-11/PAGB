@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { FileText, Globe, Eye, Download } from 'lucide-react';
+import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
+import { showNotification } from '@/utils/notifications';
 
 interface User {
   id: number;
@@ -32,6 +34,7 @@ interface BookListItem {
 
 export default function AdminPublishPage() {
   const router = useRouter();
+  const confirm = useConfirmDialog();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState<BookListItem[]>([]);
@@ -138,7 +141,7 @@ export default function AdminPublishPage() {
       URL.revokeObjectURL(url);
     } catch (e: any) {
       console.error('Download failed:', e);
-      alert(e?.message || 'Failed to download');
+      showNotification.error(e?.message || 'Failed to download');
     } finally {
       setBusyId(null);
     }
@@ -146,7 +149,13 @@ export default function AdminPublishPage() {
 
   const publishBook = async (book: BookListItem) => {
     if (!user?.id) return;
-    const ok = window.confirm('Publish this book? This will set it as the current book for the landing page and rotate older editions.');
+    const ok = await confirm({
+      title: 'Publish this book?'
+      ,
+      message: 'This will set it as the current book for the landing page and rotate older editions.',
+      confirmText: 'Publish',
+      cancelText: 'Cancel',
+    });
     if (!ok) return;
 
     setBusyId(book.id);
@@ -162,12 +171,12 @@ export default function AdminPublishPage() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || 'Failed to publish');
       }
-      alert('Book published successfully.');
+      showNotification.success('Book published successfully.');
       await refresh();
       setSelected(null);
     } catch (e: any) {
       console.error('Publish failed:', e);
-      alert(e?.message || 'Failed to publish');
+      showNotification.error(e?.message || 'Failed to publish');
     } finally {
       setBusyId(null);
     }

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, Archive, LogOut, Search, Bell, MessageSquare } from 'lucide-react';
+import { Menu, X, LayoutGrid, Archive, LogOut, Search, MessageSquare } from 'lucide-react';
 
 export default function ReviewerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,9 +11,6 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
   const [open, setOpen] = useState(true);
   const [search, setSearch] = useState('');
   const [mounted, setMounted] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -24,37 +21,11 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
       if (parsed.role !== 'reviewer') {
         router.replace('/login');
       } else {
-        fetchNotifications(parsed.id);
       }
     } else {
       router.replace('/login');
     }
   }, [router]);
-
-  const fetchNotifications = async (userId: number) => {
-    try {
-      const response = await fetch('/api/notifications', {
-        headers: { 'x-user-id': userId.toString() }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.notifications?.filter((n: any) => !n.is_read).length || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  const markAsRead = async (id: number) => {
-    try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-      setNotifications(prev => prev.map((n: any) => n.id === id ? { ...n, is_read: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
 
   if (!mounted) return null;
 
@@ -163,53 +134,6 @@ export default function ReviewerLayout({ children }: { children: React.ReactNode
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white" />
             </div>
           </div>
-          
-          {/* Notifications */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded hover:bg-[forestgreen]/80 relative"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-            
-            {/* Notifications Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500">
-                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>No notifications</p>
-                    </div>
-                  ) : (
-                    notifications.slice(0, 10).map((notif: any, index: number) => (
-                      <div
-                        key={`reviewer-notification-${notif.id}-${index}`}
-                        onClick={() => !notif.is_read && markAsRead(notif.id)}
-                        className={`p-4 hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-blue-50' : ''}`}
-                      >
-                        <h4 className="text-sm font-semibold text-gray-900">{notif.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {new Date(notif.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          
           {user && <div className="text-sm hidden md:block">{user.username || user.fullName}</div>}
         </header>
 
