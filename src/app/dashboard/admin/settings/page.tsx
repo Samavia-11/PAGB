@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { ArrowLeft, Settings, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
 import { showNotification } from '@/utils/notifications';
+import { sanitizeAlphanumericSpaces, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -140,9 +141,30 @@ const JournalSettingsPage = () => {
       const section = modal.section;
       const payload: any = { section };
 
+      // Validate form fields for special characters
+      const titleError = getValidationError(form.title, 'Title');
+      const nameError = getValidationError(form.name, 'Name');
+      const affiliationError = getValidationError(form.affiliation, 'Affiliation');
+
       if (section === 'executive_leadership') {
         if (!form.title.trim() || !form.name.trim()) {
           showNotification.warning('Please fill all required fields.');
+          setSubmitting(false);
+          return;
+        }
+        if (titleError) {
+          showNotification.error(titleError);
+          setSubmitting(false);
+          return;
+        }
+        if (nameError) {
+          showNotification.error(nameError);
+          setSubmitting(false);
+          return;
+        }
+        if (form.affiliation.trim() && affiliationError) {
+          showNotification.error(affiliationError);
+          setSubmitting(false);
           return;
         }
         payload.title = form.title.trim();
@@ -151,6 +173,17 @@ const JournalSettingsPage = () => {
       } else if (section === 'editorial_team_editor') {
         if (!form.title.trim() || !form.name.trim()) {
           showNotification.warning('Please fill all required fields.');
+          setSubmitting(false);
+          return;
+        }
+        if (titleError) {
+          showNotification.error(titleError);
+          setSubmitting(false);
+          return;
+        }
+        if (nameError) {
+          showNotification.error(nameError);
+          setSubmitting(false);
           return;
         }
         payload.title = form.title.trim();
@@ -158,6 +191,12 @@ const JournalSettingsPage = () => {
       } else if (section === 'editorial_team_sub_editor') {
         if (!form.name.trim()) {
           showNotification.warning('Please fill all required fields.');
+          setSubmitting(false);
+          return;
+        }
+        if (nameError) {
+          showNotification.error(nameError);
+          setSubmitting(false);
           return;
         }
         payload.name = form.name.trim();
@@ -165,6 +204,17 @@ const JournalSettingsPage = () => {
       } else {
         if (!form.name.trim()) {
           showNotification.warning('Please fill all required fields.');
+          setSubmitting(false);
+          return;
+        }
+        if (nameError) {
+          showNotification.error(nameError);
+          setSubmitting(false);
+          return;
+        }
+        if (form.title.trim() && titleError) {
+          showNotification.error(titleError);
+          setSubmitting(false);
           return;
         }
         payload.name = form.name.trim();
@@ -387,7 +437,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      onChange={(e) => setForm({ ...form, title: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Patron-in-Chief"
                     />
@@ -397,7 +447,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => setForm({ ...form, name: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Field Marshal Syed Asim Munir, NI(M), SJ"
                     />
@@ -407,7 +457,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.affiliation}
-                      onChange={(e) => setForm({ ...form, affiliation: e.target.value })}
+                      onChange={(e) => setForm({ ...form, affiliation: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="IGT&E"
                     />
@@ -422,7 +472,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      onChange={(e) => setForm({ ...form, title: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Editor"
                     />
@@ -432,7 +482,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => setForm({ ...form, name: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Name"
                     />
@@ -447,7 +497,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => setForm({ ...form, name: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Name"
                     />
@@ -462,7 +512,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => setForm({ ...form, name: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Name"
                     />
@@ -472,7 +522,7 @@ const JournalSettingsPage = () => {
                     <input
                       type="text"
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      onChange={(e) => setForm({ ...form, title: sanitizeAlphanumericSpaces(e.target.value) })}
                       className="form-input"
                       placeholder="Dean, Faculty of Contemporary Studies (FCS), NDU"
                     />

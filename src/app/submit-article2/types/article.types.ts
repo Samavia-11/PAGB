@@ -51,6 +51,8 @@ export interface StoredArticle {
   manuscriptFileName?: string;
   editorAttachment?: string;
   editorAttachmentName?: string;
+  coverLetter?: string;
+  conflicts?: string;
   funding?: string;
   ethics?: boolean;
   licenseAgreement?: boolean;
@@ -112,6 +114,11 @@ export interface ArticleSubmissionResponse {
     article_type: string;
     author_id: number;
     manuscript_file_name?: string;
+    cover_letter?: string | null;
+    conflicts?: string | null;
+    funding?: string | null;
+    ethics?: number | boolean | null;
+    license_agreement?: number | boolean | null;
   };
 }
 

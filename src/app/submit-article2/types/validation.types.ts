@@ -21,7 +21,7 @@ export interface ValidationSchema {
 export type ValidationLevel = 'error' | 'warning' | 'info';
 export type ValidationFunction = (value: any, formData?: any) => boolean;
 
-export interface AsyncValidationRule extends ValidationRule {
+export interface AsyncValidationRule extends Omit<ValidationRule, 'validate'> {
   validate: (value: any, formData?: any) => Promise<boolean>;
 }
 

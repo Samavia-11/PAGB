@@ -18,8 +18,14 @@ export const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
   errors,
   disabled = false,
 }) => {
+  const sanitizeAlnumSpaces = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s]+/g, '');
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === 'title') {
+      onChange({ [name]: sanitizeAlnumSpaces(value) });
+      return;
+    }
     onChange({ [name]: value });
   };
 
@@ -28,7 +34,7 @@ export const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
       {/* Step Header */}
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Basic Information</h2>
-        <p className="text-gray-600">Let's start with the essential details about your article</p>
+        <p className="text-gray-600">Let&apos;s start with the essential details about your article</p>
       </div>
 
       {/* Article Title */}

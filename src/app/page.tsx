@@ -795,7 +795,7 @@ export default function Home() {
                 <p className="text-sm text-gray-700 mb-3">
                   Submit your research on <strong>&#34;Hardcore Military Subjects and National Security Issues&#34;</strong>
                 </p>
-                <p className="text-xs text-gray-600 mb-3">Deadline: December 31, 2026</p>
+                {/* <p className="text-xs text-gray-600 mb-3">Deadline: December 31, 2026</p> */}
                 <Link href="/login" className="btn-secondary text-sm w-full inline-block text-center">Submit Now</Link>
               </div>
               <div className="mb-12">

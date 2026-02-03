@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
-
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface Article {
   id: number;
@@ -72,24 +71,33 @@ export default function SubmitReview() {
       return;
     }
 
-    if (!isNoSpecialChars(comments)) {
-      showNotification.error('Comments can only contain letters, numbers, and spaces');
+    const commentsError = getValidationError(comments, 'Comments');
+    if (commentsError) {
+      showNotification.error(commentsError);
       return;
     }
-    if (strengths.trim() && !isNoSpecialChars(strengths)) {
-      showNotification.error('Strengths can only contain letters, numbers, and spaces');
+    
+    const strengthsError = getValidationError(strengths, 'Strengths');
+    if (strengths.trim() && strengthsError) {
+      showNotification.error(strengthsError);
       return;
     }
-    if (weaknesses.trim() && !isNoSpecialChars(weaknesses)) {
-      showNotification.error('Weaknesses can only contain letters, numbers, and spaces');
+    
+    const weaknessesError = getValidationError(weaknesses, 'Weaknesses');
+    if (weaknesses.trim() && weaknessesError) {
+      showNotification.error(weaknessesError);
       return;
     }
-    if (suggestions.trim() && !isNoSpecialChars(suggestions)) {
-      showNotification.error('Suggestions can only contain letters, numbers, and spaces');
+    
+    const suggestionsError = getValidationError(suggestions, 'Suggestions');
+    if (suggestions.trim() && suggestionsError) {
+      showNotification.error(suggestionsError);
       return;
     }
-    if (confidentialComments.trim() && !isNoSpecialChars(confidentialComments)) {
-      showNotification.error('Confidential comments can only contain letters, numbers, and spaces');
+    
+    const confidentialError = getValidationError(confidentialComments, 'Confidential comments');
+    if (confidentialComments.trim() && confidentialError) {
+      showNotification.error(confidentialError);
       return;
     }
 
@@ -258,7 +266,7 @@ export default function SubmitReview() {
             </label>
             <textarea
               value={comments}
-              onChange={(e) => setComments(e.target.value)}
+              onChange={(e) => setComments(sanitizeMultilineText(e.target.value))}
               placeholder="Provide detailed feedback for the author..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
               rows={6}
@@ -276,7 +284,7 @@ export default function SubmitReview() {
             </label>
             <textarea
               value={strengths}
-              onChange={(e) => setStrengths(e.target.value)}
+              onChange={(e) => setStrengths(sanitizeMultilineText(e.target.value))}
               placeholder="Highlight the positive aspects of the work..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
               rows={4}
@@ -290,7 +298,7 @@ export default function SubmitReview() {
             </label>
             <textarea
               value={weaknesses}
-              onChange={(e) => setWeaknesses(e.target.value)}
+              onChange={(e) => setWeaknesses(sanitizeMultilineText(e.target.value))}
               placeholder="Identify areas that need improvement..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
               rows={4}
@@ -304,7 +312,7 @@ export default function SubmitReview() {
             </label>
             <textarea
               value={suggestions}
-              onChange={(e) => setSuggestions(e.target.value)}
+              onChange={(e) => setSuggestions(sanitizeMultilineText(e.target.value))}
               placeholder="Provide specific suggestions for improving the manuscript..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
               rows={4}
@@ -318,7 +326,7 @@ export default function SubmitReview() {
             </label>
             <textarea
               value={confidentialComments}
-              onChange={(e) => setConfidentialComments(e.target.value)}
+              onChange={(e) => setConfidentialComments(sanitizeMultilineText(e.target.value))}
               placeholder="Private comments for the editor only..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
               rows={3}

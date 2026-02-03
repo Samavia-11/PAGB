@@ -7,7 +7,7 @@ import {
   isFileSizeValid,
   sanitizeFileName,
   isValidId,
-  validateNoSpecialCharacters,
+  validateMessageText,
 } from '@/lib/security';
 
 // GET - Fetch all messages for an article
@@ -93,7 +93,7 @@ export async function POST(
     }
 
     if (message?.trim()) {
-      const messageValidation = validateNoSpecialCharacters(message, 'Message');
+      const messageValidation = validateMessageText(message, 'Message');
       if (!messageValidation.valid) {
         return NextResponse.json(
           { error: messageValidation.error || 'Invalid message' },
@@ -110,7 +110,13 @@ export async function POST(
     if (file) {
       try {
         // Validate file type
-        const fileTypeCheck = isAllowedFileType(file);
+        const fileTypeCheck = isAllowedFileType(file, {
+          allowedMimeTypes: [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ],
+          allowedExtensions: ['.pdf', '.docx'],
+        });
         if (!fileTypeCheck.valid) {
           return NextResponse.json(
             { error: fileTypeCheck.error },

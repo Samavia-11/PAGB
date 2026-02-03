@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  Search,
   Globe,
   Settings
 } from 'lucide-react';
@@ -195,18 +194,6 @@ const Layout = ({ children, user }: LayoutProps) => {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              
-              {/* Search bar */}
-              <div className="hidden md:block">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Search articles, authors, keywords..."
-                    className="pl-10 pr-4 py-2 w-96 rounded-lg focus:ring-2 focus:ring-[color:var(--primary-color)] focus:border-transparent bg-white text-gray-900 placeholder-gray-500 border border-white/0 shadow-sm"
-                  />
-                </div>
-              </div>
             </div>
 
             <div className="flex items-center space-x-4">

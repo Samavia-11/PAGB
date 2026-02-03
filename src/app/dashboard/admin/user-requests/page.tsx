@@ -494,7 +494,7 @@ const UserRequestsPage = () => {
                     placeholder="Enter new password (optional)"
                     className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-academic-500 mt-1">Leave empty if you don't want to change the password</p>
+                  <p className="text-xs text-academic-500 mt-1">Leave empty if you don&apos;t want to change the password</p>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">

@@ -205,8 +205,10 @@ export default function ReviewerArticleView() {
           {parsedContent.manuscript?.abstract && parsedContent.manuscript.abstract !== 'nnn' && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Abstract</h2>
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r">
-                <p className="text-gray-700 leading-relaxed">{parsedContent.manuscript.abstract}</p>
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r max-h-32 overflow-y-auto">
+                <p className="text-gray-700 leading-relaxed break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                  {parsedContent.manuscript.abstract}
+                </p>
               </div>
             </div>
           )}

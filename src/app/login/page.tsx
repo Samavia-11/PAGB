@@ -20,6 +20,7 @@ interface SignupData {
 
 const normalizeDigits = (value: string) => String(value || '').replace(/\D/g, '');
 const sanitizeAlnumSpaces = (value: string) => String(value || '').replace(/[^A-Za-z0-9 ]+/g, '');
+const sanitizeLettersSpaces = (value: string) => String(value || '').replace(/[^A-Za-z ]+/g, '');
 const formatCnic = (value: string) => {
   const digits = normalizeDigits(value).slice(0, 13);
   const p1 = digits.slice(0, 5);
@@ -378,8 +379,8 @@ const LoginPage = () => {
       return;
     }
 
-    if (!isAlnumAndSpaces(signupData.qualification)) {
-      setError('Highest qualification can only contain letters, numbers, and spaces');
+    if (!isLettersAndSpaces(signupData.qualification)) {
+      setError('Highest qualification can only contain letters and spaces');
       setLoading(false);
       return;
     }
@@ -490,6 +491,11 @@ const LoginPage = () => {
       setSignupData({
         ...signupData,
         contactNumber: formatContactNumber(value),
+      });
+    } else if (name === 'qualification') {
+      setSignupData({
+        ...signupData,
+        qualification: sanitizeLettersSpaces(value),
       });
     } else if (name === 'securityAnswer1' || name === 'securityAnswer2') {
       setSignupData({

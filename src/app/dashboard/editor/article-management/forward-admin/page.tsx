@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Send, FileText } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
+
+// Sanitization function to prevent special characters
+const sanitizeComment = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s.,!?-]/g, '');
 
 interface User {
   id: number;
@@ -27,7 +30,7 @@ interface ReviewerForwardedDoc {
   article_abstract?: string;
 }
 
-export default function ForwardAdminPage() {
+function ForwardAdminContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -208,7 +211,7 @@ export default function ForwardAdminPage() {
           <textarea
             rows={5}
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e) => setComment(sanitizeComment(e.target.value))}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             placeholder="Write message for administrator"
             disabled={sending}
@@ -237,5 +240,13 @@ export default function ForwardAdminPage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+export default function ForwardAdminPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>}>
+      <ForwardAdminContent />
+    </Suspense>
   );
 }

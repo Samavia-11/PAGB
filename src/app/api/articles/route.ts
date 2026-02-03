@@ -126,6 +126,11 @@ export async function POST(request: NextRequest) {
     let authors: any[] | null = null;
     let affiliation: string | null = null;
     let articleType: string | null = null;
+    let coverLetter: string | null = null;
+    let conflicts: string | null = null;
+    let funding: string | null = null;
+    let ethics: number = 0;
+    let licenseAgreement: number = 0;
     let status: string = 'submitted';
     let manuscriptFile: File | null = null;
     let coverLetterFile: File | null = null;
@@ -140,6 +145,11 @@ export async function POST(request: NextRequest) {
       content = (formData.get('content') as string) || null;
       affiliation = (formData.get('affiliation') as string) || null;
       articleType = (formData.get('articleType') as string) || null;
+      coverLetter = (formData.get('coverLetter') as string) || null;
+      conflicts = (formData.get('conflicts') as string) || null;
+      funding = (formData.get('funding') as string) || null;
+      ethics = parseInt(((formData.get('ethics') as string) || '0').toString(), 10) ? 1 : 0;
+      licenseAgreement = parseInt(((formData.get('licenseAgreement') as string) || '0').toString(), 10) ? 1 : 0;
       status = ((formData.get('status') as string) || 'submitted').toString();
 
       const authorsRaw = formData.get('authors');
@@ -171,6 +181,11 @@ export async function POST(request: NextRequest) {
       authors = body.authors || null;
       affiliation = body.affiliation || null;
       articleType = body.articleType || null;
+      coverLetter = body.coverLetter || null;
+      conflicts = body.conflicts || null;
+      funding = body.funding || null;
+      ethics = body.ethics ? 1 : 0;
+      licenseAgreement = body.licenseAgreement ? 1 : 0;
       status = body.status || 'submitted';
       manuscriptFile = null;
       coverLetterFile = null;
@@ -186,8 +201,9 @@ export async function POST(request: NextRequest) {
 
     if (manuscriptFile && manuscriptFile.size > 0) {
       const typeCheck = isAllowedFileType(manuscriptFile, {
-        allowedExtensions: ['.doc', '.docx'],
+        allowedExtensions: ['.pdf', '.doc', '.docx'],
         allowedMimeTypes: [
+          'application/pdf',
           'application/msword',
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ],
@@ -231,6 +247,11 @@ export async function POST(request: NextRequest) {
       JSON.stringify(authors || []), // always a valid JSON string
       affiliation || null,
       articleType || null,
+      coverLetter || null,
+      conflicts || null,
+      funding || null,
+      ethics,
+      licenseAgreement,
       manuscriptFile ? manuscriptFile.name : null,
       null,
       status
@@ -239,8 +260,8 @@ export async function POST(request: NextRequest) {
 
     const [result] = await connection.execute(
       `INSERT INTO authors_articles 
-       (author_id, title, abstract, keywords, content, authors, affiliation, article_type, manuscript_file_name, manuscript_file_path, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (author_id, title, abstract, keywords, content, authors, affiliation, article_type, cover_letter, conflicts, funding, ethics, license_agreement, manuscript_file_name, manuscript_file_path, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       insertValues
     ) as [any, any];
 

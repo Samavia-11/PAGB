@@ -2,6 +2,16 @@ import { ValidationRule, ValidationResult } from '../types/validation.types';
 import { ArticleForm, AuthorEntry } from '../types/article.types';
 import { VALIDATION_MESSAGES, MAX_ABSTRACT_WORDS, MAX_TITLE_CHARS } from './constants';
 
+const digitsOnly = (value: string): string => String(value || '').replace(/\D/g, '');
+const isLettersAndSpaces = (value: string): boolean => /^[A-Za-z\s]+$/.test(String(value || '').trim());
+const isAlnumAndSpaces = (value: string): boolean => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+const isNoSpecialCharsMultiline = (value: string): boolean => {
+  const v = String(value || '');
+  if (!v.trim()) return false;
+  return /^[A-Za-z0-9\s\r\n]+$/.test(v);
+};
+const isExactly11Digits = (value: string): boolean => digitsOnly(value).length === 11;
+
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -13,12 +23,16 @@ export const validatePhone = (phone: string): boolean => {
 };
 
 export const validateTitle = (title: string): boolean => {
-  return title.trim().length > 0 && title.length <= MAX_TITLE_CHARS;
+  const v = String(title || '').trim();
+  if (!v) return true;
+  return v.length <= MAX_TITLE_CHARS;
 };
 
 export const validateAbstract = (abstract: string): boolean => {
-  const wordCount = abstract.trim().split(/\s+/).filter(word => word.length > 0).length;
-  return wordCount > 0 && wordCount <= MAX_ABSTRACT_WORDS;
+  const v = String(abstract || '').trim();
+  if (!v) return true;
+  const wordCount = v.split(/\s+/).filter(word => word.length > 0).length;
+  return wordCount <= MAX_ABSTRACT_WORDS;
 };
 
 export const validateAuthors = (authors: AuthorEntry[]): boolean => {
@@ -30,13 +44,17 @@ export const validateAuthors = (authors: AuthorEntry[]): boolean => {
     author.email.trim() && 
     validateEmail(author.email) &&
     author.contact?.trim() &&
-    validatePhone(author.contact || '')
+    isLettersAndSpaces(author.name) &&
+    isExactly11Digits(author.contact || '')
   );
   
   const allAuthorsValid = authors.every(author => 
     author.name.trim() && 
     author.email.trim() && 
-    validateEmail(author.email)
+    validateEmail(author.email) &&
+    isLettersAndSpaces(author.name) &&
+    (!author.contact?.trim() || isExactly11Digits(author.contact || '')) &&
+    (author.role !== 'Main Author' || Boolean(author.contact?.trim()))
   );
   
   return hasMainAuthor && allAuthorsValid;
@@ -44,7 +62,26 @@ export const validateAuthors = (authors: AuthorEntry[]): boolean => {
 
 export const validateKeywords = (keywords: string): boolean => {
   const keywordArray = keywords.split(',').map(k => k.trim()).filter(k => k);
-  return keywordArray.length >= 3 && keywordArray.length <= 10;
+  if (keywordArray.length < 3 || keywordArray.length > 10) return false;
+  return keywordArray.every(k => isNoSpecialCharsMultiline(k));
+};
+
+export const validateKeywordsNoSpecialChars = (keywords: string): boolean => {
+  const keywordArray = String(keywords || '').split(',').map(k => k.trim()).filter(k => k);
+  if (keywordArray.length === 0) return true;
+  return keywordArray.every(k => isNoSpecialCharsMultiline(k));
+};
+
+export const validateAffiliation = (affiliation: string): boolean => {
+  const v = String(affiliation || '').trim();
+  if (!v) return true;
+  return isLettersAndSpaces(v);
+};
+
+export const validateNoSpecialChars = (value: string): boolean => {
+  const v = String(value || '');
+  if (!v.trim()) return true;
+  return isNoSpecialCharsMultiline(v);
 };
 
 export const validateFile = (file: File | null): boolean => {
@@ -65,13 +102,18 @@ export const validateFile = (file: File | null): boolean => {
 export const validationRules: Record<string, ValidationRule[]> = {
   title: [
     {
+      validate: (value: string) => value.trim().length > 0,
+      message: VALIDATION_MESSAGES.REQUIRED,
+      level: 'error'
+    },
+    {
       validate: (value: string) => validateTitle(value),
       message: VALIDATION_MESSAGES.TITLE_TOO_LONG,
       level: 'error'
     },
     {
-      validate: (value: string) => value.trim().length > 0,
-      message: VALIDATION_MESSAGES.REQUIRED,
+      validate: (value: string) => (String(value || '').trim() ? isAlnumAndSpaces(value) : true),
+      message: VALIDATION_MESSAGES.TITLE_ALNUM_ONLY,
       level: 'error'
     }
   ],
@@ -91,15 +133,8 @@ export const validationRules: Record<string, ValidationRule[]> = {
   ],
   affiliation: [
     {
-      validate: (value: string) => value.trim().length > 0,
-      message: VALIDATION_MESSAGES.REQUIRED,
-      level: 'error'
-    }
-  ],
-  abstract: [
-    {
-      validate: (value: string) => validateAbstract(value),
-      message: VALIDATION_MESSAGES.ABSTRACT_TOO_LONG,
+      validate: (value: string) => validateAffiliation(value),
+      message: VALIDATION_MESSAGES.NAME_TEXT_ONLY,
       level: 'error'
     },
     {
@@ -108,10 +143,53 @@ export const validationRules: Record<string, ValidationRule[]> = {
       level: 'error'
     }
   ],
+  abstract: [
+    {
+      validate: (value: string) => value.trim().length > 0,
+      message: VALIDATION_MESSAGES.REQUIRED,
+      level: 'error'
+    },
+    {
+      validate: (value: string) => validateAbstract(value),
+      message: VALIDATION_MESSAGES.ABSTRACT_TOO_LONG,
+      level: 'error'
+    },
+    {
+      validate: (value: string) => validateNoSpecialChars(value),
+      message: VALIDATION_MESSAGES.NO_SPECIAL_CHARS,
+      level: 'error'
+    }
+  ],
   keywords: [
     {
       validate: (value: string) => validateKeywords(value),
       message: VALIDATION_MESSAGES.KEYWORDS_REQUIRED,
+      level: 'error'
+    },
+    {
+      validate: (value: string) => validateKeywordsNoSpecialChars(value),
+      message: VALIDATION_MESSAGES.NO_SPECIAL_CHARS,
+      level: 'error'
+    }
+  ],
+  coverLetter: [
+    {
+      validate: (value: string) => validateNoSpecialChars(value),
+      message: VALIDATION_MESSAGES.NO_SPECIAL_CHARS,
+      level: 'error'
+    }
+  ],
+  conflicts: [
+    {
+      validate: (value: string) => validateNoSpecialChars(value),
+      message: VALIDATION_MESSAGES.NO_SPECIAL_CHARS,
+      level: 'error'
+    }
+  ],
+  funding: [
+    {
+      validate: (value: string) => validateNoSpecialChars(value),
+      message: VALIDATION_MESSAGES.NO_SPECIAL_CHARS,
       level: 'error'
     }
   ],

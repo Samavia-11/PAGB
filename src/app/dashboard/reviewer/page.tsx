@@ -14,6 +14,7 @@ import {
   User,
   AlertTriangle
 } from 'lucide-react';
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -572,7 +573,11 @@ const ReviewerDashboard = () => {
                 <div className="bg-academic-50 rounded-lg p-4">
                   <p className="text-sm text-academic-700"><strong>Authors:</strong> {selectedArticle.authors}</p>
                   <p className="text-sm text-academic-700 mt-2"><strong>Abstract:</strong></p>
-                  <p className="text-sm text-academic-600 mt-1">{selectedArticle.abstract}</p>
+                  <div className="max-h-32 overflow-y-auto">
+                    <p className="text-sm text-academic-600 mt-1 break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      {selectedArticle.abstract}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -600,7 +605,7 @@ const ReviewerDashboard = () => {
                 <textarea
                   rows={10}
                   value={reviewContent}
-                  onChange={(e) => setReviewContent(e.target.value)}
+                  onChange={(e) => setReviewContent(sanitizeMultilineText(e.target.value))}
                   className="form-textarea"
                   placeholder="Provide detailed feedback on the article's methodology, findings, writing quality, and suggestions for improvement..."
                 />
@@ -650,8 +655,10 @@ const ReviewerDashboard = () => {
             <div className="p-6 space-y-4">
               <div>
                 <h4 className="font-medium text-academic-900 mb-2">Abstract</h4>
-                <div className="bg-academic-50 rounded-lg p-4 text-academic-700 whitespace-pre-wrap">
-                  {selectedForwardedDetails?.abstract || selectedForwarded.abstract}
+                <div className="bg-academic-50 rounded-lg p-4 text-academic-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                  <p className="break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                    {selectedForwardedDetails?.abstract || selectedForwarded.abstract}
+                  </p>
                 </div>
               </div>
 

@@ -444,7 +444,11 @@ const ArticleManagementPage = () => {
   };
 
   const filtered = submissions.filter((s) => s.status === activeTab);
-  console.log(`Filtered submissions for tab '${activeTab}':`, filtered);
+  console.log(`Active tab: ${activeTab}, Total submissions: ${submissions.length}, Filtered: ${filtered.length}`);
+  console.log('Submissions by status:', submissions.reduce((acc, s) => {
+    acc[s.status] = (acc[s.status] || 0) + 1;
+    return acc;
+  }, {}));
 
   if (loading) {
     return (
@@ -530,7 +534,7 @@ const ArticleManagementPage = () => {
                         <div className="flex gap-2 justify-end">
                           {doc.attachment_path ? (
                             <>
-                              {doc.attachment_path.endsWith('.pdf') ? (
+                              {doc.attachment_path.toLowerCase().endsWith('.pdf') ? (
                                 <a
                                   href={doc.attachment_path}
                                   target="_blank"
@@ -629,7 +633,7 @@ const ArticleManagementPage = () => {
                         <div className="flex gap-3 justify-end">
                           {r.file_url ? (
                             <>
-                              {r.file_url.endsWith('.pdf') ? (
+                              {r.file_url.toLowerCase().endsWith('.pdf') ? (
                                 <a
                                   href={r.file_url}
                                   target="_blank"
@@ -721,18 +725,13 @@ const ArticleManagementPage = () => {
                 <tr key={s.rowKey} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {s.title}
-                    {s.keywords ? (
-                      <div className="text-xs text-gray-500 mt-1 line-clamp-1">Keywords: {s.keywords}</div>
-                    ) : null}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    <div className="line-clamp-2">{s.abstract || '—'}</div>
-                    {s.articleType ? (
-                      <div className="text-xs text-gray-500 mt-1">Type: {s.articleType}</div>
-                    ) : null}
-                    {s.affiliation ? (
-                      <div className="text-xs text-gray-500 mt-1 line-clamp-1">Affiliation: {s.affiliation}</div>
-                    ) : null}
+                    <div className="max-w-xs max-h-20 overflow-y-auto">
+                      <p className="break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        {s.abstract || '—'}
+                      </p>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {s.author_name}
@@ -760,7 +759,7 @@ const ArticleManagementPage = () => {
                   <td className="px-6 py-4">
                     {s.manuscriptFilePath ? (
                       <div className="flex gap-3">
-                        {s.manuscriptFilePath.endsWith('.pdf') ? (
+                        {s.manuscriptFilePath.toLowerCase().endsWith('.pdf') ? (
                           <a
                             href={s.manuscriptFilePath}
                             target="_blank"
@@ -784,20 +783,22 @@ const ArticleManagementPage = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled={activeTab === 'external_review' && (s.reviewerDecision || 'pending') === 'accepted'}
-                        onClick={() => {
-                          // Open existing forward modal (Forward to Reviewer / Forward to Author)
-                          const selected = { ...s, id: s.articleId };
-                          sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
-                          setForwardChoiceSubmission(selected);
-                          setForwardChoiceOpen(true);
-                        }}
-                        className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Forward <Send className="w-4 h-4 ml-1" />
-                      </button>
+                      {activeTab !== 'revision' && (
+                        <button
+                          type="button"
+                          disabled={activeTab === 'external_review' && (s.reviewerDecision || 'pending') === 'accepted'}
+                          onClick={() => {
+                            // Open existing forward modal (Forward to Reviewer / Forward to Author)
+                            const selected = { ...s, id: s.articleId };
+                            sessionStorage.setItem('selectedSubmission', JSON.stringify(selected));
+                            setForwardChoiceSubmission(selected);
+                            setForwardChoiceOpen(true);
+                          }}
+                          className="text-green-600 hover:text-green-700 flex items-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Forward <Send className="w-4 h-4 ml-1" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -853,132 +854,32 @@ const ArticleManagementPage = () => {
                 {forwardChoiceSubmission.forwardSource === 'reviewer_doc' ? 'Forward to Admin' : 'Forward to Reviewer'}
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setForwardChoiceOpen(false);
-                  const articleId = forwardChoiceSubmission.articleId;
-                  // If this is a reviewer-forwarded document, send it to the original author (no selection)
-                  if (forwardChoiceSubmission.forwardSource === 'reviewer_doc') {
-                    const reviewerForwardId = forwardChoiceSubmission.reviewerForwardId;
-                    if (!user || !reviewerForwardId) {
-                      showNotification.error('Missing data. Please try again.');
+              {/* Only show Forward to Author button if NOT in external_review tab */}
+              {activeTab !== 'external_review' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForwardChoiceOpen(false);
+                    const articleId = forwardChoiceSubmission.articleId;
+                    if (forwardChoiceSubmission.forwardSource === 'reviewer_doc') {
+                      const reviewerForwardId = forwardChoiceSubmission.reviewerForwardId;
+                      if (!reviewerForwardId) {
+                        showNotification.error('Missing reviewer document. Please try again.');
+                        return;
+                      }
+                      router.push(
+                        `/dashboard/editor/article-management/forward-author?article=${articleId}&reviewerForwardId=${reviewerForwardId}`
+                      );
                       return;
                     }
 
-                    (async () => {
-                      try {
-                        const ok = await confirm({
-                          title: 'Send to author?',
-                          message: 'Do you want to forward this reviewer document to the author?',
-                          confirmText: 'Send',
-                          cancelText: 'Cancel',
-                        });
-                        if (!ok) return;
-
-                        const articleRes = await fetch(`/api/articles?id=${articleId}`, {
-                          headers: {
-                            'x-user-id': String(user.id),
-                            'x-user-role': 'editor',
-                          },
-                        });
-
-                        if (!articleRes.ok) {
-                          throw new Error('Failed to load article details');
-                        }
-
-                        const articleData = await articleRes.json();
-                        const article = (articleData.articles || [])[0];
-                        const authorId = article?.author_id;
-                        if (!authorId) {
-                          throw new Error('Author not found for this article');
-                        }
-
-                        const sendRes = await fetch('/api/editor-author-documents', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'x-user-id': String(user.id),
-                            'x-user-role': 'editor',
-                          },
-                          body: JSON.stringify({
-                            reviewerForwardId,
-                            authorId,
-                            comment: '',
-                          }),
-                        });
-
-                        if (!sendRes.ok) {
-                          const err = await sendRes.json().catch(() => ({}));
-                          throw new Error(err?.error || 'Failed to send to author');
-                        }
-
-                        // Mark article as editor review (revision) so it moves out of New Submissions
-                        await fetch('/api/articles', {
-                          method: 'PATCH',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'x-user-id': String(user.id),
-                            'x-user-role': 'editor',
-                          },
-                          body: JSON.stringify({
-                            id: articleId,
-                            status: 'editor_review',
-                          }),
-                        }).catch(() => null);
-
-                        showNotification.success('Sent to author successfully.');
-                        setActiveTab('revision');
-                        loadMockSubmissions();
-                      } catch (e: any) {
-                        console.error('Forward reviewer doc to author failed:', e);
-                        showNotification.error(e?.message || 'Failed to send to author');
-                      }
-                    })();
-
-                    return;
-                  }
-
-                  // Mark as editor review (revision) immediately so it moves out of New Submissions
-                  if (!user) {
                     router.push(`/dashboard/editor/article-management/${articleId}`);
-                    return;
-                  }
-
-                  (async () => {
-                    try {
-                      const ok = await confirm({
-                        title: 'Send to author?',
-                        message: 'Do you want to send this article back to the author for revision?',
-                        confirmText: 'Send',
-                        cancelText: 'Cancel',
-                      });
-                      if (!ok) return;
-
-                      await fetch('/api/articles', {
-                        method: 'PATCH',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'x-user-id': String(user.id),
-                          'x-user-role': 'editor',
-                        },
-                        body: JSON.stringify({
-                          id: articleId,
-                          status: 'editor_review',
-                        }),
-                      });
-                    } catch (e) {
-                      console.error('Failed to mark article as editor_review:', e);
-                    } finally {
-                      // Reuse existing Reply-to-Author page so author receives it on /reviewed
-                      router.push(`/dashboard/editor/article-management/${articleId}`);
-                    }
-                  })();
-                }}
-                className="w-full px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-              >
-                Forward to Author
-              </button>
+                  }}
+                  className="w-full px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
+                >
+                  Forward to Author
+                </button>
+              )}
 
               <button
                 type="button"
@@ -996,6 +897,6 @@ const ArticleManagementPage = () => {
       )}
     </Layout>
   );
-};
+}
 
 export default ArticleManagementPage;

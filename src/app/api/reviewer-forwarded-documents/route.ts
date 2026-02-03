@@ -4,6 +4,22 @@ import mysql from 'mysql2/promise';
 import fs from 'fs/promises';
 import path from 'path';
 
+const ALLOWED_UPLOAD_EXTENSIONS = ['.pdf', '.docx'] as const;
+const ALLOWED_UPLOAD_MIME_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+] as const;
+
+function isAllowedUploadFile(file: File): boolean {
+  const name = String(file?.name || '').toLowerCase();
+  const ext = path.extname(name);
+  const mime = String((file as any)?.type || '').toLowerCase();
+
+  if (ext && !ALLOWED_UPLOAD_EXTENSIONS.includes(ext as any)) return false;
+  if (mime && !ALLOWED_UPLOAD_MIME_TYPES.includes(mime as any)) return false;
+  return true;
+}
+
 function requireRole(request: NextRequest, roles: string[]) {
   const role = request.headers.get('x-user-role');
   const userId = request.headers.get('x-user-id');
@@ -114,6 +130,10 @@ export async function POST(request: NextRequest) {
 
     if (!attachmentFile || attachmentFile.size <= 0) {
       return NextResponse.json({ error: 'Attachment is required' }, { status: 400 });
+    }
+
+    if (!isAllowedUploadFile(attachmentFile)) {
+      return NextResponse.json({ error: 'Only PDF or DOCX files are allowed' }, { status: 400 });
     }
 
     let attachmentName: string | null = null;

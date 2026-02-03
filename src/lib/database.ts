@@ -3,13 +3,28 @@ import mysql from 'mysql2/promise';
 let connection: mysql.Connection | null = null;
 
 export async function getDatabase() {
-  if (!connection) {
-    const host = process.env.DB_HOST || 'localhost';
-    const user = process.env.DB_USER || 'root';
-    const password = process.env.DB_PASSWORD || '';
-    const database = process.env.DB_NAME || 'armyjournal';
-    const port = parseInt(process.env.DB_PORT || '3306');
+  const host = process.env.DB_HOST || 'localhost';
+  const user = process.env.DB_USER || 'root';
+  const password = process.env.DB_PASSWORD || '';
+  const database = process.env.DB_NAME || 'armyjournal';
+  const port = parseInt(process.env.DB_PORT || '3306');
 
+  // Reuse connection if possible, but recover from dropped/stale connections.
+  if (connection) {
+    try {
+      await connection.ping();
+      return connection;
+    } catch {
+      try {
+        await connection.end();
+      } catch {
+        // ignore
+      }
+      connection = null;
+    }
+  }
+
+  if (!connection) {
     try {
       connection = await mysql.createConnection({
         host,
@@ -89,6 +104,11 @@ async function createTables() {
         authors TEXT,
         affiliation VARCHAR(255),
         article_type VARCHAR(100),
+        cover_letter TEXT,
+        conflicts TEXT,
+        funding TEXT,
+        ethics TINYINT(1) DEFAULT 0,
+        license_agreement TINYINT(1) DEFAULT 0,
         manuscript_file_name VARCHAR(255),
         manuscript_file_path VARCHAR(255),
         status ENUM('draft', 'submitted', 'under_review', 'reviewed', 'editor_review', 'accepted', 'published', 'rejected') DEFAULT 'draft',
@@ -106,6 +126,33 @@ async function createTables() {
     }
     try {
       await connection.execute('ALTER TABLE authors_articles ADD COLUMN manuscript_file_path VARCHAR(255)');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+
+    // Add declaration columns if authors_articles already existed
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN cover_letter TEXT');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN conflicts TEXT');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN funding TEXT');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN ethics TINYINT(1) DEFAULT 0');
+    } catch (e: any) {
+      if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try {
+      await connection.execute('ALTER TABLE authors_articles ADD COLUMN license_agreement TINYINT(1) DEFAULT 0');
     } catch (e: any) {
       if (e?.code !== 'ER_DUP_FIELDNAME') throw e;
     }

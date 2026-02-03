@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Users, Send, FileText, UserCheck, Mail, Phone, Award, Upload } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
+
+// Sanitization function to prevent special characters
+const sanitizeComment = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s.,!?-]/g, '');
 
 interface User {
   id: number;
@@ -34,7 +37,7 @@ interface Submission {
   content?: string;
 }
 
-const ForwardPage = () => {
+function ForwardPageContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [submission, setSubmission] = useState<Submission | null>(null);
@@ -154,6 +157,13 @@ const ForwardPage = () => {
 
   const handleForwardToReviewer = async () => {
     if (!selectedReviewer || !comment.trim() || !submission) return;
+    
+    // Additional validation to ensure comment has meaningful content
+    const sanitizedComment = sanitizeComment(comment);
+    if (!sanitizedComment.trim()) {
+      showNotification.error('Comment must contain valid characters (letters, numbers, and basic punctuation only)');
+      return;
+    }
 
     setSending(true);
     try {
@@ -179,36 +189,37 @@ const ForwardPage = () => {
         body: formData,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Update the original article status to external_review
-        await fetch('/api/articles', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': (user?.id || '').toString(),
-            'x-user-role': 'editor',
-          },
-          body: JSON.stringify({
-            id: submission.id,
-            status: 'under_review'
-          })
-        });
-
-        // Update reviewer's assigned articles count
-        const updatedReviewers = reviewers.map(r => 
-          r.id === selectedReviewer.id 
-            ? { ...r, assignedArticles: r.assignedArticles + 1 }
-            : r
-        );
-        setReviewers(updatedReviewers);
-
-        showNotification.success(`Article forwarded to ${selectedReviewer.name} successfully!`);
-        router.push('/dashboard/editor/article-management');
-      } else {
-        throw new Error('Failed to forward article');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error || `Failed to forward article: ${response.status} ${response.statusText}`);
       }
+
+      const data = await response.json();
+      
+      // Update the original article status to external_review
+      await fetch('/api/articles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': (user?.id || '').toString(),
+          'x-user-role': 'editor',
+        },
+        body: JSON.stringify({
+          id: submission.id,
+          status: 'under_review'
+        })
+      });
+
+      // Update reviewer's assigned articles count
+      const updatedReviewers = reviewers.map(r => 
+        r.id === selectedReviewer.id 
+          ? { ...r, assignedArticles: r.assignedArticles + 1 }
+          : r
+      );
+      setReviewers(updatedReviewers);
+
+      showNotification.success(`Article forwarded to ${selectedReviewer.name} successfully!`);
+      router.push('/dashboard/editor/article-management');
     } catch (error) {
       console.error('Error forwarding to reviewer:', error);
       showNotification.error('Failed to forward article. Please try again.');
@@ -264,7 +275,7 @@ const ForwardPage = () => {
             Forward to Reviewer
           </h1>
           <p className="text-gray-600">
-            Select a reviewer to review: "{submission.title}"
+            Select a reviewer to review: &quot;{submission.title}&quot;
           </p>
         </div>
 
@@ -282,7 +293,11 @@ const ForwardPage = () => {
             </div>
             <div>
               <h3 className="font-medium text-gray-700">Abstract</h3>
-              <p className="text-gray-600">{submission.abstract}</p>
+              <div className="max-h-32 overflow-y-auto">
+                <p className="text-gray-600 break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                  {submission.abstract}
+                </p>
+              </div>
             </div>
             {submission.keywords && (
               <div>
@@ -384,7 +399,7 @@ const ForwardPage = () => {
                 </label>
                 <textarea
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) => setComment(sanitizeComment(e.target.value))}
                   placeholder="Enter specific instructions or focus areas for the reviewer..."
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
@@ -400,8 +415,19 @@ const ForwardPage = () => {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
-                      onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                          if (!allowedTypes.includes(file.type)) {
+                            showNotification.error('Only PDF and Word documents (.pdf, .doc, .docx) are allowed');
+                            e.target.value = '';
+                            return;
+                          }
+                        }
+                        setAttachmentFile(file || null);
+                      }}
                     />
                   </label>
                   {attachmentFile ? (
@@ -444,6 +470,12 @@ const ForwardPage = () => {
       </div>
     </Layout>
   );
-};
+}
 
-export default ForwardPage;
+export default function ForwardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>}>
+      <ForwardPageContent />
+    </Suspense>
+  );
+}

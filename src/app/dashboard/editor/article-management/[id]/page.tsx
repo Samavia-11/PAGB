@@ -6,8 +6,7 @@ import Layout from '@/components/Layout';
 import { ArrowLeft, Send, Paperclip } from 'lucide-react';
 import { useConfirmDialog } from '@/contexts/ConfirmDialogContext';
 import { showNotification } from '@/utils/notifications';
-
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -76,7 +75,16 @@ const SubmissionDetailPage = () => {
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFile(e.target.files?.[0] || null);
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        showNotification.error('Only PDF and Word documents (.pdf, .doc, .docx) are allowed');
+        e.target.value = '';
+        return;
+      }
+    }
+    setFile(file || null);
   };
 
   const handleSend = async () => {
@@ -85,8 +93,9 @@ const SubmissionDetailPage = () => {
       return;
     }
 
-    if (comment.trim() && !isNoSpecialChars(comment)) {
-      showNotification.error('Comments can only contain letters, numbers, and spaces');
+    const commentError = getValidationError(comment, 'Comments');
+    if (comment.trim() && commentError) {
+      showNotification.error(commentError);
       return;
     }
 
@@ -155,7 +164,8 @@ const SubmissionDetailPage = () => {
       router.push('/dashboard/editor/article-management');
     } catch (error) {
       console.error('Error sending reply:', error);
-      showNotification.error('Failed to send reply. Please try again.');
+      const msg = error instanceof Error ? error.message : 'Failed to send reply. Please try again.';
+      showNotification.error(msg);
     }
   };
 
@@ -185,18 +195,23 @@ const SubmissionDetailPage = () => {
 
       <div className="mb-6 bg-white border border-gray-200 rounded-lg p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">Abstract</h2>
-        <p className="text-gray-700 whitespace-pre-wrap">{detail.abstract}</p>
+        <div className="max-h-32 overflow-y-auto">
+          <p className="text-gray-700 whitespace-pre-wrap break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+            {detail.abstract}
+          </p>
+        </div>
       </div>
 
-      {/* Attachment preview / download */}
+      {/* Attachment preview / open */}
       {detail.attachment_url && (
         <div className="mb-6">
           <a
             href={detail.attachment_url}
             target="_blank"
-            className="text-blue-600 hover:text-blue-700 underline"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
-            View Attached Manuscript
+            Open Manuscript
           </a>
         </div>
       )}
@@ -211,7 +226,7 @@ const SubmissionDetailPage = () => {
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-blue-600 hover:text-blue-700">
             <Paperclip className="w-4 h-4" /> Choose file
-            <input type="file" className="hidden" onChange={handleFile} />
+            <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={handleFile} />
           </label>
           {file && <p className="text-sm text-gray-600 mt-1">{file.name}</p>}
         </div>
@@ -221,7 +236,7 @@ const SubmissionDetailPage = () => {
           <textarea
             rows={6}
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e) => setComment(sanitizeMultilineText(e.target.value))}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             placeholder="Write your remarks, feedback or revision request here..."
           />

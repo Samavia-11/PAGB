@@ -106,6 +106,8 @@ export const saveDraft = (userId: number, formData: ArticleForm, articleId?: num
     authors: formData.authors,
     affiliation: formData.affiliation,
     articleType: formData.articleType,
+    coverLetter: formData.coverLetter,
+    conflicts: formData.conflicts,
     funding: formData.funding,
     ethics: formData.ethics,
     licenseAgreement: formData.licenseAgreement,

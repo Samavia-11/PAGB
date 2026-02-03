@@ -19,8 +19,20 @@ export const Step2Authors: React.FC<Step2AuthorsProps> = ({
   errors,
   disabled = false,
 }) => {
+  const digitsOnly = (value: string) => String(value || '').replace(/\D/g, '');
+  const isLettersAndSpaces = (value: string) => /^[A-Za-z\s]+$/.test(String(value || '').trim());
+  const sanitizeLettersSpaces = (value: string) => String(value || '').replace(/[^A-Za-z\s]+/g, '');
+
   const handleAuthorChange = (index: number, field: keyof AuthorEntry, value: string) => {
     const updatedAuthors = [...formData.authors];
+
+    let nextValue = value;
+    if (field === 'name') {
+      nextValue = sanitizeLettersSpaces(value);
+    }
+    if (field === 'contact') {
+      nextValue = digitsOnly(value).slice(0, 11);
+    }
     
     // If changing role to Main Author, ensure only one exists
     if (field === 'role' && value === 'Main Author') {
@@ -32,7 +44,7 @@ export const Step2Authors: React.FC<Step2AuthorsProps> = ({
       });
     }
     
-    updatedAuthors[index] = { ...updatedAuthors[index], [field]: value };
+    updatedAuthors[index] = { ...updatedAuthors[index], [field]: nextValue };
     onChange({ authors: updatedAuthors });
   };
 
@@ -68,6 +80,8 @@ export const Step2Authors: React.FC<Step2AuthorsProps> = ({
     
     if (!author.name.trim()) {
       authorErrors.push('Author name is required');
+    } else if (!isLettersAndSpaces(author.name)) {
+      authorErrors.push('Only letters are allowed');
     }
     
     if (!author.email.trim()) {
@@ -78,8 +92,8 @@ export const Step2Authors: React.FC<Step2AuthorsProps> = ({
     
     if (author.role === 'Main Author' && !author.contact?.trim()) {
       authorErrors.push('Contact number is required for Main Author');
-    } else if (author.contact && !/^[\d\s\-\+\(\)]+$/.test(author.contact)) {
-      authorErrors.push('Please enter a valid phone number');
+    } else if (author.role === 'Main Author' && digitsOnly(author.contact || '').length !== 11) {
+      authorErrors.push('Contact number must be exactly 11 digits');
     }
     
     return authorErrors;
@@ -187,7 +201,7 @@ export const Step2Authors: React.FC<Step2AuthorsProps> = ({
           label="Primary Institution"
           name="affiliation"
           value={formData.affiliation}
-          onChange={(e) => onChange({ affiliation: e.target.value })}
+          onChange={(e) => onChange({ affiliation: sanitizeLettersSpaces(e.target.value) })}
           error={errors.affiliation}
           required={true}
           placeholder="e.g., Department of Computer Science, University of Example"

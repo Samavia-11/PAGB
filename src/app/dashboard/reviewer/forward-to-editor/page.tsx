@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Upload, Send, FileText } from 'lucide-react';
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -26,7 +27,7 @@ interface EditorArticle {
   editor_name?: string;
 }
 
-export default function ReviewerForwardToEditorPage() {
+function ReviewerForwardToEditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editorArticleId = searchParams.get('editorArticleId');
@@ -172,7 +173,7 @@ export default function ReviewerForwardToEditorPage() {
               <h2 className="text-lg font-semibold text-academic-900 mb-4">Comments</h2>
               <textarea
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={(e) => setComment(sanitizeMultilineText(e.target.value))}
                 rows={10}
                 className="form-textarea w-full"
                 placeholder="Write comments for the editor (optional)"
@@ -189,7 +190,7 @@ export default function ReviewerForwardToEditorPage() {
                   <input
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
+                    accept=".pdf,.docx"
                     onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
                   />
                 </label>
@@ -230,5 +231,13 @@ export default function ReviewerForwardToEditorPage() {
         )}
       </div>
     </Layout>
+  );
+}
+
+export default function ReviewerForwardToEditorPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-academic-50 flex items-center justify-center">Loading...</div>}>
+      <ReviewerForwardToEditorContent />
+    </Suspense>
   );
 }

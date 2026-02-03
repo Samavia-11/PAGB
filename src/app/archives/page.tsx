@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FileText, Download, Search, Filter } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -34,10 +35,16 @@ interface BookWithArticles {
   articles: PublicBookArticle[];
 }
 
-export default function Archives() {
+function ArchivesContent() {
   const [items, setItems] = useState<BookWithArticles[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    setSearchTerm(q);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadAllIssuesAndArticles() {
@@ -109,7 +116,7 @@ export default function Archives() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by title or author..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-14 pr-6 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600 text-lg"
@@ -203,5 +210,13 @@ export default function Archives() {
       </div>
       <Footer />
     </>
+  );
+}
+
+export default function Archives() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>}>
+      <ArchivesContent />
+    </Suspense>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Eye, EyeOff, Lock, Save, Settings, User as UserIcon } from 'lucide-react';
+import { sanitizeLettersSpaces, sanitizeAlphanumericSpaces, getValidationError } from '@/utils/validation';
 
 const normalizeDigits = (value: string) => String(value || '').replace(/\D/g, '');
 const formatCnic = (value: string) => {
@@ -143,6 +144,35 @@ const DashboardSettingsPage = () => {
     setProfileError(null);
     setProfileSuccess(null);
 
+    // Validate fields for special characters
+    const usernameError = getValidationError(profileForm.username, 'Username');
+    if (usernameError) {
+      setProfileError(usernameError);
+      setSavingProfile(false);
+      return;
+    }
+
+    const fullNameError = getValidationError(profileForm.fullName, 'Full name');
+    if (fullNameError) {
+      setProfileError(fullNameError);
+      setSavingProfile(false);
+      return;
+    }
+
+    const fatherNameError = getValidationError(profileForm.fatherName, 'Father name');
+    if (profileForm.fatherName.trim() && fatherNameError) {
+      setProfileError(fatherNameError);
+      setSavingProfile(false);
+      return;
+    }
+
+    const qualificationError = getValidationError(profileForm.qualification, 'Qualification');
+    if (profileForm.qualification.trim() && qualificationError) {
+      setProfileError(qualificationError);
+      setSavingProfile(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
@@ -280,7 +310,7 @@ const DashboardSettingsPage = () => {
                 <input
                   className={inputClassName}
                   value={profileForm.username}
-                  onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
+                  onChange={(e) => setProfileForm({ ...profileForm, username: sanitizeLettersSpaces(e.target.value) })}
                 />
               </div>
               <div>
@@ -298,7 +328,7 @@ const DashboardSettingsPage = () => {
               <input
                 className={inputClassName}
                 value={profileForm.fullName}
-                onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                onChange={(e) => setProfileForm({ ...profileForm, fullName: sanitizeLettersSpaces(e.target.value) })}
               />
             </div>
 
@@ -308,7 +338,7 @@ const DashboardSettingsPage = () => {
                 <input
                   className={inputClassName}
                   value={profileForm.fatherName}
-                  onChange={(e) => setProfileForm({ ...profileForm, fatherName: e.target.value })}
+                  onChange={(e) => setProfileForm({ ...profileForm, fatherName: sanitizeLettersSpaces(e.target.value) })}
                 />
               </div>
               <div>
@@ -339,7 +369,7 @@ const DashboardSettingsPage = () => {
                 <input
                   className={inputClassName}
                   value={profileForm.qualification}
-                  onChange={(e) => setProfileForm({ ...profileForm, qualification: e.target.value })}
+                  onChange={(e) => setProfileForm({ ...profileForm, qualification: sanitizeLettersSpaces(e.target.value) })}
                 />
               </div>
             </div>

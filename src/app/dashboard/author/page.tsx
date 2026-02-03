@@ -34,21 +34,59 @@ interface Article {
   authors?: any[];
   affiliation?: string;
   articleType?: string;
+  coverLetter?: string;
+  conflicts?: string;
+  funding?: string;
+  ethics?: boolean;
+  licenseAgreement?: boolean;
+  manuscriptFileName?: string;
+  manuscriptFilePath?: string;
 }
+
+type DbArticle = {
+  id: number;
+  title: string;
+  abstract: string;
+  status: Article['status'];
+  submission_date: string;
+  last_updated: string;
+  keywords?: string | null;
+  content?: string | null;
+  authors?: any[] | null;
+  affiliation?: string | null;
+  article_type?: string | null;
+  cover_letter?: string | null;
+  conflicts?: string | null;
+  funding?: string | null;
+  ethics?: number | boolean | null;
+  license_agreement?: number | boolean | null;
+  manuscript_file_name?: string | null;
+  manuscript_file_path?: string | null;
+};
 
 const storageKeyForUser = (userId: number) => `articles:${userId}`;
 
-const readArticlesFromStorage = (userId: number): Article[] => {
+const readAllArticlesFromStorage = (userId: number): Article[] => {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(storageKeyForUser(userId));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Article[];
-    // Filter out drafts - they should only appear in the drafts page
-    return Array.isArray(parsed) ? parsed.filter(article => article.status !== 'draft') : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
+};
+
+const readArticlesFromStorage = (userId: number): Article[] => {
+  // Filter out drafts - they should only appear in the drafts page
+  return readAllArticlesFromStorage(userId).filter(article => article.status !== 'draft');
+};
+
+const truncateWords = (text: string, maxWords: number = 20) => {
+  const words = (text || '').split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '...';
 };
 
 const AuthorDashboard = () => {
@@ -58,7 +96,81 @@ const AuthorDashboard = () => {
   const [publishedCount, setPublishedCount] = useState(0);
   const [publishedLoading, setPublishedLoading] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [message, setMessage] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
   const router = useRouter();
+
+  const persistArticlesToStorage = (userId: number, nextArticles: Article[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(storageKeyForUser(userId), JSON.stringify(nextArticles));
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('articles');
+        channel.postMessage({ type: 'updated', userId });
+        channel.close();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const showMessage = (type: 'info' | 'error' | 'success', text: string) => {
+    setMessage({ type, text });
+    console.log('Popup message:', { type, text }); // Debug log
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  const loadArticles = async (authorId: number) => {
+    let next: Article[] = [];
+
+    try {
+      const res = await fetch('/api/articles', {
+        headers: {
+          'x-user-id': String(authorId),
+          'x-user-role': 'author',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const dbArticles = (Array.isArray(data.articles) ? data.articles : []) as DbArticle[];
+
+        const mapped: Article[] = dbArticles.map((a) => ({
+          id: a.id,
+          title: a.title,
+          abstract: a.abstract,
+          status: a.status,
+          submission_date: a.submission_date,
+          last_updated: a.last_updated,
+          keywords: a.keywords || undefined,
+          content: a.content || undefined,
+          authors: a.authors || undefined,
+          affiliation: a.affiliation || undefined,
+          articleType: a.article_type || undefined,
+          coverLetter: a.cover_letter || undefined,
+          conflicts: a.conflicts || undefined,
+          funding: a.funding || undefined,
+          ethics: typeof a.ethics === 'number' ? Boolean(a.ethics) : Boolean(a.ethics),
+          licenseAgreement: typeof a.license_agreement === 'number' ? Boolean(a.license_agreement) : Boolean(a.license_agreement),
+          manuscriptFileName: a.manuscript_file_name || undefined,
+          manuscriptFilePath: a.manuscript_file_path || undefined,
+        }));
+
+        const drafts = readAllArticlesFromStorage(authorId).filter((x) => x.status === 'draft');
+        next = [...drafts, ...mapped];
+
+        // Persist merged set so other pages that rely on localStorage keep working.
+        persistArticlesToStorage(authorId, next);
+      } else {
+        next = readAllArticlesFromStorage(authorId);
+        showMessage('info', 'Showing offline articles only. Some data may not be up to date.');
+      }
+    } catch {
+      next = readAllArticlesFromStorage(authorId);
+      showMessage('error', 'Failed to load articles from server. Showing offline articles.');
+    }
+
+    setArticles(next.filter((a) => a.status !== 'draft'));
+  };
 
   // Check if article can be edited (within 2-3 hours of submission or if it's a draft)
   const canEditArticle = (article: Article): boolean => {
@@ -95,9 +207,7 @@ const AuthorDashboard = () => {
             return;
           }
           setUser(userData.user);
-          // Load persisted articles for this author
-          const initial = readArticlesFromStorage(userData.user.id);
-          setArticles(initial);
+          await loadArticles(userData.user.id);
         } else {
           redirectToLogin();
           return;
@@ -183,7 +293,7 @@ const AuthorDashboard = () => {
     const userId = user.id;
 
     // Initial refresh in case of direct navigation
-    setArticles(readArticlesFromStorage(userId));
+    loadArticles(userId);
 
     let channel: BroadcastChannel | null = null;
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -191,14 +301,14 @@ const AuthorDashboard = () => {
       channel.onmessage = (ev: MessageEvent) => {
         const msg = ev.data as { type?: string; userId?: number };
         if (msg && msg.userId === userId) {
-          setArticles(readArticlesFromStorage(userId));
+          loadArticles(userId);
         }
       };
     }
 
     const onStorage = (e: StorageEvent) => {
       if (e.key === storageKeyForUser(userId)) {
-        setArticles(readArticlesFromStorage(userId));
+        loadArticles(userId);
       }
     };
     window.addEventListener('storage', onStorage);
@@ -292,6 +402,16 @@ const AuthorDashboard = () => {
 
   return (
     <Layout user={user}>
+      {/* Message Banner */}
+      {message && (
+        <div className={`mb-4 px-4 py-3 rounded-lg border ${
+          message.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' :
+          message.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' :
+          'bg-blue-50 border-blue-200 text-blue-700'
+        }`}>
+          {message.text}
+        </div>
+      )}
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-academic-900 font-serif">Author Dashboard</h1>
@@ -334,14 +454,28 @@ const AuthorDashboard = () => {
         <h2 className="text-xl font-semibold text-academic-900 mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <button
-            onClick={() => router.push('/submit-article')}
+            onClick={() => {
+              if (!user) {
+                showMessage('error', 'User not authenticated. Please log in again.');
+                router.push('/login');
+                return;
+              }
+              router.push('/submit-article');
+            }}
             className="btn-primary flex items-center"
           >
             <PlusCircle className="w-4 h-4 mr-2" />
             Submit New Article
           </button>
           <button 
-            onClick={() => router.push('/submit-article')}
+            onClick={() => {
+              if (!user) {
+                showMessage('error', 'User not authenticated. Please log in again.');
+                router.push('/login');
+                return;
+              }
+              router.push('/submit-article');
+            }}
             className="btn-secondary flex items-center"
           >
             <FileText className="w-4 h-4 mr-2" />
@@ -357,22 +491,23 @@ const AuthorDashboard = () => {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <div className="min-w-full">
+            <table className="w-full">
             <thead className="bg-academic-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider min-w-[200px]">
                   Title
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider whitespace-nowrap">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider whitespace-nowrap">
                   Submitted
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider whitespace-nowrap">
                   Last Updated
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-academic-500 uppercase tracking-wider whitespace-nowrap">
                   Actions
                 </th>
               </tr>
@@ -380,34 +515,46 @@ const AuthorDashboard = () => {
             <tbody className="bg-white divide-y divide-academic-200">
               {articles.map((article) => (
                 <tr key={article.id} className="hover:bg-academic-50">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 min-w-[200px]">
                     <div>
                       <div className="text-sm font-medium text-academic-900">
                         {article.title}
                       </div>
-                      <div className="text-sm text-academic-500 mt-1 line-clamp-2">
-                        {article.abstract}
+                      <div className="text-sm text-academic-500 mt-1 max-w-xs max-h-20 overflow-y-auto">
+                        <p className="break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                          {article.abstract}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 min-w-0">
                     <div className="flex items-center">
                       {getStatusIcon(article.status)}
-                      <span className={`ml-2 ${getStatusBadge(article.status)}`}>
+                      <span className={`ml-2 ${getStatusBadge(article.status)} whitespace-nowrap`}>
                         {getStatusText(article.status)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-academic-500">
+                  <td className="px-6 py-4 text-sm text-academic-500 whitespace-nowrap">
                     {new Date(article.submission_date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-sm text-academic-500">
+                  <td className="px-6 py-4 text-sm text-academic-500 whitespace-nowrap">
                     {new Date(article.last_updated).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex space-x-2">
                       <button 
-                        onClick={() => setSelectedArticle(article)}
+                        onClick={() => {
+                          if (!article) {
+                            showMessage('error', 'No article data available.');
+                            return;
+                          }
+                          if (!article.title || !article.abstract || !article.status) {
+                            showMessage('error', 'Article data is incomplete. Missing required fields.');
+                            return;
+                          }
+                          setSelectedArticle(article);
+                        }}
                         className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                       >
                         View
@@ -418,6 +565,7 @@ const AuthorDashboard = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
         
         {articles.length === 0 && (
@@ -428,7 +576,14 @@ const AuthorDashboard = () => {
               Get started by submitting your first article to the journal.
             </p>
             <button
-              onClick={() => router.push('/submit-article')}
+              onClick={() => {
+                if (!user) {
+                  showMessage('error', 'User not authenticated. Please log in again.');
+                  router.push('/login');
+                  return;
+                }
+                router.push('/submit-article');
+              }}
               className="btn-primary"
             >
               Submit Your First Article

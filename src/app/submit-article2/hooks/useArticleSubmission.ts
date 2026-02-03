@@ -41,6 +41,11 @@ export const useArticleSubmission = (user: User | null) => {
       submitForm.append('authors', JSON.stringify(formData.authors || []));
       submitForm.append('affiliation', formData.affiliation);
       submitForm.append('articleType', formData.articleType);
+      submitForm.append('coverLetter', formData.coverLetter);
+      submitForm.append('conflicts', formData.conflicts);
+      submitForm.append('funding', formData.funding);
+      submitForm.append('ethics', formData.ethics ? '1' : '0');
+      submitForm.append('licenseAgreement', formData.licenseAgreement ? '1' : '0');
       submitForm.append('status', 'submitted');
       
       if (formData.manuscriptFile) {
@@ -78,6 +83,11 @@ export const useArticleSubmission = (user: User | null) => {
         articleType: created.article_type,
         author_id: created.author_id,
         manuscriptFileName: created.manuscript_file_name || formData.manuscriptFile?.name,
+        coverLetter: (created as any).cover_letter ?? formData.coverLetter,
+        conflicts: (created as any).conflicts ?? formData.conflicts,
+        funding: (created as any).funding ?? formData.funding,
+        ethics: Boolean((created as any).ethics ?? formData.ethics),
+        licenseAgreement: Boolean((created as any).license_agreement ?? formData.licenseAgreement),
       };
 
       // Update local storage

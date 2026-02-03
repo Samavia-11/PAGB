@@ -20,8 +20,14 @@ export const Step3Manuscript: React.FC<Step3ManuscriptProps> = ({
   errors,
   disabled = false,
 }) => {
+  const sanitizeNoSpecialCharsMultiline = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s\r\n]+/g, '');
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    if (name === 'abstract') {
+      onChange({ [name]: sanitizeNoSpecialCharsMultiline(value) });
+      return;
+    }
     onChange({ [name]: value });
   };
 

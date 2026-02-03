@@ -22,9 +22,7 @@ export function escapeHtml(text: string | null | undefined): string {
 export const ALLOWED_FILE_TYPES = {
   documents: [
     'application/pdf',
-    'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
   ],
   images: [
     'image/jpeg',
@@ -38,7 +36,7 @@ ALLOWED_FILE_TYPES.all = [...ALLOWED_FILE_TYPES.documents, ...ALLOWED_FILE_TYPES
 
 // Allowed file extensions
 export const ALLOWED_EXTENSIONS = [
-  '.pdf', '.doc', '.docx', '.txt',
+  '.pdf', '.docx',
   '.jpg', '.jpeg', '.png', '.gif', '.webp'
 ];
 
@@ -147,6 +145,15 @@ export function validateNoSpecialCharacters(value: string, fieldLabel: string = 
   }
   return { valid: true };
 }
+
+ export function validateMessageText(value: string, fieldLabel: string = 'Value'): ValidationResult {
+   const v = String(value || '').trim();
+   if (!v) return { valid: false, error: `${fieldLabel} is required` };
+   if (!/^[A-Za-z0-9\s.,!?@()\-]+$/.test(v)) {
+     return { valid: false, error: `${fieldLabel} must contain valid characters (letters, numbers, spaces, and basic punctuation only)` };
+   }
+   return { valid: true };
+ }
 
 export function normalizeDigits(value: string): string {
   return String(value || '').replace(/\D/g, '');

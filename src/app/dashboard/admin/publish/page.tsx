@@ -236,7 +236,9 @@ export default function AdminPublishPage() {
                 <tbody className="divide-y divide-gray-200">
                   {books.map((book) => {
                     const isCurrent = Number(book.is_current) === 1;
+                    const isPublished = book.status === 'published';
                     const isBusy = busyId === book.id;
+                    const shouldDisablePublish = isBusy || isCurrent || isPublished;
                     return (
                       <tr key={book.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
@@ -263,6 +265,10 @@ export default function AdminPublishPage() {
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Current
                             </span>
+                          ) : isPublished ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Published
+                            </span>
                           ) : (
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                               {book.status}
@@ -288,11 +294,13 @@ export default function AdminPublishPage() {
                             </button>
                             <button
                               type="button"
-                              disabled={isBusy || isCurrent}
+                              disabled={shouldDisablePublish}
                               className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center disabled:text-gray-400"
                               onClick={() => publishBook(book)}
+                              title={isCurrent ? 'This book is already published and current' : isPublished ? 'This book has already been published' : ''}
                             >
-                              <Globe className="w-4 h-4 mr-1" /> Publish
+                              <Globe className="w-4 h-4 mr-1" /> 
+                              {isCurrent ? 'Current' : isPublished ? 'Published' : isBusy ? 'Publishing...' : 'Publish'}
                             </button>
                           </div>
                         </td>

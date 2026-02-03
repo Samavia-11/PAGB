@@ -19,9 +19,21 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
   errors,
   disabled = false,
 }) => {
+  const sanitizeNoSpecialCharsMultiline = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s\r\n]+/g, '');
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
-    onChange({ [name]: type === 'checkbox' ? checked : value });
+    if (type === 'checkbox') {
+      onChange({ [name]: checked });
+      return;
+    }
+
+    if (name === 'coverLetter' || name === 'conflicts' || name === 'funding') {
+      onChange({ [name]: sanitizeNoSpecialCharsMultiline(value) });
+      return;
+    }
+
+    onChange({ [name]: value });
   };
 
   return (
@@ -44,6 +56,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
           name="coverLetter"
           value={formData.coverLetter}
           onChange={handleInputChange}
+          error={errors.coverLetter}
           type="textarea"
           rows={4}
           placeholder="Provide a brief cover letter for the editors..."
@@ -86,6 +99,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
           name="conflicts"
           value={formData.conflicts}
           onChange={handleInputChange}
+          error={errors.conflicts}
           type="textarea"
           rows={3}
           placeholder="Declare any potential conflicts of interest..."
@@ -110,7 +124,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
             </li>
             <li className="flex items-start">
               <span className="w-1.5 h-1.5 bg-yellow-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
-              If none exist, please state "None to declare"
+              If none exist, please state &quot;None to declare&quot;
             </li>
           </ul>
         </div>
@@ -128,6 +142,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
           name="funding"
           value={formData.funding}
           onChange={handleInputChange}
+          error={errors.funding}
           type="textarea"
           rows={3}
           placeholder="Provide details about funding sources..."
@@ -148,7 +163,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
             </li>
             <li className="flex items-start">
               <span className="w-1.5 h-1.5 bg-green-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
-              If no external funding, state "No external funding"
+              If no external funding, state &quot;No external funding&quot;
             </li>
             <li className="flex items-start">
               <span className="w-1.5 h-1.5 bg-green-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></span>
@@ -207,7 +222,7 @@ export const Step4Declarations: React.FC<Step4DeclarationsProps> = ({
                 <div>
                   <p className="font-medium text-gray-900">Copyright and License Agreement</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    I agree to the copyright and license terms. I understand that upon acceptance, this work will be published under the journal's license terms.
+                    I agree to the copyright and license terms. I understand that upon acceptance, this work will be published under the journal&apos;s license terms.
                   </p>
                   <button
                     type="button"

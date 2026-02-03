@@ -23,7 +23,7 @@ if (!fs.existsSync(THUMBNAIL_FOLDER)) {
 // PDF files to process
 const pdfFiles = [
   {
-    filename: 'PAGB 2024 (1) ___Pakistan's National Security National Security Policies.pdf',
+    filename: "PAGB 2024 (1) ___Pakistan's National Security National Security Policies.pdf",
     outputName: 'article-1.jpg'
   },
   {
@@ -35,7 +35,7 @@ const pdfFiles = [
     outputName: 'article-4.jpg'
   },
   {
-    filename: 'PAGB 2024 (5)___Modi's Neighbourhood First Policy Implications for Pakistan.pdf',
+    filename: "PAGB 2024 (5)___Modi's Neighbourhood First Policy Implications for Pakistan.pdf",
     outputName: 'article-5.jpg'
   },
   {

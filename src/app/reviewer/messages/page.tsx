@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, MessageCircle, ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
-
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+import { sanitizeText, getValidationError } from '@/utils/validation';
 
 interface FileAttachment {
   name: string;
@@ -142,8 +141,9 @@ export default function ReviewerMessagesPage() {
     if (!newMessage.trim() && !selectedFile) return;
     if (!user || !selectedEditor) return;
 
-    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
-      alert('Message can only contain letters, numbers, and spaces');
+    const messageError = getValidationError(newMessage, 'Message');
+    if (newMessage.trim() && messageError) {
+      alert(messageError);
       return;
     }
 
@@ -490,7 +490,7 @@ export default function ReviewerMessagesPage() {
                   <textarea
                     value={newMessage}
                     onChange={(e) => {
-                      setNewMessage(e.target.value);
+                      setNewMessage(sanitizeText(e.target.value));
                     }}
                     placeholder="Type your message or share a file..."
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none bg-white text-gray-900 placeholder-gray-400"

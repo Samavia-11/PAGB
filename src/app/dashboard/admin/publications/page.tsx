@@ -266,14 +266,13 @@ export default function AdminPublicationsPage() {
                             Open Attachment
                           </a>
                         </div>
-                      ) : null}
-                      {selected.manuscript_file_path ? (
+                      ) : (
                         <div>
                           <a className="text-blue-600 hover:text-blue-700" href={selected.manuscript_file_path} target="_blank" rel="noreferrer">
                             Open Manuscript
                           </a>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 ) : null}

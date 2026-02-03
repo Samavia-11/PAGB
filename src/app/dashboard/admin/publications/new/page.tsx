@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { showNotification } from '@/utils/notifications';
+import { sanitizeAlphanumericSpaces, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -49,10 +50,62 @@ export default function AdminCreatePublicationPage() {
     return ext === '.pdf';
   };
 
+  const isManuscriptFile = (file: File | null) => {
+    if (!file) return false;
+    const ext = '.' + String(file.name || '').split('.').pop()?.toLowerCase();
+    return ['.pdf', '.doc', '.docx'].includes(ext);
+  };
+
   const isImageFile = (file: File | null) => {
     if (!file) return false;
     const ext = '.' + String(file.name || '').split('.').pop()?.toLowerCase();
     return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+  };
+
+  const handleBookCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file && !isImageFile(file)) {
+      showNotification.error('Book cover must be an image file (JPG, PNG, GIF, WEBP). Please select a valid image file.');
+      e.target.value = ''; // Clear the input
+      setBookCover(null);
+      setBookCoverPickerKey(k => k + 1);
+      return;
+    }
+    setBookCover(file);
+  };
+
+  const handlePendingManuscriptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file && !isManuscriptFile(file)) {
+      showNotification.error('Article manuscript must be a PDF, DOC, or DOCX file. Please select a valid file.');
+      e.target.value = ''; // Clear the input
+      setPendingManuscript(null);
+      setPendingManuscriptPickerKey(k => k + 1);
+      return;
+    }
+    setPendingManuscript(file);
+  };
+
+  const handlePendingCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file && !isImageFile(file)) {
+      showNotification.error('Article cover must be an image file (JPG, PNG, GIF, WEBP). Please select a valid image file.');
+      e.target.value = ''; // Clear the input
+      setPendingCover(null);
+      setPendingCoverPickerKey(k => k + 1);
+      return;
+    }
+    setPendingCover(file);
+  };
+
+  const handlePendingTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedValue = sanitizeAlphanumericSpaces(e.target.value);
+    setPendingTitle(sanitizedValue);
+  };
+
+  const handlePendingAuthorNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitizedValue = sanitizeAlphanumericSpaces(e.target.value);
+    setPendingAuthorName(sanitizedValue);
   };
 
   useEffect(() => {
@@ -92,6 +145,20 @@ export default function AdminCreatePublicationPage() {
     }
     if (!authorName) {
       showNotification.warning('Please enter the author name.');
+      return;
+    }
+
+    // Validate title for special characters
+    const titleError = getValidationError(title, 'Title');
+    if (titleError) {
+      showNotification.error(titleError);
+      return;
+    }
+
+    // Validate author name for special characters
+    const authorNameError = getValidationError(authorName, 'Author name');
+    if (authorNameError) {
+      showNotification.error(authorNameError);
       return;
     }
 
@@ -144,12 +211,12 @@ export default function AdminCreatePublicationPage() {
 
     for (const s of selectedArticles) {
       if (!s.manuscriptFile) {
-        showNotification.warning('Each article must have a PDF file.');
+        showNotification.warning('Each article must have a manuscript file.');
         return;
       }
 
-      if (!isPdfFile(s.manuscriptFile)) {
-        showNotification.warning('Each article manuscript must be a PDF file.');
+      if (!isManuscriptFile(s.manuscriptFile)) {
+        showNotification.warning('Each article manuscript must be a PDF, DOC, or DOCX file.');
         return;
       }
 
@@ -328,7 +395,7 @@ export default function AdminCreatePublicationPage() {
                   key={bookCoverPickerKey}
                   type="file"
                   accept=".jpg,.jpeg,.png,.gif,.webp"
-                  onChange={(e) => setBookCover(e.target.files?.[0] || null)}
+                  onChange={handleBookCoverChange}
                   className="hidden"
                 />
               </label>
@@ -393,7 +460,7 @@ export default function AdminCreatePublicationPage() {
               <div className="p-6 border-b border-gray-200 flex justify-between items-start">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Add Article</h2>
-                  <div className="text-sm text-gray-600 mt-1">Upload a PDF and enter details, then click Done.</div>
+                  <div className="text-sm text-gray-600 mt-1">Upload a PDF/DOC/DOCX manuscript and enter details, then click Done.</div>
                 </div>
                 <button type="button" onClick={() => setPickerOpen(false)} className="text-gray-500 hover:text-gray-700">
                   ×
@@ -403,15 +470,15 @@ export default function AdminCreatePublicationPage() {
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">Article PDF</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Article Manuscript</label>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <label className="btn-primary inline-flex items-center justify-center cursor-pointer">
                         Choose File
                         <input
                           key={pendingManuscriptPickerKey}
                           type="file"
-                          accept="application/pdf"
-                          onChange={(e) => setPendingManuscript(e.target.files?.[0] || null)}
+                          accept=".pdf,.doc,.docx"
+                          onChange={handlePendingManuscriptChange}
                           className="hidden"
                         />
                       </label>
@@ -430,7 +497,7 @@ export default function AdminCreatePublicationPage() {
                           key={pendingCoverPickerKey}
                           type="file"
                           accept=".jpg,.jpeg,.png,.gif,.webp"
-                          onChange={(e) => setPendingCover(e.target.files?.[0] || null)}
+                          onChange={handlePendingCoverChange}
                           className="hidden"
                         />
                       </label>
@@ -444,7 +511,7 @@ export default function AdminCreatePublicationPage() {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Title</label>
                     <input
                       value={pendingTitle}
-                      onChange={(e) => setPendingTitle(e.target.value)}
+                      onChange={handlePendingTitleChange}
                       className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
                       placeholder="Enter article title"
                     />
@@ -454,7 +521,7 @@ export default function AdminCreatePublicationPage() {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">Author Name</label>
                     <input
                       value={pendingAuthorName}
-                      onChange={(e) => setPendingAuthorName(e.target.value)}
+                      onChange={handlePendingAuthorNameChange}
                       className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
                       placeholder="Enter author name"
                     />

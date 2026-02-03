@@ -5,7 +5,19 @@ import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { FileText, MessageSquare, Calendar, User, Eye, Download } from 'lucide-react';
 
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+const isAllowedForwardComment = (value: string) => /^[A-Za-z0-9\s@.]+$/.test(String(value || '').trim());
+const sanitizeForwardComment = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s@.]/g, '');
+
+const isAllowedForwardFile = (file: File) => {
+  const name = String(file?.name || '').toLowerCase();
+  return name.endsWith('.pdf') || name.endsWith('.docx');
+};
+
+const truncateWords = (text: string, maxWords: number = 20) => {
+  const words = (text || '').split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '...';
+};
 
 interface User {
   id: number;
@@ -453,8 +465,8 @@ export default function ReviewedPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold mb-2">{article.title}</h3>
-                    <p className="text-gray-600 mb-2 line-clamp-3">
-                      {article.abstract || 'No abstract available'}
+                    <p className="text-gray-600 mb-2 line-clamp-3 whitespace-pre-wrap break-words">
+                      {truncateWords(article.abstract)}
                     </p>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center">
@@ -546,7 +558,7 @@ export default function ReviewedPage() {
                     {article.editorAttachmentName && (
                       <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <div>
-                          <p className="text-sm font-medium text-green-800">Editor's Attachment</p>
+                          <p className="text-sm font-medium text-green-800">Editor&apos;s Attachment</p>
                           <p className="text-xs text-green-600">{article.editorAttachmentName}</p>
                         </div>
                         {article.editorAttachment ? (
@@ -649,7 +661,7 @@ export default function ReviewedPage() {
                   <textarea
                     rows={6}
                     value={forwardComment}
-                    onChange={(e) => setForwardComment(e.target.value)}
+                    onChange={(e) => setForwardComment(sanitizeForwardComment(e.target.value))}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     placeholder="Write comment and send to editor"
                   />
@@ -660,8 +672,18 @@ export default function ReviewedPage() {
                   <div className="relative">
                     <input
                       type="file"
+                      accept=".pdf,.docx"
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      onChange={(e) => setForwardFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] || null;
+                        if (f && !isAllowedForwardFile(f)) {
+                          alert('Only PDF or DOCX files are allowed');
+                          e.target.value = '';
+                          setForwardFile(null);
+                          return;
+                        }
+                        setForwardFile(f);
+                      }}
                       disabled={sendingForward}
                       id="forward-file-input"
                     />
@@ -698,8 +720,8 @@ export default function ReviewedPage() {
                     onClick={async () => {
                       if (!user) return;
 
-                      if (forwardComment.trim() && !isNoSpecialChars(forwardComment)) {
-                        alert('Comment can only contain letters, numbers, and spaces');
+                      if (forwardComment.trim() && !isAllowedForwardComment(forwardComment)) {
+                        alert('Comment can only contain letters, numbers, spaces, @ and .');
                         return;
                       }
 

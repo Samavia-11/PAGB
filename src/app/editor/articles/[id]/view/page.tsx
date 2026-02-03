@@ -347,8 +347,10 @@ export default function EditorArticleView() {
                   {parsedContent.manuscript?.abstract && (
                     <div className="mb-8">
                       <h2 className="text-xl font-bold text-gray-800 mb-3">Abstract</h2>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p className="text-gray-700 leading-relaxed">{parsedContent.manuscript.abstract}</p>
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 max-h-32 overflow-y-auto">
+                        <p className="text-gray-700 leading-relaxed break-words pr-2" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                          {parsedContent.manuscript.abstract}
+                        </p>
                       </div>
                     </div>
                   )}

@@ -17,6 +17,7 @@ import {
   Calendar,
   TrendingUp
 } from 'lucide-react';
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface User {
   id: number;
@@ -465,7 +466,7 @@ const EditorDashboard = () => {
                 <textarea
                   rows={6}
                   value={editorComments}
-                  onChange={(e) => setEditorComments(e.target.value)}
+                  onChange={(e) => setEditorComments(sanitizeMultilineText(e.target.value))}
                   className="form-textarea"
                   placeholder="Provide additional comments for the author and/or administrator..."
                 />

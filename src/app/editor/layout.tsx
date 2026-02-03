@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, Search, FileText, Send, Users } from 'lucide-react';
+import { Menu, X, LayoutGrid, Edit3, FileCheck, Settings, LogOut, FileText, Send, Users } from 'lucide-react';
 
 interface Notification {
   id: number;
@@ -19,7 +19,6 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [open, setOpen] = useState(true);
-  const [search, setSearch] = useState('');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -99,17 +98,7 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
           <button onClick={() => setOpen(!open)} className="p-2 rounded hover:bg-green-900/40 md:hidden">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search articles, authors, keywords..."
-                className="w-full bg-green-900/40 placeholder-green-100/70 text-white rounded pl-9 pr-3 py-2 text-sm outline-none border border-green-700/60 focus:border-green-400"
-              />
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-green-100" />
-            </div>
-          </div>
+          <div className="flex-1" />
           <div className="flex items-center space-x-4">
             {user && <div className="text-sm hidden md:block">{user.username || user.fullName}</div>}
           </div>

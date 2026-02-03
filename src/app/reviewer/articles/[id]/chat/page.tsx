@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
-
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+import { sanitizeText, getValidationError } from '@/utils/validation';
 
 interface FileAttachment {
   name: string;
@@ -122,8 +121,9 @@ export default function ReviewerArticleChat() {
   const sendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || sending || !user) return;
 
-    if (newMessage.trim() && !isNoSpecialChars(newMessage)) {
-      alert('Message can only contain letters, numbers, and spaces');
+    const messageError = getValidationError(newMessage, 'Message');
+    if (newMessage.trim() && messageError) {
+      alert(messageError);
       setSending(false);
       return;
     }
@@ -358,7 +358,7 @@ export default function ReviewerArticleChat() {
             <div className="flex-1">
               <textarea
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => setNewMessage(sanitizeText(e.target.value))}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"

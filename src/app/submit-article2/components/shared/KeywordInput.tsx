@@ -31,6 +31,8 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const sanitizeKeyword = (value: string) => String(value || '').replace(/[^A-Za-z0-9\s]+/g, '').trim();
+
   const hasError = error.length > 0;
   const isMaxReached = keywords.length >= maxKeywords;
 
@@ -50,7 +52,7 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
   }, [inputValue, suggestions, keywords]);
 
   const addKeyword = (keyword: string) => {
-    const trimmedKeyword = keyword.trim();
+    const trimmedKeyword = sanitizeKeyword(keyword);
     
     if (!trimmedKeyword) return;
     
@@ -75,12 +77,12 @@ export const KeywordInput: React.FC<KeywordInputProps> = ({
     // Allow comma and backspace for removing last character
     if (value.includes(',')) {
       const parts = value.split(',');
-      const beforeComma = parts[0].trim();
+      const beforeComma = sanitizeKeyword(parts[0]);
       if (beforeComma) {
         addKeyword(beforeComma);
       }
     } else {
-      setInputValue(value);
+      setInputValue(sanitizeKeyword(value));
     }
   };
 

@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Send, FileText, AlertCircle, CheckCircle, XCircle, Upload, Edit3, Save } from 'lucide-react';
 import { showNotification } from '@/utils/notifications';
-
-const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
+import { sanitizeMultilineText, getValidationError } from '@/utils/validation';
 
 interface Article {
   id: number;
@@ -32,6 +31,11 @@ export default function ForwardArticle() {
   const [editedContent, setEditedContent] = useState('');
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  const isAllowedAttachmentFile = (file: File) => {
+    const name = String(file?.name || '').toLowerCase();
+    return name.endsWith('.pdf') || name.endsWith('.docx');
+  };
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -69,6 +73,12 @@ export default function ForwardArticle() {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
+    const invalid = files.find((f) => !isAllowedAttachmentFile(f));
+    if (invalid) {
+      showNotification.error('Only PDF or DOCX files are allowed');
+      event.target.value = '';
+      return;
+    }
     setAttachedFiles(prev => [...prev, ...files]);
   };
 
@@ -82,12 +92,15 @@ export default function ForwardArticle() {
       return;
     }
 
-    if (!isNoSpecialChars(reviewerComments)) {
-      showNotification.error('Reviewer comments can only contain letters, numbers, and spaces');
+    const reviewerCommentsError = getValidationError(reviewerComments, 'Reviewer comments');
+    if (reviewerCommentsError) {
+      showNotification.error(reviewerCommentsError);
       return;
     }
-    if (editorComments.trim() && !isNoSpecialChars(editorComments)) {
-      showNotification.error('Comments for editor can only contain letters, numbers, and spaces');
+    
+    const editorCommentsError = getValidationError(editorComments, 'Comments for editor');
+    if (editorComments.trim() && editorCommentsError) {
+      showNotification.error(editorCommentsError);
       return;
     }
 
@@ -296,7 +309,7 @@ export default function ForwardArticle() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Reviewer Comments</h2>
               <textarea
                 value={reviewerComments}
-                onChange={(e) => setReviewerComments(e.target.value)}
+                onChange={(e) => setReviewerComments(sanitizeMultilineText(e.target.value))}
                 placeholder="Provide detailed feedback and recommendations..."
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
                 rows={6}
@@ -312,7 +325,7 @@ export default function ForwardArticle() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Comments for Editor</h2>
               <textarea
                 value={editorComments}
-                onChange={(e) => setEditorComments(e.target.value)}
+                onChange={(e) => setEditorComments(sanitizeMultilineText(e.target.value))}
                 placeholder="Private comments for the editor only..."
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[forestgreen] focus:border-transparent resize-none"
                 rows={4}
@@ -333,13 +346,13 @@ export default function ForwardArticle() {
                       <p className="mb-2 text-sm text-gray-500">
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT files</p>
+                      <p className="text-xs text-gray-500">PDF, DOCX files only</p>
                     </div>
                     <input
                       type="file"
                       className="hidden"
                       multiple
-                      accept=".pdf,.doc,.docx,.txt"
+                      accept=".pdf,.docx"
                       onChange={handleFileUpload}
                     />
                   </label>

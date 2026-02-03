@@ -290,7 +290,7 @@ const AuthorsPage = () => {
           <Users className="w-16 h-16 text-academic-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-academic-900 mb-2">No authors found</h3>
           <p className="text-academic-500 mb-6">
-            Try adjusting your search terms or filters to find what you're looking for.
+            Try adjusting your search terms or filters to find what you&apos;re looking for.
           </p>
           <button
             onClick={() => {

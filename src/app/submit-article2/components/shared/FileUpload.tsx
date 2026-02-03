@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
+import { showNotification } from '@/utils/notifications';
 
 interface FileUploadProps {
   onFileSelect: (file: File | null) => void;
@@ -32,7 +33,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragError, setDragError] = useState<string | null>(null);
 
-  const handleFileSelect = (file: File | null) => {
+  const handleFileSelect = (file: File | null, inputElement?: HTMLInputElement) => {
     if (!file) {
       onFileSelect(null);
       setDragError(null);
@@ -42,13 +43,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     // Validate file type
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!accept.includes(fileExtension)) {
-      setDragError(`Invalid file type. Accepted formats: ${accept.join(', ')}`);
+      const errorMessage = `Invalid file type. Accepted formats: ${accept.join(', ')}`;
+      setDragError(errorMessage);
+      showNotification.error(errorMessage);
+      // Clear the input
+      if (inputElement) {
+        inputElement.value = '';
+      }
       return;
     }
 
     // Validate file size
     if (file.size > maxSize) {
-      setDragError(`File size exceeds ${maxSizeMB}MB limit`);
+      const errorMessage = `File size exceeds ${maxSizeMB}MB limit`;
+      setDragError(errorMessage);
+      showNotification.error(errorMessage);
+      // Clear the input
+      if (inputElement) {
+        inputElement.value = '';
+      }
       return;
     }
 
@@ -58,7 +71,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    handleFileSelect(file);
+    handleFileSelect(file, e.target);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
