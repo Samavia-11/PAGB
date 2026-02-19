@@ -50,3 +50,4 @@ public/pdfs/*.pdf
 
 # Markdown files at root (documentation)
 /*.md
+!README.md
