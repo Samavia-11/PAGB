@@ -4,7 +4,7 @@
   "private": true,
   "description": "A modern journaling application built with Next.js, Node.js, and MySQL",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3000",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
