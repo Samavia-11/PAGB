@@ -92,20 +92,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Get articles error:', error);
-    const err = error as any;
+    console.error('Articles API error:', error);
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details:
-          process.env.NODE_ENV !== 'production'
-            ? {
-                message: err?.message ?? String(err),
-                code: err?.code,
-                stack: err?.stack,
-              }
-            : undefined,
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

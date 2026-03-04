@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Send, User, Clock, Eye, MessageSquare, Phone, Video, MoreVertical, Paperclip, FileText, Download, X } from 'lucide-react';
+import { sanitizeMessage } from '@/lib/sanitize';
 
 const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
 
@@ -358,7 +359,7 @@ export default function EditorAuthorChat() {
                     ? 'bg-blue-600 text-white'
                     : 'bg-white border border-gray-200 text-gray-900'
                 }`}>
-                  {message.message && <p className="text-sm">{message.message}</p>}
+                  {message.message && <p className="text-sm">{sanitizeMessage(message.message)}</p>}
                   
                   {message.attachment && (
                     <div className={`mt-2 p-3 rounded-lg border ${

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Send, Paperclip, Download, FileText, Image as ImageIcon, File, Eye, MessageCircle, User, ArrowLeft } from 'lucide-react';
 import { sanitizeText, getValidationError } from '@/utils/validation';
+import { sanitizeMessage } from '@/lib/sanitize';
 
 interface FileAttachment {
   name: string;
@@ -294,7 +295,7 @@ export default function ReviewerArticleChat() {
                   </div>
                   
                   {message.message && (
-                    <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+                    <p className="text-sm whitespace-pre-wrap">{sanitizeMessage(message.message)}</p>
                   )}
                   
                   {message.attachment && (

@@ -2,12 +2,14 @@
 
 const ContentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  'img-src * data:',
+  "script-src 'self' 'unsafe-inline'", // Required for Next.js and client-side scripts
+  "style-src 'self' 'unsafe-inline'", // Required for Tailwind CSS and inline styles
+  "img-src 'self' data: https:", // Allow data URLs and HTTPS images
   "font-src 'self' data:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
 ].join('; ');
 
 const securityHeaders = [

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { BookOpen, ChevronLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface PolicyMeta {
   slug: string;
@@ -135,7 +136,7 @@ export default function PolicyPage() {
                 <div 
                   className="policy-content text-base leading-relaxed"
                   dangerouslySetInnerHTML={{ 
-                    __html: formatPolicyContent(policy.content) 
+                    __html: sanitizeHtml(formatPolicyContent(policy.content)) 
                   }}
                 />
               </article>
