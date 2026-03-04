@@ -10,8 +10,6 @@ import { ArrowLeft, Send, User, Clock, Eye, MessageSquare, Phone, Video, MoreVer
 
 import { sanitizeMessage } from '@/lib/sanitize';
 
-import { sanitizeMessage } from '@/lib/sanitize';
-
 
 const isNoSpecialChars = (value: string) => /^[A-Za-z0-9\s]+$/.test(String(value || '').trim());
 

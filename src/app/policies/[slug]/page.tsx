@@ -16,8 +16,6 @@ import Footer from '@/components/Footer';
 
 import { sanitizeHtml } from '@/lib/sanitize';
 
-import { sanitizeHtml } from '@/lib/sanitize';
-
 
 interface PolicyMeta {
 
