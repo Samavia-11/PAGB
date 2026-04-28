@@ -26,6 +26,7 @@ export default function AdminCreatePublicationPage() {
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [csrfToken, setCSRFToken] = useState<string | null>(null);
 
   const [bookTitle, setBookTitle] = useState('');
   const [editionYear, setEditionYear] = useState(String(new Date().getFullYear()));
@@ -122,6 +123,13 @@ export default function AdminCreatePublicationPage() {
           return;
         }
         setUser(data.user);
+
+        // Fetch CSRF token after authentication
+        const csrfRes = await fetch('/api/auth/csrf');
+        if (csrfRes.ok) {
+          const csrfData = await csrfRes.json();
+          setCSRFToken(csrfData.csrfToken);
+        }
       } catch {
         router.push('/login');
       } finally {
@@ -251,6 +259,7 @@ export default function AdminCreatePublicationPage() {
           headers: {
             'x-user-id': String(user.id),
             'x-user-role': 'administrator',
+            'x-csrf-token': csrfToken || '',
           },
           body: fd,
         });
@@ -301,8 +310,10 @@ export default function AdminCreatePublicationPage() {
         headers: {
           'x-user-id': String(user.id),
           'x-user-role': 'administrator',
+          'x-csrf-token': csrfToken || '',
         },
         body: formData,
+        
       });
 
       const data = await res.json().catch(() => ({}));
