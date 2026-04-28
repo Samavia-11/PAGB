@@ -78,7 +78,7 @@ export async function PUT(
       
       // Hash password before storing
       const hashedPassword = await bcrypt.hash(password, 10);
-      sql = `UPDATE users SET username = ?, full_name = ?, email = ?, password = ?, role = ? WHERE id = ?`;
+      sql = `UPDATE users SET username = ?, full_name = ?, email = ?, password_hash = ?, role = ? WHERE id = ?`;
       params = [username, full_name, email, hashedPassword, role, id];
     } else {
       sql = `UPDATE users SET username = ?, full_name = ?, email = ?, role = ? WHERE id = ?`;

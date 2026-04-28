@@ -60,7 +60,7 @@ export const authenticateUser = async (username: string, password: string): Prom
   const user = users[0];
   
   // Verify password using bcrypt
-  const isValidPassword = await verifyPassword(password, user.password);
+  const isValidPassword = await verifyPassword(password, user.password_hash);
   
   if (isValidPassword) {
     return {
@@ -123,7 +123,7 @@ export const createUserFromRequest = async (requestData: {
 
     const colSet = new Set((cols || []).map((c) => String(c.name).toLowerCase()));
 
-    const columns: string[] = ['username', 'email', 'password', 'role', 'full_name'];
+    const columns: string[] = ['username', 'email', 'password_hash', 'role', 'full_name'];
     const values: any[] = [
       requestData.username,
       requestData.email,

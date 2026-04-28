@@ -8,6 +8,17 @@ const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'armyjournal',
+  // Linux-specific MySQL connection optimizations
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+  // Connection timeout settings for Linux
+  connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'),
+  // Character set for Linux MySQL
+  charset: 'utf8mb4',
+  // SSL configuration for secure connections (optional on Linux)
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+  } : undefined,
 };
 
 const defaultUsers = [
@@ -64,14 +75,14 @@ async function seedUsers() {
       if (existing.length > 0) {
         // Update existing user
         await connection.execute(
-          'UPDATE users SET email = ?, password = ?, full_name = ?, role = ? WHERE username = ?',
+          'UPDATE users SET email = ?, password_hash = ?, full_name = ?, role = ? WHERE username = ?',
           [user.email, hashedPassword, user.fullName, user.role, user.username]
         );
         console.log(`✅ Updated user: ${user.username}`);
       } else {
         // Insert new user
         await connection.execute(
-          'INSERT INTO users (username, email, password, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+          'INSERT INTO users (username, email, password_hash, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
           [user.username, user.email, hashedPassword, user.fullName, user.role]
         );
         console.log(`✅ Created user: ${user.username}`);

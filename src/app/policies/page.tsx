@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { encodeHTML } from '@/lib/sanitization';
 
 interface PolicyLink {
   slug: string;
@@ -98,10 +99,10 @@ export default function PoliciesIndexPage() {
                       href={`/policies/${policy.slug}`}
                       className="text-lg font-semibold text-gray-800 hover:text-green-700 block mb-1"
                     >
-                      {policy.title}
+                      {encodeHTML(policy.title)}
                     </Link>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      {policy.description}
+                      {encodeHTML(policy.description)}
                     </p>
                   </div>
                 </div>

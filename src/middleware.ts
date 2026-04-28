@@ -192,7 +192,54 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Only apply to API routes
+  // Prevent Windows short filename disclosure attacks
+  if (pathname.match(/\/[a-zA-Z0-9]{1,8}\.[a-zA-Z0-9]{1,3}$/)) {
+    return new NextResponse('Access Denied', { status: 403 });
+  }
+  
+  // Block access to sensitive files and directories
+  const blockedPaths = [
+    '/.env',
+    '/.git',
+    '/.svn',
+    '/.htaccess',
+    '/.htpasswd',
+    '/web.config',
+    '/.DS_Store',
+    '/Thumbs.db',
+    '/.next',
+    '/node_modules',
+    '/.vscode',
+    '/.idea',
+    '/.babelrc',
+    '/.eslintrc',
+    '/.prettierrc',
+    '/package-lock.json',
+    '/yarn.lock',
+    '/.npmrc',
+    '/.yarnrc',
+    '/.nvmrc',
+    '/.editorconfig',
+    '/.gitignore',
+    '/.gitattributes',
+  ];
+  
+  // Check if path starts with any blocked path
+  if (blockedPaths.some(blocked => pathname.startsWith(blocked))) {
+    return new NextResponse('Access Denied', { status: 403 });
+  }
+  
+  // Block access to backup files and temporary files
+  if (pathname.match(/\.(bak|backup|tmp|temp|old|orig|save|swp|swo)$/)) {
+    return new NextResponse('Access Denied', { status: 403 });
+  }
+  
+  // Block access to configuration files
+  if (pathname.match(/\.(conf|config|ini|cfg|yaml|yml|xml)$/)) {
+    return new NextResponse('Access Denied', { status: 403 });
+  }
+  
+  // Only apply security middleware to API routes
   if (!pathname.startsWith('/api')) {
     return NextResponse.next();
   }
@@ -317,7 +364,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all API routes
-    '/api/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (public files)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };

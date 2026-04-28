@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error || 'Invalid password' }, { status: 400 });
     }
 
-    const rows = (await query('SELECT password FROM users WHERE id = ? LIMIT 1', [userId])) as any[];
+    const rows = (await query('SELECT password_hash FROM users WHERE id = ? LIMIT 1', [userId])) as any[];
     if (!rows || rows.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const stored = rows[0].password;
+    const stored = rows[0].password_hash;
     if (!stored || typeof stored !== 'string') {
       return NextResponse.json({ error: 'Account requires password reset. Please contact administrator.' }, { status: 400 });
     }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(String(newPassword), 10);
-    await query('UPDATE users SET password = ? WHERE id = ?', [hashed, userId]);
+    await query('UPDATE users SET password_hash = ? WHERE id = ?', [hashed, userId]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

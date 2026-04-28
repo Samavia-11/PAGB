@@ -2,12 +2,18 @@
 
 const ContentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes'",
   "style-src 'self' 'unsafe-inline'",
-  'img-src * data:',
+  "img-src 'self' data: https: blob:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https:",
   "frame-ancestors 'none'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "media-src 'self'",
+  "manifest-src 'self'",
+  "worker-src 'self' blob:",
 ].join('; ');
 
 const securityHeaders = [
@@ -29,6 +35,26 @@ const securityHeaders = [
   },
   {
     key: 'Referrer-Policy',
+    value: 'strict-origin-when-cross-origin',
+  },
+  {
+    key: 'X-XSS-Protection',
+    value: '1; mode=block',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
+  },
+  {
+    key: 'Cross-Origin-Embedder-Policy',
+    value: 'require-corp',
+  },
+  {
+    key: 'Cross-Origin-Opener-Policy',
+    value: 'same-origin',
+  },
+  {
+    key: 'Cross-Origin-Resource-Policy',
     value: 'same-origin',
   },
 ];

@@ -10,6 +10,13 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  // Linux-specific MySQL optimizations
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
+  // SSL configuration for secure connections (optional on Linux)
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+  } : undefined,
 };
 
 // Create connection pool

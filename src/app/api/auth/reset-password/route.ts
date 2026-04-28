@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(String(newPassword), 10);
 
-    await query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, tokenRow.user_id]);
+    await query('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, tokenRow.user_id]);
     await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = ?', [tokenRow.id]);
 
     return NextResponse.json({ success: true, message: 'Password updated successfully' }, { status: 200 });

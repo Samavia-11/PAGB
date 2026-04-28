@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { handleFormError } from '@/lib/errorHandling';
 
 interface SignupData {
   username: string;
@@ -332,12 +333,13 @@ const LoginPage = () => {
           window.location.href = redirectUrl;
         }, 500);
       } else {
-        setError(data.error || 'Login failed');
+        const errorMessage = handleFormError({ status: response.status, message: data?.error || data?.message || 'Login failed' }, 'login');
+        setError(errorMessage);
         setLoading(false);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      const errorMessage = handleFormError(error, 'login');
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -462,12 +464,13 @@ const LoginPage = () => {
         }, 100);
       } else {
         // Handle errors
-        setError(data.message || 'Registration failed');
+        const errorMessage = handleFormError({ status: response.status, message: data?.message || data?.error || 'Registration failed' }, 'signup');
+        setError(errorMessage);
         setLoading(false);
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      setError('Network error. Please try again.');
+      const errorMessage = handleFormError(error, 'signup');
+      setError(errorMessage);
       setLoading(false);
     }
   };

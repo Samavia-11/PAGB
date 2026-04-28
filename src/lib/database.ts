@@ -32,6 +32,17 @@ export async function getDatabase() {
         password,
         database,
         port,
+        // Linux-specific MySQL connection optimizations
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 0,
+        // SSL configuration for secure connections (optional on Linux)
+        ssl: process.env.DB_SSL === 'true' ? {
+          rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+        } : undefined,
+        // Connection timeout settings for Linux
+        connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'),
+        // Character set for Linux MySQL
+        charset: 'utf8mb4',
       });
     } catch (error: any) {
       // Auto-create database if missing
@@ -41,6 +52,11 @@ export async function getDatabase() {
           user,
           password,
           port,
+          // Linux-specific MySQL connection optimizations
+          enableKeepAlive: true,
+          keepAliveInitialDelay: 0,
+          connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'),
+          charset: 'utf8mb4',
         });
         await bootstrap.execute(`CREATE DATABASE IF NOT EXISTS \`${database}\``);
         await bootstrap.end();
@@ -51,6 +67,14 @@ export async function getDatabase() {
           password,
           database,
           port,
+          // Linux-specific MySQL connection optimizations
+          enableKeepAlive: true,
+          keepAliveInitialDelay: 0,
+          ssl: process.env.DB_SSL === 'true' ? {
+            rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+          } : undefined,
+          connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'),
+          charset: 'utf8mb4',
         });
       } else {
         throw error;
@@ -81,7 +105,8 @@ async function createTables() {
         qualification TEXT,
         specialization TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -114,7 +139,8 @@ async function createTables() {
         status ENUM('draft', 'submitted', 'under_review', 'reviewed', 'editor_review', 'accepted', 'published', 'rejected') DEFAULT 'draft',
         submission_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -177,7 +203,8 @@ async function createTables() {
         response_date DATETIME NULL,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL
+        FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -216,7 +243,8 @@ async function createTables() {
         reviewed_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (editor_article_id) REFERENCES editor_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE
+        FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -230,7 +258,8 @@ async function createTables() {
         comment TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
-        FOREIGN KEY (commenter_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (commenter_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -247,7 +276,8 @@ async function createTables() {
         file_type VARCHAR(100),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
-        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -261,7 +291,8 @@ async function createTables() {
         affiliation VARCHAR(255) NULL,
         sort_order INT NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -282,7 +313,8 @@ async function createTables() {
         FOREIGN KEY (editor_article_id) REFERENCES editor_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -303,7 +335,8 @@ async function createTables() {
         FOREIGN KEY (reviewer_forward_id) REFERENCES reviewer_forwarded_documents(id) ON DELETE CASCADE,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
@@ -324,27 +357,39 @@ async function createTables() {
         FOREIGN KEY (reviewer_forward_id) REFERENCES reviewer_forwarded_documents(id) ON DELETE CASCADE,
         FOREIGN KEY (article_id) REFERENCES authors_articles(id) ON DELETE CASCADE,
         FOREIGN KEY (editor_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+        ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       )
     `);
 
-    // Create indexes
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_authors_articles_author_id ON authors_articles(author_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_authors_articles_status ON authors_articles(status)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_articles_editor_id ON editor_articles(editor_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_articles_reviewer_id ON editor_articles(reviewer_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_articles_reviewer_id ON reviewer_articles(reviewer_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_comments_article_id ON article_comments(article_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editorial_board_section_sort ON editorial_board_items(section, sort_order)');
+    // Create indexes (MySQL doesn't support IF NOT EXISTS with CREATE INDEX, so we use try-catch)
+    const indexes = [
+      'CREATE INDEX idx_users_role ON users(role)',
+      'CREATE INDEX idx_authors_articles_author_id ON authors_articles(author_id)',
+      'CREATE INDEX idx_authors_articles_status ON authors_articles(status)',
+      'CREATE INDEX idx_editor_articles_editor_id ON editor_articles(editor_id)',
+      'CREATE INDEX idx_editor_articles_reviewer_id ON editor_articles(reviewer_id)',
+      'CREATE INDEX idx_reviewer_articles_reviewer_id ON reviewer_articles(reviewer_id)',
+      'CREATE INDEX idx_article_comments_article_id ON article_comments(article_id)',
+      'CREATE INDEX idx_editorial_board_section_sort ON editorial_board_items(section, sort_order)',
+      'CREATE INDEX idx_article_messages_article_id ON article_messages(article_id)',
+      'CREATE INDEX idx_article_messages_sender_id ON article_messages(sender_id)',
+      'CREATE INDEX idx_reviewer_forwarded_editor_id ON reviewer_forwarded_documents(editor_id)',
+      'CREATE INDEX idx_reviewer_forwarded_reviewer_id ON reviewer_forwarded_documents(reviewer_id)',
+      'CREATE INDEX idx_editor_author_documents_editor_id ON editor_author_documents(editor_id)',
+      'CREATE INDEX idx_editor_author_documents_author_id ON editor_author_documents(author_id)'
+    ];
 
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_messages_article_id ON article_messages(article_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_article_messages_sender_id ON article_messages(sender_id)');
-
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_forwarded_editor_id ON reviewer_forwarded_documents(editor_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_reviewer_forwarded_reviewer_id ON reviewer_forwarded_documents(reviewer_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_author_documents_editor_id ON editor_author_documents(editor_id)');
-    await connection.execute('CREATE INDEX IF NOT EXISTS idx_editor_author_documents_author_id ON editor_author_documents(author_id)');
+    for (const indexSql of indexes) {
+      try {
+        await connection.execute(indexSql);
+      } catch (e: any) {
+        // Ignore duplicate index errors
+        if (e?.code !== 'ER_DUP_KEYNAME' && e?.code !== 'ER_DUP_ENTRY') {
+          console.error(`Error creating index: ${indexSql}`, e);
+        }
+      }
+    }
 
     console.log('Database tables created successfully');
   } catch (error) {

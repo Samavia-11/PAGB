@@ -14,6 +14,14 @@ import {
   Filter,
   ChevronDown
 } from 'lucide-react';
+import { 
+  encodeHTML, 
+  sanitizeText, 
+  sanitizeName, 
+  sanitizeSpecialization, 
+  sanitizeBio,
+  sanitizeSearchTerm 
+} from '@/lib/sanitization';
 
 interface User {
   id: number;
@@ -42,6 +50,11 @@ const AuthorsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('all');
   const router = useRouter();
+
+  // Sanitize search term on change
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(sanitizeSearchTerm(value));
+  };
 
   useEffect(() => {
     checkAuth();
@@ -137,9 +150,10 @@ const AuthorsPage = () => {
   };
 
   const filteredAuthors = authors.filter(author => {
-    const matchesSearch = author.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         author.affiliation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         author.specialization.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()));
+    const sanitizedSearchTerm = sanitizeSearchTerm(searchTerm).toLowerCase();
+    const matchesSearch = author.name.toLowerCase().includes(sanitizedSearchTerm) ||
+                         author.affiliation.toLowerCase().includes(sanitizedSearchTerm) ||
+                         author.specialization.some(spec => spec.toLowerCase().includes(sanitizedSearchTerm));
     const matchesSpecialization = selectedSpecialization === 'all' || 
                                  author.specialization.includes(selectedSpecialization);
     
@@ -181,7 +195,7 @@ const AuthorsPage = () => {
                 type="text"
                 placeholder="Search authors by name, affiliation, or specialization..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 form-input"
               />
             </div>
@@ -224,11 +238,11 @@ const AuthorsPage = () => {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-academic-900">{author.name}</h3>
-                  <p className="text-academic-600 text-sm">{author.affiliation}</p>
+                  <h3 className="text-lg font-semibold text-academic-900">{encodeHTML(author.name)}</h3>
+                  <p className="text-academic-600 text-sm">{encodeHTML(author.affiliation)}</p>
                   <div className="flex items-center text-academic-500 text-sm mt-1">
                     <MapPin className="w-3 h-3 mr-1" />
-                    <span>{author.location}</span>
+                    <span>{encodeHTML(author.location)}</span>
                   </div>
                 </div>
               </div>
@@ -240,7 +254,7 @@ const AuthorsPage = () => {
             </div>
 
             {/* Bio */}
-            <p className="text-academic-700 text-sm mb-4 line-clamp-3">{author.bio}</p>
+            <p className="text-academic-700 text-sm mb-4 line-clamp-3">{encodeHTML(author.bio)}</p>
 
             {/* Specializations */}
             <div className="mb-4">
@@ -251,7 +265,7 @@ const AuthorsPage = () => {
                     key={idx}
                     className="bg-primary-50 text-primary-700 px-2 py-1 rounded text-xs font-medium"
                   >
-                    {spec}
+                    {encodeHTML(spec)}
                   </span>
                 ))}
               </div>
@@ -260,7 +274,7 @@ const AuthorsPage = () => {
             {/* Latest Publication */}
             <div className="mb-4 p-3 bg-academic-50 rounded-lg">
               <h4 className="text-sm font-medium text-academic-700 mb-1">Latest Publication:</h4>
-              <p className="text-sm text-academic-600">{author.latest_publication}</p>
+              <p className="text-sm text-academic-600">{encodeHTML(author.latest_publication)}</p>
             </div>
 
             {/* Stats and Actions */}

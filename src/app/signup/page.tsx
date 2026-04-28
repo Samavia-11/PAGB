@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { handleFormError } from '@/lib/errorHandling';
 
 const isLettersAndSpaces = (value: string) => /^[A-Za-z ]+$/.test(String(value || '').trim());
 const validateStrongPassword = (value: string): string | null => {
@@ -83,11 +84,12 @@ export default function SignupPage() {
         // Redirect to login page
         router.push('/login?registered=true');
       } else {
-        setError(data.message || 'Registration failed. Please try again.');
+        const errorMessage = handleFormError({ status: response.status, message: data?.message || data?.error || 'Registration failed' }, 'signup');
+        setError(errorMessage);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
-      console.error('Signup error:', err);
+      const errorMessage = handleFormError(err, 'signup');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

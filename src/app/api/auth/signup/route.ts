@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     // Insert user into database
     const result = await query(
-      'INSERT INTO users (username, email, password, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+      'INSERT INTO users (username, email, password_hash, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
       [username, resolvedEmail, hashedPassword, fullName, role]
     ) as any;
 

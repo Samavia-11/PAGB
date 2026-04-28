@@ -78,10 +78,10 @@ export async function POST(request: NextRequest) {
     // Check password - ONLY allow hashed passwords
     let isValidPassword = false;
     
-    if (user.password) {
+    if (user.password_hash) {
       // Only accept bcrypt hashed passwords
-      if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
-        isValidPassword = await bcrypt.compare(password, user.password);
+      if (user.password_hash.startsWith('$2a$') || user.password_hash.startsWith('$2b$')) {
+        isValidPassword = await bcrypt.compare(password, user.password_hash);
       } else {
         // Reject plaintext passwords - this is a security risk
         console.error(`SECURITY WARNING: User ${user.id} has unhashed password. Run password migration.`);
