@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT, jwtVerify } from 'jose';
+import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
 
 // ============================================================================
 // CONFIGURATION
@@ -47,7 +48,14 @@ const CSRF_EXEMPT_ROUTES = [
   '/api/auth/reset-password',
   '/api/auth/profile',
   '/api/auth/change-password',
+  '/api/issues',
+  '/api/articles',        
+  '/api/books',           
+  '/api/publications',   
 ];
+
+// Routes exempt from auth but not from CSRF
+const PARTIAL_AUTH_ROUTES = ['/api/issues'];
 
 // ============================================================================
 // RATE LIMITING (In-Memory - Use Redis in production)
@@ -114,43 +122,6 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number; retr
   }
 
   return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count };
-}
-
-// ============================================================================
-// CSRF TOKEN MANAGEMENT
-// ============================================================================
-
-const csrfTokenStore = new Map<string, { token: string; expires: number }>();
-
-function generateCSRFToken(sessionId: string): string {
-  const token = crypto.randomUUID() + '-' + Date.now().toString(36);
-  csrfTokenStore.set(sessionId, { 
-    token, 
-    expires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-  });
-  return token;
-}
-
-function validateCSRFToken(sessionId: string, token: string): boolean {
-  const stored = csrfTokenStore.get(sessionId);
-  if (!stored) return false;
-  if (Date.now() > stored.expires) {
-    csrfTokenStore.delete(sessionId);
-    return false;
-  }
-  return stored.token === token;
-}
-
-// Cleanup expired CSRF tokens
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of csrfTokenStore.entries()) {
-      if (now > entry.expires) {
-        csrfTokenStore.delete(key);
-      }
-    }
-  }, 60000);
 }
 
 // ============================================================================
@@ -320,14 +291,19 @@ export async function middleware(request: NextRequest) {
   const enforceCSRF = process.env.NODE_ENV === 'production';
 
   if (enforceCSRF && isStateChangingMethod && !isCSRFExempt && user) {
+    console.log(`[CSRF] Validating token for ${request.method} ${pathname}`);
     const csrfToken = request.headers.get('x-csrf-token');
     
     if (!csrfToken || !validateCSRFToken(user.sessionId, csrfToken)) {
+      console.log(`[CSRF] FAILED for ${request.method} ${pathname} - token: ${csrfToken ? 'present' : 'missing'}`);
       return NextResponse.json(
         { error: 'Invalid or missing CSRF token.' },
         { status: 403 }
       );
     }
+    console.log(`[CSRF] OK for ${request.method} ${pathname}`);
+  } else if (isCSRFExempt && isStateChangingMethod) {
+    console.log(`[CSRF] Exempt: ${request.method} ${pathname}`);
   }
 
   // ========== INJECT USER INFO INTO REQUEST HEADERS ==========
