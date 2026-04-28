@@ -1,6 +1,7 @@
 import mysql from 'mysql2/promise';
 
 let connection: mysql.Connection | null = null;
+let tablesInitialized = false; // Performance optimization flag
 
 export async function getDatabase() {
   const host = process.env.DB_HOST || 'localhost';
@@ -81,8 +82,11 @@ export async function getDatabase() {
       }
     }
 
-    // Create tables if they don't exist
-    await createTables();
+    // Create tables if they don't exist (only once per server start)
+    if (!tablesInitialized) {
+      await createTables();
+      tablesInitialized = true;
+    }
   }
   
   return connection;

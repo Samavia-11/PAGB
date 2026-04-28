@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         fileType = file.type || 'application/octet-stream';
       } catch (fileError) {
         console.error('Error uploading file:', fileError);
-        throw new Error(`File upload failed: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+        throw new Error('File upload failed');
       }
     }
 
@@ -208,9 +208,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error sending message:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
